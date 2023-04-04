@@ -1,0 +1,171 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: PersistentVolume
+  metadata:
+    annotations:
+      pv.kubernetes.io/bound-by-controller: "yes"
+    finalizers:
+    - kubernetes.io/pv-protection
+    labels:
+      pvname: pv-elastic-cluster-master-0
+    name: pv-elastic-cluster-master-0
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    capacity:
+      storage: 30Gi
+    local:
+      path: /opt/data/elastic-cluster/master/0
+    nodeAffinity:
+      required:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: kubernetes.io/hostname
+            operator: In
+            values:
+            - k-kube-lab-08
+    persistentVolumeReclaimPolicy: Retain
+    storageClassName: elastic-cluster-master
+    volumeMode: Filesystem
+- apiVersion: v1
+  kind: PersistentVolume
+  metadata:
+    annotations:
+      pv.kubernetes.io/bound-by-controller: "yes"
+    finalizers:
+    - kubernetes.io/pv-protection
+    labels:
+      pvname: pv-elastic-cluster-master-1
+    name: pv-elastic-cluster-master-1
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    capacity:
+      storage: 30Gi
+    local:
+      path: /opt/data/elastic-cluster/master/1
+    nodeAffinity:
+      required:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: kubernetes.io/hostname
+            operator: In
+            values:
+            - k-kube-lab-08
+    persistentVolumeReclaimPolicy: Retain
+    storageClassName: elastic-cluster-master
+    volumeMode: Filesystem
+- apiVersion: v1
+  kind: PersistentVolume
+  metadata:
+    annotations:
+      pv.kubernetes.io/bound-by-controller: "yes"
+    finalizers:
+    - kubernetes.io/pv-protection
+    labels:
+      pvname: pv-elastic-cluster-master-2
+    name: pv-elastic-cluster-master-2
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    capacity:
+      storage: 30Gi
+    local:
+      path: /opt/data/elastic-cluster/master/2
+    nodeAffinity:
+      required:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: kubernetes.io/hostname
+            operator: In
+            values:
+            - k-kube-lab-08
+    persistentVolumeReclaimPolicy: Retain
+    storageClassName: elastic-cluster-master
+    volumeMode: Filesystem
+- apiVersion: v1
+  kind: PersistentVolume
+  metadata:
+    annotations:
+      pv.kubernetes.io/bound-by-controller: "yes"
+    finalizers:
+    - kubernetes.io/pv-protection
+    labels:
+      pvname: pv-elastic-cluster-data-0
+    name: pv-elastic-cluster-data-0
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    capacity:
+      storage: 30Gi
+    local:
+      path: /opt/data/elastic-cluster/data/0
+    nodeAffinity:
+      required:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: kubernetes.io/hostname
+            operator: In
+            values:
+            - k-kube-lab-11
+    persistentVolumeReclaimPolicy: Retain
+    storageClassName: elastic-cluster-data
+    volumeMode: Filesystem
+- apiVersion: v1
+  kind: PersistentVolume
+  metadata:
+    annotations:
+      pv.kubernetes.io/bound-by-controller: "yes"
+    finalizers:
+    - kubernetes.io/pv-protection
+    labels:
+      pvname: pv-elastic-cluster-data-1
+    name: pv-elastic-cluster-data-1
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    capacity:
+      storage: 30Gi
+    local:
+      path: /opt/data/elastic-cluster/data/1
+    nodeAffinity:
+      required:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: kubernetes.io/hostname
+            operator: In
+            values:
+            - k-kube-lab-11
+    persistentVolumeReclaimPolicy: Retain
+    storageClassName: elastic-cluster-data
+    volumeMode: Filesystem
+- apiVersion: v1
+  kind: PersistentVolume
+  metadata:
+    annotations:
+      pv.kubernetes.io/bound-by-controller: "yes"
+    finalizers:
+    - kubernetes.io/pv-protection
+    labels:
+      pvname: pv-elastic-cluster-data-2
+    name: pv-elastic-cluster-data-2
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    capacity:
+      storage: 30Gi
+    local:
+      path: /opt/data/elastic-cluster/data/2
+    nodeAffinity:
+      required:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: kubernetes.io/hostname
+            operator: In
+            values:
+            - k-kube-lab-11
+    persistentVolumeReclaimPolicy: Retain
+    storageClassName: elastic-cluster-data
+    volumeMode: Filesystem
+kind: List

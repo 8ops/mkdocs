@@ -1,0 +1,110 @@
+apiVersion: v1
+data:
+  alertmanager.yml: |
+    global:
+      resolve_timeout: 5m
+      smtp_from: 'AlertManager<m@8ops.top>'
+      smtp_smarthost: 'smtp.exmail.qq.com:465'
+      smtp_auth_username: 'm@8ops.top'
+      smtp_auth_password: 'password'
+      smtp_auth_identity: 'm@8ops.top'
+      smtp_require_tls: false
+    route:
+      group_by:
+      - 'instance'
+      - 'severity'
+      group_wait: 10m
+      group_interval: 10s
+      repeat_interval: 1d
+      receiver: 'prometheusalert'
+      routes:
+      - receiver: 'email'
+        match_re:
+          severity: 'critical|warning'
+        continue: true
+      - receiver: 'wechat'
+        match_re:
+          severity: 'critical|warning'
+        continue: true
+      - receiver: 'prometheusalert'
+        match_re:
+          severity: 'critical|warning'
+        continue: true
+    receivers:
+    - name: 'email'
+      email_configs:
+      - send_resolved: true
+        to: 'm@8ops.top'
+    - name: 'wechat'
+      wechat_configs:
+      - send_resolved: true
+        api_url: 'https://qyapi.weixin.qq.com/cgi-bin/'
+        corp_id: 'ww8249717441913c51'
+        agent_id: '1000002'
+        api_secret: 'KVZZuC1CvWKssY8qZSW3eSxXR4EgGuNx02l1buQmbnQ'
+        to_user: '@all'
+        to_party: '1'
+        message: '{{ template "wechat.default.message" . }}'
+    - name: 'prometheusalert'
+      webhook_configs:
+      - send_resolved: true
+        url: 'http://10.101.11.236:8080/prometheus/alert?type=wx&tpl=prometheus-wx&wxurl=https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=d38f3a90-2b86-4d48-a9c7-228e1e89d416&at=@all'
+    templates:
+    - '/etc/config/templates.tmpl'
+  templates.tmpl: |
+    {{ define "wechat.default.message" }}
+    {{- if gt (len .Alerts.Firing) 0 -}}
+    {{- range $index, $alert := .Alerts -}}
+    {{- if eq $index 0 -}}
+    告警类型: {{ $alert.Labels.alertname }}
+    告警级别: {{ $alert.Labels.severity }}
+    =====================
+    {{- end }}
+    ===告警详情===
+    告警详情: {{ $alert.Annotations.summary }}
+    告警描述: {{ $alert.Annotations.description }}
+    故障时间: {{ $alert.StartsAt.Format "2006-01-02 15:04:05" }}
+    ===参考信息===
+    {{ if gt (len $alert.Labels.instance) 0 -}}故障实例ip: {{ $alert.Labels.instance }};{{- end -}}
+    {{- if gt (len $alert.Labels.namespace) 0 -}}故障实例所在namespace: {{ $alert.Labels.namespace }};{{- end -}}
+    {{- if gt (len $alert.Labels.node) 0 -}}故障物理机ip: {{ $alert.Labels.node }};{{- end -}}
+    {{- if gt (len $alert.Labels.pod_name) 0 -}}故障pod名称: {{ $alert.Labels.pod_name }}{{- end }}
+    =====================
+    {{- end }}
+    {{- end }}
+    
+    {{- if gt (len .Alerts.Resolved) 0 -}}
+    {{- range $index, $alert := .Alerts -}}
+    {{- if eq $index 0 -}}
+    告警类型: {{ $alert.Labels.alertname }}
+    告警级别: {{ $alert.Labels.severity }}
+    =====================
+    {{- end }}
+    ===告警详情===
+    告警详情: {{ $alert.Annotations.summary }}
+    故障时间: {{ $alert.StartsAt.Format "2006-01-02 15:04:05" }}
+    恢复时间: {{ $alert.EndsAt.Format "2006-01-02 15:04:05" }}
+    ===参考信息===
+    {{ if gt (len $alert.Labels.instance) 0 -}}故障实例ip: {{ $alert.Labels.instance }};{{- end -}}
+    {{- if gt (len $alert.Labels.namespace) 0 -}}故障实例所在namespace: {{ $alert.Labels.namespace }};{{- end -}}
+    {{- if gt (len $alert.Labels.node) 0 -}}故障物理机ip: {{ $alert.Labels.node }};{{- end -}}
+    {{- if gt (len $alert.Labels.pod_name) 0 -}}故障pod名称: {{ $alert.Labels.pod_name }};{{- end }}
+    =====================
+    {{- end }}
+    {{- end }}
+    {{- end }}  
+
+kind: ConfigMap
+metadata:
+  annotations:
+    meta.helm.sh/release-name: prometheuss
+    meta.helm.sh/release-namespace: kube-server
+  labels:
+    app: prometheus
+    app.kubernetes.io/managed-by: Helm
+    chart: prometheus-15.8.0
+    component: alertmanager
+    heritage: Helm
+    release: prometheuss
+  name: prometheuss-alertmanager
+  namespace: kube-server

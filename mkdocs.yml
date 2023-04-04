@@ -1,0 +1,230 @@
+site_name: 爱运维 
+site_url: https://books.8ops.top/
+site_author: Jesse
+site_description: >-
+  爱运维,运维日常实践,devops,aiops,dataops,xops,kubernetes,linux,os,nginx,prometheus,运维,系统,内核,监控,开发,数据,智能,随记
+  爱运维,运维虾的在线文档囊括运维日常实践、Kubernetes、运维开发、数据处理、人工智能、生活随记
+repo_name: 8ops/books
+repo_url: https://github.com/8ops/books
+edit_uri: ""
+
+copyright: Copyright &copy; 2017 - 2027 8OPS
+theme:
+  name: material
+  language: zh
+  logo: logo.png
+  favicon: favicon.ico
+
+  static_templates:
+    - 404.html
+
+  include_search_page: false
+  search_index_only: true
+
+  features:
+    # - announce.dismiss
+    - content.action.edit
+    - content.action.view
+    - content.code.annotate
+    - content.code.copy
+    # - content.tabs.link
+    - content.tooltips
+    # - header.autohide
+    # - navigation.expand
+    - navigation.footer
+    - navigation.indexes
+    # - navigation.instant
+    # - navigation.prune
+    - navigation.sections
+    - navigation.tabs
+    # - navigation.tabs.sticky
+    - navigation.top
+    - navigation.tracking
+    - search.highlight
+    - search.share
+    - search.suggest
+    - toc.follow
+    # - toc.integrate
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  font:
+    text: Roboto
+    code: Roboto Mono
+
+plugins:
+  - search
+  - minify:
+      minify_html: true
+
+extra_css:
+  - stylesheets/extra.css
+
+# Extensions
+markdown_extensions:
+  - admonition
+  - abbr
+  - attr_list
+  - def_list
+  - footnotes
+  - meta
+  - md_in_html
+  - toc:
+      permalink: true
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.magiclink:
+      repo_url_shorthand: true
+      user: squidfunk
+      repo: mkdocs-material
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid-experimental
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+nav: 
+  - 首页: index.md
+  - 日常实践: 
+    - 系统能力: 
+      - daily/11-system.md
+      - daily/12-command.md
+      - daily/13-curl-test-time.md
+      - daily/14-imagemagick.md
+      - daily/15-openssl.md
+      - daily/16-network.md
+      - daily/17-io.md
+      - daily/18-git.md
+      - daily/19-firewall.md
+    - 常用组件:
+      - daily/33-ppp.md
+      - daily/34-kickstart.md
+      - daily/35-mogilefs.md
+      - daily/36-postgresql.md
+      - daily/37-rabbitmq.md
+      - daily/38-saltstack.md
+      - daily/39-neo4j.md
+      - daily/40-haproxy.md
+      - daily/41-dnsmasq.md
+      - daily/42-kvm.md
+      - daily/43-jumpserver.md
+      - daily/44-rsyncd.md
+      - daily/45-nfs.md
+      - daily/46-nginx.md
+      - daily/47-elastic.md
+      - daily/48-mysql.md
+      - daily/49-etcd.md
+      - daily/50-denyhosts.md
+    - 文档工具:
+      - daily/52-gitbook.md
+      - daily/53-docsify.md
+      - daily/54-mkdocs.md
+      - daily/58-html.md
+      - daily/59-vue.md
+    - 杂记:
+      - daily/96-macbook.md
+      - daily/97-miscellany.md
+      - daily/99-article.md
+  - 运维进阶: 
+    - ops/01-devops.md
+    - ops/02-dataops.md
+    - ops/03-aiops.md
+    - ops/04-xops.md
+  - Kubernetes:
+    - 搭建: 
+      - kubernetes/01-cluster-init.md
+      - kubernetes/01-cluster-init-flannel.md
+      - kubernetes/01-cluster-init-cilium.md
+      - kubernetes/01-cluster-init-calico.md
+    - kubernetes/02-cluster-reset.md
+    - kubernetes/03-addon-dashboard.md
+    - kubernetes/04-addon-ingress-controller.md
+    - kubernetes/05-helm.md
+    - kubernetes/06-cluster-upgrade-node.md
+    - 升级版本:
+      - kubernetes/06-cluster-upgrade.md
+      - kubernetes/06-cluster-upgrade-1.24.md
+      - kubernetes/06-cluster-upgrade-1.25.md
+    - kubernetes/06-cluster-upgrade-qa.md
+    - kubernetes/07-app-migrate.md
+    - kubernetes/08-docker.md
+    - 常用组件:
+      - kubernetes/20-prometheus.md
+      - kubernetes/20-promql.md
+      - kubernetes/21-mysql.md
+      - kubernetes/22-mongo.md
+      - kubernetes/23-grafana.md
+      - kubernetes/24-redis.md
+      - kubernetes/25-elastic.md
+      - kubernetes/26-harbor.md
+      - kubernetes/27-kong.md
+      - kubernetes/28-rabbitmq.md
+    - 日常应用:
+      - kubernetes/09-account.md
+      - kubernetes/10-access-image.md
+      - kubernetes/30-readme.md
+      - kubernetes/31-kubeconfig.md
+      - kubernetes/32-daemonset.md
+      - kubernetes/33-statefulset.md
+      - kubernetes/39-etcd.md
+    - 日常管理: 
+      - kubernetes/40-mgr.md
+      - kubernetes/41-rancher.md
+      - kubernetes/42-metallb.md
+      - kubernetes/43-argocd.md
+      - kubernetes/44-jsonpath.md
+    - 存储: 
+      - kubernetes/51-minio.md
+      - kubernetes/52-nfs-provider.md
+  - 运维开发: 
+    - dev/01-golang.md
+    - dev/02-python.md
+  - 数据处理: 
+    - data/01-mysql.md
+    - data/02-neo4j.md
+    - data/03-redis.md
+  - 生活随记: 
+    - note/00-daily.md
+    - note/10-effect.md
+    - note/01-swlc.md
+    - note/02-qywx.md
+    - note/03-hls-repair.md
+    - 别墅: 
+      - note/04-villa-00-01.md
+      - note/04-villa-00-02.md
+      - note/04-villa-00-70.md
+      - note/04-villa-34-80.md
+      - note/04-villa-82-90.md
+  - 关于我: 
+     - about.md
+
+
+
+

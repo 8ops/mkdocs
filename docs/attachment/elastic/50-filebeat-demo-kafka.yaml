@@ -1,0 +1,90 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    name: filebeat-demo-kafka
+    namespace: elastic-system
+  spec:
+    containers:
+    - name: busybox
+      args:
+      - /bin/sh
+      - -c
+      - while true;do i=$((i+1));echo "{\"id\":\"$i\", \"msg\":\"$(date)\"}" >> /var/log/demo.json;echo "$i - $(date)" >> /var/log/demo.out;sleep 2;done
+      image: hub.8ops.top/elastic/busybox:1.28.0
+      resources:
+        limits:
+          cpu: 200m
+          memory: 512Mi
+        requests:
+          cpu: 30m
+          memory: 32Mi
+      volumeMounts:
+      - mountPath: /var/log
+        name: varlog
+    - name: filebeat
+      args:
+      - -c
+      - /etc/filebeat/filebeat.yml
+      image: hub.8ops.top/elastic/filebeat:7.17.3
+      resources:
+        limits:
+          cpu: 200m
+          memory: 512Mi
+        requests:
+          cpu: 30m
+          memory: 32Mi
+      volumeMounts:
+      - mountPath: /var/log
+        name: varlog
+      - mountPath: /etc/filebeat/filebeat.yml
+        name: filebeat-demo-kafka
+        readOnly: true
+        subPath: filebeat.yml
+    volumes:
+    - emptyDir: {}
+      name: varlog
+    - configMap:
+        defaultMode: 420
+        name: filebeat-demo-kafka
+      name: filebeat-demo-kafka
+- apiVersion: v1
+  data:
+    filebeat.yml: |-
+      filebeat.inputs:
+      - type: log
+        enable: true
+        paths:
+          - /var/log/*.json
+        fields:
+          topic: demo-json
+          type: demo-json
+        json.keys_under_root: true
+        json.add_error_key: true
+        ignore_older: 1h
+        close_inactive: 30m
+        tail_files: true
+      - type: log
+        enable: true
+        paths:
+          - /var/log/*.out
+        fields:
+          topic: demo-out
+          type: demo-out
+        ignore_older: 1h
+        close_inactive: 30m
+        tail_files: true
+      output.kafka:
+        hosts: ["kafka:9092"]
+        topic: '%{[fields][topic]}'
+        partition.round_robin:
+          reachable_only: false
+        required_acks: 1
+        compression: gzip
+        max_message_bytes: 10000000
+  kind: ConfigMap
+  metadata:
+    name: filebeat-demo-kafka
+    namespace: elastic-system
+kind: List

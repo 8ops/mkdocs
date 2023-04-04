@@ -1,0 +1,13 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: tls-xyz.nextn.cn
+  namespace: default
+spec:
+  secretName: tls-xyz.nextn.cn
+  issuerRef:
+    name: dnspod-imroc
+    kind: ClusterIssuer
+    group: cert-manager.io
+  dnsNames:
+  - "*.xyz.nextn.cn"

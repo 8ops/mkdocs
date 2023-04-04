@@ -1,0 +1,17 @@
+
+image:
+  repository: hub.8ops.top/google_containers/nfs-subdir-external-provisioner
+  tag: v4.0.2
+
+nfs:
+  server: 10.101.11.236
+  path: /data1/lib/nfs
+
+resources: 
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+

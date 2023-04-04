@@ -1,0 +1,30 @@
+
+busyboxImage: hub.8ops.top/third/busybox:1.28.0
+
+ingress:
+  enabled: true
+  ingressClassName: "external"
+
+  tls:
+    secretName: tls-8ops.top
+
+rancherImage: hub.8ops.top/google_containers/rancher
+rancherImageTag: v2.6.8
+
+resources:
+  limits:
+    cpu: 1
+    memory: 1Gi
+  request:
+    cpu: 1
+    memory: 1Gi
+
+postDelete:
+  enabled: true
+  image:
+    repository: hub.8ops.top/google_containers/rancher-shell
+    tag: v0.1.18
+
+  namespaceList:
+    - kube-cattle
+

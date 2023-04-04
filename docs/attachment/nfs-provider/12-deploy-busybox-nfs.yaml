@@ -1,0 +1,56 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    name: pvc-busybox-nfs-demo
+    namespace: default
+    annotations:
+      nfs.io/storage-path: "deploy-demo"
+  spec:
+    storageClassName: "nfs-demo"
+    accessModes:
+      - ReadWriteMany
+    resources:
+      requests:
+        storage: 1Gi
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    labels:
+      app: deploy-busybox-nfs-demo
+    name: deploy-busybox-nfs-demo
+    namespace: default
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        app: deploy-busybox-nfs-demo
+    template:
+      metadata:
+        labels:
+          app: deploy-busybox-nfs-demo
+      spec:
+        containers:
+        - args:
+          - /bin/sh
+          - -c
+          - while true;do sleep 60;date;done
+          image: hub.8ops.top/third/busybox:1.28.0
+          name: deploy-busybox-nfs-demo
+          resources:
+            limits:
+              cpu: 50m
+              memory: 64Mi
+            requests:
+              cpu: 50m
+              memory: 64Mi
+          volumeMounts:
+          - name: data
+            mountPath: /data1/lib/nfs
+            subPath: busybox
+        volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: pvc-busybox-nfs-demo
+kind: List

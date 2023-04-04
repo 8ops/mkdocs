@@ -1,0 +1,135 @@
+
+image:
+  registry: hub.8ops.top
+  repository: bitnami/mysql
+  tag: 8.0.28
+
+architecture: replication
+
+auth:
+  rootPassword: "jesse"
+  database: "grafana"
+  username: "grafana"
+  password: "grafana"
+  replicationUser: "replicator"
+  replicationPassword: "replicator"
+
+primary:
+  configuration: |-
+    #
+    # The MySQL  Server configuration file.
+    #
+    # For explanations see
+    # http://dev.mysql.com/doc/mysql/en/server-system-variables.html
+    [mysqld]
+    pid-file        = /var/run/mysqld/mysqld.pid
+    socket          = /var/run/mysqld/mysqld.sock
+    datadir         = /var/lib/mysql
+    secure-file-priv= NULL
+    skip-host-cache
+    skip-name-resolve
+    [mysql]
+
+  resources:
+    limits:
+       cpu: 1000m
+       memory: 1024Mi
+    requests:
+       cpu: 200m
+       memory: 256Mi
+
+  extraEnvVars: 
+    - name: TZ
+      value: Asia/Shanghai
+
+  persistence:
+    enabled: true
+    storageClass: "mysql-replication-primary"
+    size: 20Gi
+
+  extraVolumeMounts:
+    - mountPath: /var/lib/mysql
+      name: data
+    - mountPath: /etc/mysql/my.cnf
+      name: config
+      subPath: my.cnf
+
+  service:
+    type: NodePort
+    port: 3306
+    nodePort: "30381"
+
+secondary:
+  configuration: |-
+    #
+    # The MySQL  Server configuration file.
+    #
+    # For explanations see
+    # http://dev.mysql.com/doc/mysql/en/server-system-variables.html
+    
+    [mysqld]
+    pid-file        = /var/run/mysqld/mysqld.pid
+    socket          = /var/run/mysqld/mysqld.sock
+    datadir         = /var/lib/mysql
+    secure-file-priv= NULL
+    skip-host-cache
+    skip-name-resolve
+    [mysql]
+
+  resources:
+    limits:
+       cpu: 1000m
+       memory: 1024Mi
+    requests:
+       cpu: 200m
+       memory: 256Mi
+
+  extraEnvVars: 
+    - name: TZ
+      value: Asia/Shanghai
+    - name: MYSQL_ROOT_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          key: mysql-root-password
+          name: mysql-replication
+
+  persistence:
+    enabled: true
+    storageClass: "mysql-replication-secondary"
+    size: 20Gi
+
+  extraVolumeMounts:
+    - mountPath: /var/lib/mysql
+      name: data
+    - mountPath: /etc/mysql/my.cnf
+      name: config
+      subPath: my.cnf
+
+  service:
+    type: NodePort
+    port: 3306
+    nodePort: "30382"
+
+metrics:
+  enabled: true
+
+  image:
+    registry: hub.8ops.top
+    repository: bitnami/mysqld-exporter
+    tag: 0.14.0
+
+  service:
+    type: ClusterIP
+    port: 9104
+    annotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "{{ .Values.metrics.service.port }}"
+
+  resources:
+    limits:
+       cpu: 100m
+       memory: 128Mi
+    requests:
+       cpu: 50m
+       memory: 64Mi
+

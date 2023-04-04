@@ -1,0 +1,82 @@
+
+image:
+  registry: hub.8ops.top
+  repository: bitnami/redis
+  tag: 6.2.6
+
+auth:
+  enabled: true
+  sentinel: true
+  password: "jesse"
+
+master:
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+
+  extraEnvVars:
+    - name: TZ
+      value: Asia/Shanghai
+
+  persistence:
+    enabled: true
+    storageClass: "redis-sentinel"
+    size: 1Gi
+
+replica:
+  replicaCount: 3
+
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+
+  extraEnvVars:
+    - name: TZ
+      value: Asia/Shanghai
+
+  persistence:
+    enabled: true
+    storageClass: "redis-sentinel"
+    size: 1Gi
+
+
+sentinel:
+  enabled: true
+
+  image:
+    registry: hub.8ops.top
+    repository: bitnami/redis-sentinel
+    tag: 6.2.6
+
+  resources:
+    limits: 
+      cpu: 50m
+      memory: 64Mi
+    requests: 
+      cpu: 50m
+      memory: 64Mi
+
+metrics:
+  enabled: true
+
+  image:
+    registry: hub.8ops.top
+    repository: bitnami/redis-exporter
+    tag: 1.37.0
+
+  resources:
+    limits: 
+      cpu: 50m
+      memory: 64Mi
+    requests: 
+      cpu: 50m
+      memory: 64Mi
+

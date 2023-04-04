@@ -1,0 +1,64 @@
+nameOverride: "minio-cluster"
+
+image:
+  repository: hub.8ops.top/quay/minio
+  tag: RELEASE.2022-12-12T19-27-27Z
+
+mcImage:
+  repository: hub.8ops.top/quay/minio-mc
+  tag: RELEASE.2022-12-13T00-23-28Z
+
+rootUser: "minio"
+rootPassword: "minio"
+
+replicas: 1
+
+persistence:
+  enabled: true
+  storageClass: "nfs-client"
+  accessMode: ReadWriteOnce
+  size: 100Gi
+
+ingress:
+  enabled: true
+  ingressClassName: "external"
+  path: /
+  hosts:
+    - minio.8ops.top
+  tls: 
+   - secretName: tls-8ops.top
+     hosts:
+       - minio.8ops.top
+
+consoleIngress:
+  enabled: true
+  ingressClassName: "external"
+
+  path: /
+  hosts:
+    - minio-console.8ops.top
+  tls:
+   - secretName: tls-8ops.top
+     hosts:
+       - minio-console.8ops.top
+
+resources:
+  limits:
+    cpu: 1
+    memory: 4Gi
+  requests:
+    cpu: 1
+    memory: 4Gi
+
+users:
+  - accessKey: console
+    secretKey: console123
+    policy: consoleAdmin
+
+#metrics:
+#  serviceMonitor:
+#    enabled: true
+#    namespace: kube-server
+
+
+
