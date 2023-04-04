@@ -13,5 +13,7 @@ mkdocs serve
 
 pip install mkdocs-material
 pip install mkdocs-minify-plugin 
+
+mkdocs gh-deploy --force
 ```
 

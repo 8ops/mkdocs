@@ -152,11 +152,6 @@ nav:
       - daily/96-macbook.md
       - daily/97-miscellany.md
       - daily/99-article.md
-  - 运维进阶: 
-    - ops/01-devops.md
-    - ops/02-dataops.md
-    - ops/03-aiops.md
-    - ops/04-xops.md
   - Kubernetes:
     - 搭建: 
       - kubernetes/01-cluster-init.md
@@ -203,6 +198,11 @@ nav:
     - 存储: 
       - kubernetes/51-minio.md
       - kubernetes/52-nfs-provider.md
+  - 运维进阶: 
+    - ops/01-devops.md
+    - ops/02-dataops.md
+    - ops/03-aiops.md
+    - ops/04-xops.md
   - 运维开发: 
     - dev/01-golang.md
     - dev/02-python.md
