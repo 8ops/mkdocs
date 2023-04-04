@@ -148,9 +148,8 @@ nav:
       - daily/54-mkdocs.md
       - daily/58-html.md
       - daily/59-vue.md
-    - 杂记:
+    - 未做分类:
       - daily/96-macbook.md
-      - daily/97-miscellany.md
       - daily/99-article.md
   - Kubernetes:
     - 搭建: 
