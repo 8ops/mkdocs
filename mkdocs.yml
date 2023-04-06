@@ -11,8 +11,8 @@ copyright: |+
   <a target="_blank" href="https://www.8ops.top/" >爱运维</a> &nbsp; 
   <a target="_blank" href="https://mkdocs.8ops.top/sitemap.xml" >XML</a><br />
   <a target="_blank" href="http://beian.miit.gov.cn/" >沪ICP备18030892号</a><br />
-  <a target="_blank" href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=31010602005774" ><img src="images/wa.png" style="float:left;height:20px;"/>沪公网安备31010602005774号</a><br />
-  <a target="_blank" href="https://www.upyun.com/?utm_source=lianmeng&utm_medium=referral" ><img src="images/upyun.png" style="float:left;height:20px;"/>提供CDN加速/云存储服务</a><br />
+  <a target="_blank" href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=31010602005774" ><img src="/images/wa.png" style="float:left;height:20px;"/>沪公网安备31010602005774号</a><br />
+  <a target="_blank" href="https://www.upyun.com/?utm_source=lianmeng&utm_medium=referral" ><img src="/images/upyun.png" style="float:left;height:20px;"/>提供CDN加速/云存储服务</a><br />
   Copyright &copy; 2017 - 2027 8OPS
 
 theme:
