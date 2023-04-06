@@ -1,8 +1,12 @@
 #!/bin/bash
 
 [ `dirname $0` == "./bin" ] || exit 1
+set -e
 
-upx switch jesse-8ops-mkdocs
+CTX_NAME=jesse-8ops-mkdocs
+upx switch ${CTX_NAME}
+[ "X${CTX_NAME}Y" == "X`upx sessions | awk '/^>/{printf $2}'`Y" ] || exit 1
 upx sync --delete site/ /
 upx switch jesse-8ops-normal
 
+printf "\nCompleted.\n\n"
