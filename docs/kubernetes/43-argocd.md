@@ -47,7 +47,7 @@ chmod +x ~/bin/argocd
 kubectl config get-contexts
 
 # 登录 argo-cd
-argocd login argo-cd.8ops.top --grpc-web
+argocd login argo-cd.8ops.top --username=admin --password=xx --grpc-web
 argocd context --grpc-web
 
 # 添加 kubernetes cluster
@@ -324,12 +324,19 @@ argocd proj allow-cluster-resource argo-example-proj '*' '*' -l allow
 argocd proj allow-namespace-resource argo-example-proj '*' '*' -l allow
 
 # ---
-
 argocd proj create control-plane-proj --description "control plane proj" 
 argocd proj add-source control-plane-proj \
     https://git.8ops.top/ops/control-plane-ops.git
 argocd proj add-destination control-plane-proj \
+    https://kubernetes.default.svc default 
+argocd proj add-destination control-plane-proj \
     https://kubernetes.default.svc kube-server 
+argocd proj add-destination control-plane-proj \
+    https://kubernetes.default.svc kube-system
+argocd proj add-destination control-plane-proj \
+    https://kubernetes.default.svc elastic-system
+argocd proj add-destination control-plane-proj \
+    https://kubernetes.default.svc cert-manager
 argocd proj get control-plane-proj
 ```
 
@@ -743,8 +750,9 @@ argocd app create metallb \
     --values values-ops.yaml \
     --helm-skip-crds
 
-# 不建议这样
+# 【不建议这样】
 # argocd app delete metallb
+# 其中资源 bgppeers.metallb.io + addresspools.metallb.io 会一直报 OutOfSync
 
 argocd app create metallb-extention \
     --repo https://git.8ops.top/ops/control-plane-ops.git \
@@ -815,12 +823,13 @@ argocd app create kubernetes-dashboard \
 
 
 
-### 3.5 echoserver
+### 3.5 toolkit
 
 ```bash
-argocd app create echoserver \
+# echoserver
+argocd app create toolkit \
     --repo https://git.8ops.top/ops/control-plane-ops.git \
-    --path echoserver \
+    --path toolkit \
     --project control-plane-proj \
     --directory-recurse \
     --dest-namespace default \
@@ -953,12 +962,65 @@ argocd app create nfs-subdir-external-provisioner \
 
 ### 3.9 cert-manager
 
-[Reference](05-helm.md)
+[Reference](05-helm.md#cert-manager)
 
 ```bash
 helm repo add jetstack https://charts.jetstack.io
 helm repo update jetstack
 helm search repo cert-manager
+helm pull jetstack/cert-manager --version v1.11.0 -d /tmp
+tar xf /tmp/cert-manager-v1.11.0.tgz -C .
+
+cd cert-manager
+vim values-ops.yaml
+
+argocd app create cert-manager \
+    --repo https://git.8ops.top/ops/control-plane-ops.git \
+    --path cert-manager \
+    --project control-plane-proj \
+    --dest-namespace cert-manager \
+    --dest-server https://kubernetes.default.svc \
+    --revision master \
+    --sync-policy automated \
+    --label author=jesse \
+    --label tier=helm \
+    --values values-ops.yaml
+
+# imrocc
+helm repo add imroc https://charts.imroc.cc
+helm repo update imroc
+helm search repo cert-manager-webhook-dnspod
+helm pull imroc/cert-manager-webhook-dnspod --version 1.2.0 -d /tmp
+tar xf /tmp/cert-manager-webhook-dnspod-1.2.0.tgz -C .
+
+cd cert-manager-webhook-dnspod
+vim values-ops.yaml
+
+argocd app create cert-manager-webhook-dnspod \
+    --repo https://git.8ops.top/ops/control-plane-ops.git \
+    --path cert-manager-webhook-dnspod \
+    --project control-plane-proj \
+    --dest-namespace kube-server \
+    --dest-server https://kubernetes.default.svc \
+    --revision master \
+    --sync-policy automated \
+    --label author=jesse \
+    --label tier=helm \
+    --values values-ops.yaml
+
+# extension
+# cluster-issuer + certificate
+argocd app create cert-manager-extention \
+    --repo https://git.8ops.top/ops/control-plane-ops.git \
+    --path cert-manager/extention \
+    --project control-plane-proj \
+    --directory-recurse \
+    --dest-namespace kube-server \
+    --dest-server https://kubernetes.default.svc \
+    --revision master \
+    --sync-policy automated \
+    --label author=jesse \
+    --label tier=helm 
 
 ```
 
