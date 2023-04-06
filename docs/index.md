@@ -19,8 +19,9 @@ hide:
 
 | 分站                   | 地址                                            |
 | ---------------------- | ----------------------------------------------- |
-| 笔记<1>      | <https://books.8ops.top/>                       |
-| 笔记<2>      | <https://8ops.github.io/books>                  |
+| 笔记^1 | https://mkdocs.8ops.top |
+| 笔记<1>      | <https://docsify.8ops.top/>                |
+| 笔记<2>      | <https://8ops.github.io/docsify>            |
 | 笔记<3> | <https://mkdocs.8ops.top/> |
 | 笔记<4> | <https://8ops.github.io/mkdocs/> |
 | Json格式化<1> | <https://jsonviewer.8ops.top>                   |

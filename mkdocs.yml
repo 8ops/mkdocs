@@ -1,5 +1,5 @@
 site_name: 爱运维 
-site_url: https://mkdocs.8ops.top/
+site_url: https://books.8ops.top/
 site_author: Jesse
 site_description: >-
   爱运维,运维日常实践,devops,aiops,dataops,xops,kubernetes,linux,os,nginx,prometheus,运维,系统,内核,监控,开发,数据,智能,随记
@@ -8,8 +8,8 @@ repo_name: 8ops/mkdocs
 repo_url: https://github.com/8ops/mkdocs
 edit_uri: ""
 copyright: |+
-  <a target="_blank" href="https://www.8ops.top/" >爱运维</a> &nbsp; 
-  <a target="_blank" href="https://mkdocs.8ops.top/sitemap.xml" >XML</a><br />
+  <a target="_blank" href="https://books.8ops.top/" >爱运维</a> &nbsp; 
+  <a target="_blank" href="/sitemap.xml" >XML</a><br />
   <a target="_blank" href="http://beian.miit.gov.cn/" >沪ICP备18030892号</a><br />
   <a target="_blank" href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=31010602005774" ><img src="/images/wa.png" style="float:left;height:20px;"/>沪公网安备31010602005774号</a><br />
   <a target="_blank" href="https://www.upyun.com/?utm_source=lianmeng&utm_medium=referral" ><img src="/images/upyun.png" style="float:left;height:20px;"/>提供CDN加速/云存储服务</a><br />
