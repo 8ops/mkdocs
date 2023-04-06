@@ -1,23 +1,28 @@
 site_name: 爱运维 
-site_url: https://books.8ops.top/
+site_url: https://mkdocs.8ops.top/
 site_author: Jesse
 site_description: >-
   爱运维,运维日常实践,devops,aiops,dataops,xops,kubernetes,linux,os,nginx,prometheus,运维,系统,内核,监控,开发,数据,智能,随记
   爱运维,运维虾的在线文档囊括运维日常实践、Kubernetes、运维开发、数据处理、人工智能、生活随记
-repo_name: 8ops/books
-repo_url: https://github.com/8ops/books
+repo_name: 8ops/mkdocs
+repo_url: https://github.com/8ops/mkdocs
 edit_uri: ""
+copyright: |+
+  <a target="_blank" href="https://www.8ops.top/" >爱运维</a> &nbsp; 
+  <a target="_blank" href="https://mkdocs.8ops.top/sitemap.xml" >XML</a><br />
+  <a target="_blank" href="http://beian.miit.gov.cn/" >沪ICP备18030892号</a><br />
+  <a target="_blank" href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=31010602005774" ><img src="images/wa.png" style="float:left;height:20px;"/>沪公网安备31010602005774号</a><br />
+  <a target="_blank" href="https://www.upyun.com/?utm_source=lianmeng&utm_medium=referral" ><img src="images/upyun.png" style="float:left;height:20px;"/>提供CDN加速/云存储服务</a><br />
+  Copyright &copy; 2017 - 2027 8OPS
 
-copyright: Copyright &copy; 2017 - 2027 8OPS
 theme:
   name: material
   language: zh
   logo: logo.png
   favicon: favicon.ico
-
+  custom_dir: templates/
   static_templates:
     - 404.html
-
   include_search_page: false
   search_index_only: true
 
@@ -45,10 +50,15 @@ theme:
     - search.suggest
     - toc.follow
     # - toc.integrate
+
   palette:
     - scheme: default
-      primary: indigo
-      accent: indigo
+      # primary: indigo
+      # accent: indigo
+      # primary: 'deep purple'
+      # accent: 'deep purple'
+      primary: 'teal'
+      accent: 'teal'
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
@@ -68,7 +78,10 @@ plugins:
       minify_html: true
 
 extra_css:
-  - stylesheets/extra.css
+  - extra/extra.css
+
+extra_javascript:
+  - 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML'
 
 # Extensions
 markdown_extensions:
