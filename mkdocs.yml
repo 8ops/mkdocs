@@ -7,7 +7,7 @@ site_description: >-
 repo_name: 8ops/mkdocs
 repo_url: https://github.com/8ops/mkdocs
 edit_uri: ""
-copyright: |+
+copyright: >-
   <a target="_blank" href="https://books.8ops.top/" >爱运维</a> &nbsp; 
   <a target="_blank" href="/sitemap.xml" >XML</a><br />
   <a target="_blank" href="http://beian.miit.gov.cn/" >沪ICP备18030892号</a><br />
