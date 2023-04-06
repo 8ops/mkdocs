@@ -1,4 +1,4 @@
-# 实战 | KubeConfig 的综合使用
+# kubeconfig
 
 ## 一、多集群管理
 

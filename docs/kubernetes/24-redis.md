@@ -1,4 +1,4 @@
-# 实战 | 基于Helm使用Redis
+# Helm + Redis
 
 提前持久化
 

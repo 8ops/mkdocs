@@ -1,4 +1,4 @@
-# PromQL 基本使用
+# PromQL
 
 PromQL (Prometheus Query Language) 是 Prometheus 自己开发的数据查询 DSL 语言，语言表现力非常丰富，内置函数很多，在日常数据可视化以及rule 告警中都会使用到它。
 

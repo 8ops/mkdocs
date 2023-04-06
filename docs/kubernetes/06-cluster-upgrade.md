@@ -1,4 +1,4 @@
-# 实战 | Kubernetes Cluster 升级版本
+# Upgrade
 
 Kubernetes Cluster 升级是一件必要的事情。
 

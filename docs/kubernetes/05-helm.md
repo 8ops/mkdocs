@@ -1,4 +1,4 @@
-# 实战 | Helm的使用
+# Helm
 
 Helm 是 Kubernetes 的包管理器，从CNCF毕业。
 

@@ -1,4 +1,4 @@
-# rabbitmq
+# Rabbitmq
 
 <https://www.rabbitmq.com/configure.html>
 

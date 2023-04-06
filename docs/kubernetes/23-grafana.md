@@ -1,4 +1,4 @@
-# 实战 | 通过Helm搭建Grafana
+# Helm + Grafana
 
 先准备mysql存储grafana的metedata信息[实战 | 基于Kubernetes使用MySQL](21-mysql.md)
 

@@ -1,4 +1,4 @@
-# 实战 | 通过Helm搭建 MongoDB
+# Helm + MongoDB
 
 ## 一、Helm
 

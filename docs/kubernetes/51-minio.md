@@ -1,4 +1,4 @@
-# 实战 | MinIO
+# MinIO
 
 [Reference](http://docs.minio.org.cn/docs/)
 

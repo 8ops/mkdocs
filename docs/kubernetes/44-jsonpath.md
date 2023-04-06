@@ -1,4 +1,4 @@
-# 实战 | JsonPath 使用
+# JsonPath
 
 [Reference](https://kubernetes.io/docs/reference/kubectl/jsonpath/)
 

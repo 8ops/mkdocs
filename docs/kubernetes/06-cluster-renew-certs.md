@@ -1,4 +1,4 @@
-# 实战 | Kubernetes Cluster  续签组件证书
+# Renew certs
 
 
 
@@ -25,9 +25,6 @@ cp -r /etc/kubernetes /etc/kubernetes-$(date +%Y%m%d)
 ```bash
 # 每个control-plane节点
 kubeadm certs renew all
-
-# 会有如下提示
-# You must restart the kube-apiserver, kube-controller-manager, kube-scheduler and etcd
 ```
 
 
@@ -35,12 +32,18 @@ kubeadm certs renew all
 ## 4，重启组件
 
 ```bash
+# You must restart the kube-apiserver, kube-controller-manager, kube-scheduler and etcd
+
 # 静态容器 
 #   ls /etc/kubernetes/manifests/
 #   etcd.yaml  kube-apiserver.yaml  kube-controller-manager.yaml  kube-scheduler.yaml
 
 kubectl -n kube-system get po -o name | \
   awk '/kube-apiserver|kube-controller|kube-scheduler|etcd/{printf("kubectl -n kube-system delete %s\n",$1)}' | sh
+
+mv /etc/kubernetes/manifests /etc/kubernetes/manifests-$(date +%Y%m%d)
+# sleep 60s
+mv /etc/kubernetes/manifests-$(date +%Y%m%d) /etc/kubernetes/manifests
 
 # 重启kube-proxy
 kubectl -n kube-system rollout restart ds kube-proxy
@@ -87,5 +90,16 @@ done;echo
 
 # 查看kubelet最后加载时间
 systemctl status kubelet
+
+# review etcd
+mkdir -p ~/bin
+wget --quiet --no-check-certificate m.8ops.top/linux/etcdctl-3.4.24 -O ~/bin/etcdctl
+chmod +x ~/bin/etcdctl
+export PATH=~/bin:$PATH
+etcdctl endpoint status -w table \
+  --cluster \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/server.crt \
+  --key=/etc/kubernetes/pki/etcd/server.key
 ```
 

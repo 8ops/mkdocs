@@ -126,7 +126,7 @@ markdown_extensions:
 nav: 
   - 首页: index.md
   - 日常实践: 
-    - 系统能力: 
+    - 【系统能力】: 
       - daily/11-system.md
       - daily/12-command.md
       - daily/13-curl-test-time.md
@@ -136,7 +136,7 @@ nav:
       - daily/17-io.md
       - daily/18-git.md
       - daily/19-firewall.md
-    - 常用组件:
+    - 【常用组件】:
       - daily/33-ppp.md
       - daily/34-kickstart.md
       - daily/35-mogilefs.md
@@ -155,36 +155,34 @@ nav:
       - daily/48-mysql.md
       - daily/49-etcd.md
       - daily/50-denyhosts.md
-    - 文档工具:
+    - 【文档工具】:
       - daily/52-gitbook.md
       - daily/53-docsify.md
       - daily/54-mkdocs.md
       - daily/58-html.md
       - daily/59-vue.md
-    - 未做分类:
+    - 【未做分类】:
       - daily/96-macbook.md
       - daily/99-article.md
   - Kubernetes:
-    - 搭建: 
+    - 【快速搭建】: 
       - kubernetes/01-cluster-init.md
       - kubernetes/01-cluster-init-flannel.md
       - kubernetes/01-cluster-init-cilium.md
       - kubernetes/01-cluster-init-calico.md
-    - kubernetes/02-cluster-reset.md
-    - kubernetes/03-addon-dashboard.md
-    - kubernetes/04-addon-ingress-controller.md
-    - kubernetes/05-helm.md
-    - kubernetes/06-cluster-upgrade-node.md
-    - 升级版本:
+      - kubernetes/02-cluster-reset.md
+    - 【升级版本】:
+      - kubernetes/06-cluster-renew-certs.md
       - kubernetes/06-cluster-upgrade.md
       - kubernetes/06-cluster-upgrade-1.24.md
       - kubernetes/06-cluster-upgrade-1.25.md
-    - kubernetes/06-cluster-upgrade-qa.md
-    - kubernetes/07-app-migrate.md
-    - kubernetes/08-docker.md
-    - 常用组件:
-      - kubernetes/20-prometheus.md
+      - kubernetes/06-cluster-upgrade-qa.md
+      - kubernetes/07-app-migrate.md
+      - kubernetes/08-docker.md
+    - 【常用组件】:
+      - kubernetes/05-helm.md
       - kubernetes/20-promql.md
+      - kubernetes/20-prometheus.md
       - kubernetes/21-mysql.md
       - kubernetes/22-mongo.md
       - kubernetes/23-grafana.md
@@ -193,21 +191,23 @@ nav:
       - kubernetes/26-harbor.md
       - kubernetes/27-kong.md
       - kubernetes/28-rabbitmq.md
-    - 日常应用:
+      - kubernetes/29-dashboard.md
+      - kubernetes/29-ingress-controller.md
+    - 【日常应用】:
+      - kubernetes/30-readme.md
       - kubernetes/09-account.md
       - kubernetes/10-access-image.md
-      - kubernetes/30-readme.md
       - kubernetes/31-kubeconfig.md
       - kubernetes/32-daemonset.md
       - kubernetes/33-statefulset.md
       - kubernetes/39-etcd.md
-    - 日常管理: 
+    - 【日常管理】: 
       - kubernetes/40-mgr.md
       - kubernetes/41-rancher.md
       - kubernetes/42-metallb.md
       - kubernetes/43-argocd.md
       - kubernetes/44-jsonpath.md
-    - 存储: 
+    - 【存储】: 
       - kubernetes/51-minio.md
       - kubernetes/52-nfs-provider.md
   - 运维进阶: 
@@ -228,7 +228,7 @@ nav:
     - note/01-swlc.md
     - note/02-qywx.md
     - note/03-hls-repair.md
-    - 别墅: 
+    - 【私野别墅】: 
       - note/04-villa-00-01.md
       - note/04-villa-00-02.md
       - note/04-villa-00-70.md

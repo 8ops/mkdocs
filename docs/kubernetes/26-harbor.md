@@ -1,12 +1,12 @@
-# 实战 | Harbor使用
+# Harbor
 
 
 
-
+## 一、下载
 
 下载最新的 harbor-offline-installer-vx.x.x.tgz 版本
 
-编辑配置
+## 二、编辑配置
 
 ```bash
 # cp harbor.yml.tmpl harbor.yml
@@ -31,10 +31,16 @@ metric:
 
 ```
 
-预处理
+## 三、预处理
 
 ```bash
 # ./prepare --with-notary --with-trivy --with-chartmuseum
 ./install.sh --with-notary --with-trivy --with-chartmuseum
+```
+
+## 四、安装
+
+```bash
+docker-compose up -d
 ```
 

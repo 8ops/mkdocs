@@ -1,4 +1,4 @@
-# 日常应用
+# 应用集锦
 
 
 
@@ -6,7 +6,7 @@
 
 ```bash
 # 1
-kubectl delete ns <> --force=true --grace-period=0
+kubectl delete ns <ns> --force=true --grace-period=0
 
 # 2
 kubectl get ns kube-server -o json > kube-server.json

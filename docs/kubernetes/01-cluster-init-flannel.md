@@ -1,4 +1,4 @@
-# 实战 | Kubernetes Cluster 快速搭建-Flannel
+# Quick Start - Flannel
 
 [Reference](01-cluster-init.md)
 

@@ -1,4 +1,4 @@
-# 实战 | Kubernetes Cluster 快速搭建
+# Quick Start
 
 `Kubernetes` 是一个开源的容器编排引擎，用来对容器化应用进行自动化部署、 扩缩和管理。
 

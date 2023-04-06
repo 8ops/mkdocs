@@ -1,4 +1,4 @@
-# 实战 | ArgoCD 使用
+# ArgoCD
 
 
 

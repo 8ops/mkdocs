@@ -1,10 +1,10 @@
-# 实战 | 使用Docker
+# Docker
 
 ## 一、常用技巧
 
 ### 1.1 docker基础镜像
 
-- Alpine,-
+- Alpine
 - Slim
 - Stretch
 - Buster

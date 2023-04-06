@@ -1,4 +1,4 @@
-# 实战 | MetalLB 使用
+# MetalLB
 
 [对各CNI插件支持情况](https://metallb.universe.tf/installation/network-addons/)
 

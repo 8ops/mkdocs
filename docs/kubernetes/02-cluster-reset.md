@@ -1,4 +1,4 @@
-# 实战 | Kubernetes Cluster 快速重置
+# Quick Reset
 
 在搭建kubernetes cluster时很多时候需要快速重置一个节点，避免第二次搭建或重新将节点加入集群时被干扰，故整理了一键重置操作方便快速复用。
 

@@ -1,4 +1,4 @@
-# 实战 | Rancher 初识
+# Rancher
 
 [docs](https://docs.rancher.cn)
 

@@ -1,4 +1,4 @@
-# 实战 | Kubernetes Cluster 升级版本-v1.24.0
+# Upgrade - v1.24.0
 
 [Reference](06-cluster-upgrade.md)
 
