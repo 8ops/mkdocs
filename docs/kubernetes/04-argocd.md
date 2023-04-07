@@ -657,8 +657,6 @@ argocd app create helm-repo-redis-cluster-dep \
 
 尝试自举 argocd 
 
-[Reference](43-argocd.md)
-
 ```bash
 helm repo add argoproj https://argoproj.github.io/argo-helm
 helm repo update argoproj

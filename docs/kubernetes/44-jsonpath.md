@@ -8,16 +8,24 @@
 
 ```bash
 # 无换行打印
-kubectl get po -A -o jsonpath='{.items[*].spec.containers[*].image}'
+kubectl get po -A \
+    -o jsonpath='{.items[*].spec.containers[*].image}'
 
 # go-template print
-kubectl get po -A -o go-template --template='{{range .items}}{{printf "%s\n" .metadata.name}}{{end}}'
+kubectl get po -A -o go-template \
+    --template='{{range .items}}{{printf "%s\n" .metadata.name}}{{end}}'
 
 # go-template print
-kubectl get po -A -o go-template --template='{{range .items}}{{printf "%s\n" .spec.containers[0].image}}{{end}}'
+kubectl get po -A -o go-template \
+    --template='{{range .items}}{{printf "%s\n" .spec.containers[0].image}}{{end}}'
 
 # jsonpath print
-kubectl get po -A -o=jsonpath='{range .items[*]}{.spec.containers[*].image}{"\n"}{end}'
+kubectl get po -A \
+    -o=jsonpath='{range .items[*]}{.spec.containers[*].image}{"\n"}{end}'
+
+# 转译
+kubectl get secret tls-example.com \
+    -o jsonpath='{.data.ca\.crt}'
 ```
 
 

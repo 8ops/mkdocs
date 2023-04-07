@@ -1,4 +1,4 @@
-# Ingress-Controller
+# Controller
 
 推荐使用helm安装，参考[Helm](05-helm.md)
 

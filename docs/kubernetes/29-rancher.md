@@ -75,7 +75,7 @@ admin / rancher@2022
 
 
 
-## 二、基于 Helm 安装
+## 二、Helm 安装
 
 
 

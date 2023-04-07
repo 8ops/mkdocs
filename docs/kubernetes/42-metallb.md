@@ -4,7 +4,7 @@
 
 
 
-## 一、支持ARP
+## 一、支持 ARP
 
 > 更新 kube-proxy 配置
 
