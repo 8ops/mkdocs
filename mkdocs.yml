@@ -179,15 +179,21 @@ nav:
       - kubernetes/06-cluster-upgrade-qa.md
       - kubernetes/07-app-migrate.md
       - kubernetes/08-docker.md
+    - 【日常管理】: 
+      - kubernetes/43-argocd.md
+      - kubernetes/40-mgr.md
+      - kubernetes/41-rancher.md
+      - kubernetes/42-metallb.md
+      - kubernetes/44-jsonpath.md
     - 【常用组件】:
       - kubernetes/05-helm.md
-      - kubernetes/20-promql.md
       - kubernetes/20-prometheus.md
       - kubernetes/21-mysql.md
       - kubernetes/22-mongo.md
       - kubernetes/23-grafana.md
       - kubernetes/24-redis.md
       - kubernetes/25-elastic.md
+      - kubernetes/20-promql.md
       - kubernetes/26-harbor.md
       - kubernetes/27-kong.md
       - kubernetes/28-rabbitmq.md
@@ -201,12 +207,6 @@ nav:
       - kubernetes/32-daemonset.md
       - kubernetes/33-statefulset.md
       - kubernetes/39-etcd.md
-    - 【日常管理】: 
-      - kubernetes/40-mgr.md
-      - kubernetes/41-rancher.md
-      - kubernetes/42-metallb.md
-      - kubernetes/43-argocd.md
-      - kubernetes/44-jsonpath.md
     - 【存储】: 
       - kubernetes/51-minio.md
       - kubernetes/52-nfs-provider.md
