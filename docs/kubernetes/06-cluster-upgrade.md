@@ -1,8 +1,25 @@
 # Upgrade
 
+官方阐述 [Kubernetes 发布周期](https://kubernetes.io/zh-cn/releases/release/) 
+
+![release-lifecycle](../images/kubernetes/release-lifecycle.png)
+
+
+
 Kubernetes Cluster 升级是一件必要的事情。
 
 由于 kubernetes 更新实在太频繁了，一旦落后太多版本，很多新特性就会使用不上，同时很多的补丁也无法及时享用。
+
+- Kubernetes 项目维护最近的三个次要版本（如1.26、1.25、1.24）的发布分支
+- kubernetes项目存在3类分支(branch)，分别为`master`，`release-X.Y`,`release-X.Y.Z`
+  - X - 主要版本
+  - Y - 次要版本
+  - Z - 补丁版本
+- 每一个API group维护着3个主要版本，分别是`GA`，`Beta`，`Alpha`
+  - GA - 向下兼容12个月或3个发行版
+  - Beta - 9个月或3个发行版
+  - Alpha - 立刻启用
+- 升级集群理论上只支持跨度为2个次要版本的操作
 
 这里演示我的一次升级过程。
 

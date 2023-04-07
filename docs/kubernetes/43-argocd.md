@@ -771,6 +771,8 @@ argocd app set metallb-extention --sync-policy automated
 
 ### 3.3 ingress-nginx
 
+[Reference](05-helm.md#ingress-nginx)
+
 ```bash
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 helm repo update ingress-nginx
@@ -797,6 +799,8 @@ argocd app create ingress-nginx \
 
 
 ### 3.4 dashboard
+
+[Reference](05-helm.md#dashboard)
 
 ```bash
 helm repo add kubernetes-dashboard https://kubernetes.github.io/dashboard/
@@ -931,6 +935,8 @@ helm upgrade --install minio minio/minio \
 
 [Reference](https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner)
 
+[sample](52-nfs-provider.md)
+
 ```bash
 helm repo add nfs-provider https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner
 helm repo update nfs-provider
@@ -956,13 +962,28 @@ argocd app create nfs-subdir-external-provisioner \
     --label author=jesse \
     --label tier=helm \
     --values values-ops.yaml
+
+# extention
+argocd app create nfs-extention \
+    --repo https://git.8ops.top/ops/control-plane-ops.git \
+    --path nfs-subdir-external-provisioner/extention \
+    --project control-plane-proj \
+    --directory-recurse \
+    --dest-namespace default \
+    --dest-server https://kubernetes.default.svc \
+    --revision master \
+    --sync-policy automated \
+    --label author=jesse \
+    --label tier=helm 
 ```
 
 
 
-### 3.9 cert-manager
+### 3.9 cert
 
 [Reference](05-helm.md#cert-manager)
+
+#### 3.9.1 cert-manager
 
 ```bash
 helm repo add jetstack https://charts.jetstack.io
@@ -986,7 +1007,13 @@ argocd app create cert-manager \
     --label tier=helm \
     --values values-ops.yaml
 
-# imrocc
+```
+
+#### 3.9.2 imroc
+
+webhook-dnspod
+
+```bash
 helm repo add imroc https://charts.imroc.cc
 helm repo update imroc
 helm search repo cert-manager-webhook-dnspod
@@ -1000,22 +1027,26 @@ argocd app create cert-manager-webhook-dnspod \
     --repo https://git.8ops.top/ops/control-plane-ops.git \
     --path cert-manager-webhook-dnspod \
     --project control-plane-proj \
-    --dest-namespace kube-server \
+    --dest-namespace cert-manager \
     --dest-server https://kubernetes.default.svc \
     --revision master \
     --sync-policy automated \
     --label author=jesse \
     --label tier=helm \
     --values values-ops.yaml
+```
 
-# extension
-# cluster-issuer + certificate
+#### 3.9.3 extension
+
+cluster-issuer + certificate
+
+```bash
 argocd app create cert-manager-extention \
     --repo https://git.8ops.top/ops/control-plane-ops.git \
     --path cert-manager/extention \
     --project control-plane-proj \
     --directory-recurse \
-    --dest-namespace kube-server \
+    --dest-namespace cert-manager \
     --dest-server https://kubernetes.default.svc \
     --revision master \
     --sync-policy automated \
@@ -1030,7 +1061,9 @@ argocd app create cert-manager-extention \
 
 ### 3.10 prometheus
 
-[Reference](20-prometheus.md)
+[Reference](20-prometheus.md#prometheus)
+
+#### 3.10.1 prometheus
 
 ```bash
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
@@ -1058,6 +1091,11 @@ argocd app create prometheus \
     --values values-alertmanager.yaml \
     --values values-extra.yaml
 
+```
+
+#### 3.10.2 extention
+
+```bash
 argocd app create prometheus-extention \
     --repo https://git.8ops.top/ops/control-plane-ops.git \
     --path prometheus/extention \
@@ -1071,7 +1109,9 @@ argocd app create prometheus-extention \
     --label tier=helm 
 ```
 
-### 3.11 blackbox
+
+
+#### 3.10.3 blackbox
 
 ```bash
 helm search repo prometheus-blackbox-exporter
@@ -1094,7 +1134,9 @@ argocd app create prometheus-blackbox-exporter \
     --values values-ops.yaml
 ```
 
-### 3.12 grafana
+#### 3.10.4 grafana
+
+[mysql](#mysql)
 
 ```bash
 helm repo add grafana https://grafana.github.io/helm-charts
@@ -1121,7 +1163,11 @@ argocd app create grafana \
 
 
 
-### 3.20 elastic
+### 3.11 elastic
+
+[Reference](05-helm.md#elastic)
+
+#### 3.11.1 elastic
 
 ```bash
 helm repo add elastic https://helm.elastic.co
@@ -1188,7 +1234,7 @@ argocd app create elastic-client \
  
 ```
 
-### 3.21 kibana
+#### 3.11.2 kibana
 
 ```bash
 helm search repo kibana
@@ -1213,7 +1259,7 @@ argocd app create kibana \
 
 
 
-### 3.22 kafka
+#### 3.11.3 kafka
 
 ```bash
 helm repo update bitnami
@@ -1238,7 +1284,7 @@ argocd app create kafka \
 
 ```
 
-### 3.23 logstash
+#### 3.11.4 logstash
 
 ```bash
 helm search repo logstash
@@ -1259,7 +1305,12 @@ argocd app create logstash \
     --label author=jesse \
     --label tier=helm \
     --values values-ops.yaml
+ 
+```
 
+#### 3.11.5 filebeat
+
+```bash
 argocd app create logstash-extention \
     --repo https://git.8ops.top/ops/control-plane-ops.git \
     --path logstash/extention \
@@ -1270,10 +1321,8 @@ argocd app create logstash-extention \
     --revision master \
     --sync-policy automated \
     --label author=jesse \
-    --label tier=helm      
+    --label tier=helm     
 ```
-
-
 
 
 
