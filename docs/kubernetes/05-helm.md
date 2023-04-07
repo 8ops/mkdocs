@@ -543,7 +543,8 @@ secret/tls-abc.org    kubernetes.io/tls   3      7m10s
 | -------- | -------- |
 | *.top    | x        |
 | *.cn     | √        |
-| *.tech   | .        |
+| *.tech   | √        |
+| *.com    | √        |
 
 [Reference](https://cert-manager.io/docs/configuration/acme/dns01/#webhook)
 
@@ -646,6 +647,10 @@ kubectl apply -f ingress-dnspod-qqshfox.yaml
 # uninstall
 helm -n cert-manager uninstall cert-manager-webhook-dnspod-qqshfox
 
+# 注意
+# 当集群中有两个 dnspod webhook 时
+# 两个 webhook 的 groupName 不能相同
+# 但 certificate 必须和 cert-manager 一致，默认是 cert-manager.io
 ```
 
 
