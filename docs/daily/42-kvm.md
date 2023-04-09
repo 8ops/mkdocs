@@ -1,4 +1,4 @@
-# KVM
+# kvm
 
 ## 一、安装过程
 
@@ -123,7 +123,7 @@ virsh autostart --disable vm_name 取消随开机启动
 
 ### 2.2 扩容
 
-> CPU
+#### 2.2.1 CPU
 
 ```bash
 virsh help domain
@@ -146,7 +146,7 @@ virsh reboot UAT-BIGDATA-000
 
 
 
-> 内存
+#### 2.2.2 内存
 
 ```bash
 # 查看信息
@@ -169,7 +169,7 @@ virsh reboot UAT-BIGDATA-000
 
 
 
-> 磁盘
+#### 2.2.3 磁盘
 
 磁盘类型有 `qcow2` 和 `raw`，默认是`raw`
 
@@ -213,15 +213,19 @@ xfs_growfs /dev/centos/root
 
 ### 2.3 克隆
 
+#### 2.3.1 通用操作
+
 ```bash
 # METHOD AUTO（需要关机）
 # -o 旧虚拟机
 # -n 新虚拟机
-virt-clone --auto-clone -o old-vm-server -n new-vm-server
-virt-clone --auto-clone -o old-vm-server -n new-vm-server \
-    -f /data/lib/kvm/UAT-BIGDATA-010-SDA.img \
-    -m 52:54:0A:01:02:33
+# virt-clone --auto-clone -o old-vm-server -n new-vm-server
+# e.g.
 # virt-clone --auto-clone -o UAT-BIGDATA-000 -n UAT-BIGDATA-001
+
+virt-clone --auto-clone -o old-vm-server -n new-vm-server \
+    -f /data/lib/kvm/new-vm-server-SDA.img \
+    -m 52:54:0A:01:02:33
 
 # METHOD MANUAL
 # 备份磁盘文件
@@ -236,8 +240,9 @@ virsh define new-vm-server.xml
 virsh start new-vm-server
 ```
 
+#### 2.3.2 批量克隆
+
 ```bash
-# 批量克隆
 ## 如克隆5台机器
 a=20
 b=46
@@ -252,6 +257,20 @@ virsh define UAT-STUDY-0$((i+a)).xml
 done
 
 ```
+
+#### 2.3.3 修改信息
+
+```bash
+mv /data/lib/kvm/UAT-STUDY-020-SDB-clone.img /data/lib/kvm/UAT-STUDY-0YY-SDB.img
+
+hostnamectl set-hostname UAT-STUDY-0YY --transient
+hostnamectl set-hostname UAT-STUDY-0YY --static
+hostnamectl set-hostname UAT-STUDY-0YY --pretty
+
+sed -i 's/10.1.2.70/10.1.2.77/' /etc/sysconfig/network-scripts/ifcfg-eth0
+```
+
+
 
 
 
