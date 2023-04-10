@@ -1,4 +1,4 @@
-# MacBook Pro
+# MacBook
 
 M2 Pro
 

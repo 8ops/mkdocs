@@ -1,4 +1,4 @@
-# Nginx
+# nginx
 
 ## 一、ROOT美化
 

@@ -1,6 +1,8 @@
-# Firewall
+# firewall
 
-## firewall-cmd
+## 一、iptables
+
+## 二、firewall-cmd
 
 ```bash
 # 查看设置

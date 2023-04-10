@@ -1,6 +1,6 @@
 # 文章管理
 
-使用markdown的方式编写文章，一处编辑多处发布。
+使用 markdown 的方式编写文章，一处编辑多处发布。
 
 
 
@@ -45,7 +45,7 @@
 
 ## 渠道三、自有站点
 
-`books.8ops.top `
+`docsify.8ops.top `
 
 采用docsify
 

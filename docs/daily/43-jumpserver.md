@@ -1,4 +1,4 @@
-# JumpServer
+# jumpServer
 
 [Reference](https://www.jumpserver.org/index.html)
 

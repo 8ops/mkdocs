@@ -1,8 +1,8 @@
-# CURL测时
+# curl
 
-## 简单使用
+## 一、简单使用
 
-> 更多详情
+### 1.1 打印详情
 
 ```bash
 curl -v "https://m.8ops.top/" 
@@ -11,13 +11,13 @@ curl -vvv "https://m.8ops.top/"
 curl -vvvv "https://m.8ops.top/" 
 ```
 
-> 终端耗时
+### 1.2 终端耗时
 
 ```bash
 time curl -i "https://m.8ops.top/" 
 ```
 
-> 快速使用
+### 1.3 简单耗时
 
 ```bash
 curl -s -o /dev/null \
@@ -25,7 +25,7 @@ curl -s -o /dev/null \
   "https://m.8ops.top"
 ```
 
-> 丰富使用
+### 1.4 丰富耗时
 
 ```bash
 # 1
@@ -34,8 +34,6 @@ curl -s -o /dev/null \
   "https://m.8ops.top/" 
   
 # 2
- 
-# v2
 curl -s -o /dev/null -w "\n
   http_code: \t\t %{http_code}s
   http_connect: \t %{http_connect}s
@@ -54,7 +52,7 @@ curl -s -o /dev/null -w "\n
 
 
 
-## 命令详解
+## 二、命令详解
 
 ```
 -w, --write-out 

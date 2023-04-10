@@ -1,4 +1,4 @@
-# Denyhosts
+# denyhosts
 
 [Reference](https://pypi.org/project/DenyHosts/)
 

@@ -1,8 +1,8 @@
-# NFS
+# nfs
 
 ## 一、安装
 
-<u>CentOS</u>
+### 1.1 CentOS
 
 ```bash
 # Server[CentOS]
@@ -44,7 +44,7 @@ mount -t nfs4 10.101.11.236:/data1/lib/nfs-data /data1/lib/nfs-data
 rpcinfo -p 10.101.9.179
 ```
 
-<u>Ubuntu</u>
+### 1.2 Ubuntu
 
 ```bash
 # Server[Ubuntu]
@@ -85,3 +85,16 @@ mount -t nfs4 10.101.11.236:/data1/lib/nfs /data1/lib/nfs
 rpcinfo -p 10.101.11.236
 ```
 
+
+
+## 二、高可用
+
+### 2.1 rsync + inotify
+
+[Reference](https://juejin.cn/post/7071975678614175757#heading-4)
+
+
+
+### 2.2 rsync +  sersync
+
+[Reference](https://hwholiday.com/2021/nsf/)
