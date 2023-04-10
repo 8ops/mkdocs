@@ -1,40 +1,77 @@
 # etcd
 
-## 一、搭建集群
+## 一、维护集群
 
 当 master 节点变化后需要核实信息
 
 ### 1.1 member
 
 ```bash
-etcdctl member list \
-    --endpoints=https://10.101.11.183:2379 \
-    --cacert=/etc/kubernetes/pki/etcd/ca.crt \
-    --cert=/etc/kubernetes/pki/etcd/server.crt \
-    --key=/etc/kubernetes/pki/etcd/server.key  
+# The items in the lists are endpoint, ID, version, db size, is leader, is learner, raft term, raft index, raft applied index, errors.
+etcdctl member list -w table \
+  --endpoints=https://10.101.11.240:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/server.crt \
+  --key=/etc/kubernetes/pki/etcd/server.key
 
-etcdctl member remove d928e5a97677118c \
-    --endpoints=https://10.101.11.183:2379 \
-    --cacert=/etc/kubernetes/pki/etcd/ca.crt \
-    --cert=/etc/kubernetes/pki/etcd/server.crt \
-    --key=/etc/kubernetes/pki/etcd/server.key
+etcdctl endpoint status -w table \
+  --cluster \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/server.crt \
+  --key=/etc/kubernetes/pki/etcd/server.key
 
-ETCDCTL_API=3 etcdctl endpoint status --cluster -w table \
-    --endpoints=https://10.101.11.183:2379 \
-    --cacert=/etc/kubernetes/pki/etcd/ca.crt \
-    --cert=/etc/kubernetes/pki/etcd/server.crt \
-    --key=/etc/kubernetes/pki/etcd/server.key   
+etcdctl endpoint status -w table \
+  --cluster \
+  --endpoints=https://10.101.11.240:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/server.crt \
+  --key=/etc/kubernetes/pki/etcd/server.key
 
-ETCDCTL_API=3 etcdctl endpoint health --cluster -w table \
-    --endpoints=https://10.101.11.183:2379 \
-    --cacert=/etc/kubernetes/pki/etcd/ca.crt \
-    --cert=/etc/kubernetes/pki/etcd/server.crt \
-    --key=/etc/kubernetes/pki/etcd/server.key  
+etcdctl endpoint health -w table \
+  --cluster \
+  --endpoints=https://10.101.11.240:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/server.crt \
+  --key=/etc/kubernetes/pki/etcd/server.key
+
 ```
 
 
 
-### 1.2 endpoints
+### 1.2 operation
+
+```bash
+# 切换leader（--endpoints指向原leader）
+etcdctl move-leader aa3d2ade73c186ec \
+  --endpoints=https://10.101.11.240:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/server.crt \
+  --key=/etc/kubernetes/pki/etcd/server.key
+
+etcdctl member remove 6fb6887435ae87d5 \
+  --endpoints=https://10.101.11.240:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/server.crt \
+  --key=/etc/kubernetes/pki/etcd/server.key
+
+etcdctl member add k-kube-lab-201 \
+  --endpoints=https://10.101.11.240:2379 \
+  --peer-urls=https://10.101.11.114:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/server.crt \
+  --key=/etc/kubernetes/pki/etcd/server.key
+
+# 清除存储碎片
+etcdctl defrag \
+  --endpoints=https://10.101.11.240:2379,https://10.101.11.114:2379,https://10.101.11.154:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/server.crt \
+  --key=/etc/kubernetes/pki/etcd/server.key
+```
+
+
+
+### 1.3 endpoints
 
 ```bash
 kubectl -n kube-system edit kube-etcd
@@ -91,6 +128,109 @@ kubectl create secret generic etcd-certs \
 
 ### 3.1 压测
 
+[Reference](https://doczhcn.gitbook.io/etcd/index/index-1/performance)
+
+#### 3.1.1 压测-写
+
+```bash
+# 假定 IP_1 是 leader, 写入请求发到 leader
+# 1
+benchmark \
+  --endpoints=https://10.101.11.240:2379 \
+  --conns=1 --clients=1 \
+  put --key-size=8 --sequential-keys --total=10000 --val-size=256 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/server.crt \
+  --key=/etc/kubernetes/pki/etcd/server.key 2>&1 1>/tmp/benchmark.out
+
+# 2
+benchmark \
+  --endpoints=https://10.101.11.240:2379 \
+  --conns=100 --clients=100 \
+  put --key-size=8 --sequential-keys --total=10000 --val-size=256 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/server.crt \
+  --key=/etc/kubernetes/pki/etcd/server.key 2>&1 1>/tmp/benchmark.out
+
+# 写入发到所有成员
+# 3
+benchmark \
+  --endpoints=https://10.101.11.240:2379,https://10.101.11.114:2379,https://10.101.11.154:2379 \
+  --conns=100 --clients=100 \
+  put --key-size=8 --sequential-keys --total=10000 --val-size=256 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/server.crt \
+  --key=/etc/kubernetes/pki/etcd/server.key 2>&1 1>/tmp/benchmark.out
+
+# 分析结果
+awk '/Average|Requests\/sec/{if($1~/Average/){latency+=$2*1000}else if($1~/Requests\/sec/){qps+=$2}}END{printf("%.1f\t%d\n",latency,qps)}' /tmp/benchmark.out
+
+```
+
+
+
+#### 3.1.2 压测-读
+
+```bash
+# Linearizable 读取请求
+# 1
+benchmark \
+  --endpoints=https://10.101.11.240:2379 \
+  --conns=1 --clients=1 \
+  range YOUR_KEY --consistency=l --total=10000 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/server.crt \
+  --key=/etc/kubernetes/pki/etcd/server.key 2>&1 1>/tmp/benchmark.out
+
+# 2
+benchmark \
+  --endpoints=https://10.101.11.240:2379 \
+  --conns=100 --clients=100 \
+  range YOUR_KEY --consistency=l --total=10000 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/server.crt \
+  --key=/etc/kubernetes/pki/etcd/server.key 2>&1 1>/tmp/benchmark.out
+
+# Serializable 读取请求，使用每个成员然后将数字加起来
+# 3
+for endpoint in \
+  https://10.101.11.240:2379 \
+  https://10.101.11.114:2379 \
+  https://10.101.11.154:2379
+do
+benchmark \
+  --endpoints=$endpoint \
+  --conns=1 --clients=1 \
+  range YOUR_KEY --consistency=s --total=1000 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/server.crt \
+  --key=/etc/kubernetes/pki/etcd/server.key
+done 2>&1 1>/tmp/benchmark.out
+
+# 4
+for endpoint in \
+  https://10.101.11.240:2379 \
+  https://10.101.11.114:2379 \
+  https://10.101.11.154:2379
+do
+benchmark \
+  --endpoints=$endpoint \
+  --conns=100 --clients=100 \
+  range YOUR_KEY --consistency=s --total=1000 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/server.crt \
+  --key=/etc/kubernetes/pki/etcd/server.key
+done 2>&1 1>/tmp/benchmark.out
+
+# 分析结果
+awk '/Average|Requests\/sec/{if($1~/Average/){latency+=$2*1000}else if($1~/Requests\/sec/){qps+=$2}}END{printf("%.1f\t%d\n",latency,qps)}' /tmp/benchmark.out
+
+```
+
+
+
+#### 3.1.3 结果分析
+
 当扩容后ETCD节点在不同数量下工作性能对比
 
 在实验环境做压测效果如下
@@ -127,6 +267,8 @@ kubectl create secret generic etcd-certs \
 ### 3.2 问题
 
 #### 3.2.1 ETCD 数据不一致
+
+[Reference](https://zhuanlan.zhihu.com/p/138424613)
 
 ```bash
 +---------------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+

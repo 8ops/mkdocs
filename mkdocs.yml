@@ -129,13 +129,13 @@ nav:
     - 【系统能力】: 
       - daily/11-system.md
       - daily/12-command.md
-      - daily/13-curl-test-time.md
       - daily/14-imagemagick.md
       - daily/15-openssl.md
       - daily/16-network.md
       - daily/17-io.md
       - daily/18-git.md
       - daily/19-firewall.md
+      - daily/20-curl.md
     - 【常用组件】:
       - daily/33-ppp.md
       - daily/34-kickstart.md
@@ -153,7 +153,6 @@ nav:
       - daily/46-nginx.md
       - daily/47-elastic.md
       - daily/48-mysql.md
-      - daily/49-etcd.md
       - daily/50-denyhosts.md
     - 【文档工具】:
       - daily/52-gitbook.md
