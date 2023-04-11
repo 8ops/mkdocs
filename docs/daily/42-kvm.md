@@ -121,9 +121,9 @@ virsh autostart --disable vm_name 取消随开机启动
 
 
 
-### 2.2 扩容
+### 1.2 扩容
 
-#### 2.2.1 CPU
+#### 1.2.1 CPU
 
 ```bash
 virsh help domain
@@ -146,7 +146,7 @@ virsh reboot UAT-BIGDATA-000
 
 
 
-#### 2.2.2 内存
+#### 1.2.2 内存
 
 ```bash
 # 查看信息
@@ -169,7 +169,7 @@ virsh reboot UAT-BIGDATA-000
 
 
 
-#### 2.2.3 磁盘
+#### 1.2.3 磁盘
 
 磁盘类型有 `qcow2` 和 `raw`，默认是`raw`
 
@@ -211,9 +211,9 @@ xfs_growfs /dev/centos/root
 
 
 
-### 2.3 克隆
+### 1.3 克隆
 
-#### 2.3.1 通用操作
+#### 1.3.1 通用操作
 
 ```bash
 # METHOD AUTO（需要关机）
@@ -240,7 +240,7 @@ virsh define new-vm-server.xml
 virsh start new-vm-server
 ```
 
-#### 2.3.2 批量克隆
+#### 1.3.2 批量克隆
 
 ```bash
 ## 如克隆5台机器
@@ -258,7 +258,7 @@ done
 
 ```
 
-#### 2.3.3 修改信息
+#### 1.3.3 修改信息
 
 ```bash
 mv /data/lib/kvm/UAT-STUDY-020-SDB-clone.img /data/lib/kvm/UAT-STUDY-0YY-SDB.img
@@ -268,6 +268,57 @@ hostnamectl set-hostname UAT-STUDY-0YY --static
 hostnamectl set-hostname UAT-STUDY-0YY --pretty
 
 sed -i 's/10.1.2.70/10.1.2.77/' /etc/sysconfig/network-scripts/ifcfg-eth0
+```
+
+### 1.4 笔记
+
+```bash
+# create machine UAT-SLB-NGINX-01
+virt-clone --auto-clone -o UAT-BIGDATA-000 -n UAT-SLB-NGINX-01 \
+    -f /data/lib/kvm/UAT-SLB-NGINX-01-SDA.img \
+    -m 52:54:0A:01:02:41
+
+mv /data/lib/kvm/UAT-BIGDATA-000-SDB-clone.img /data/lib/kvm/UAT-SLB-NGINX-01-SDB.img
+virsh define UAT-SLB-NGINX-01.xml
+
+hostnamectl set-hostname UAT-SLB-NGINX-01 --transient
+hostnamectl set-hostname UAT-SLB-NGINX-01 --static
+hostnamectl set-hostname UAT-SLB-NGINX-01 --pretty
+sed -i 's/10.1.2.50/10.1.2.55/' /etc/sysconfig/network-scripts/ifcfg-ens3
+
+virsh setvcpus UAT-SLB-NGINX-01 4 --maximum --config
+virsh setvcpus UAT-SLB-NGINX-01 4 --config
+virsh shutdown UAT-SLB-NGINX-01
+
+virsh setvcpus UAT-SLB-NGINX-01 4 --current
+virsh start UAT-SLB-NGINX-01
+
+virsh dominfo UAT-SLB-NGINX-01
+virsh autostart UAT-SLB-NGINX-01
+
+# create machine UAT-SLB-NGINX-02
+virt-clone --auto-clone -o UAT-BIGDATA-010 -n UAT-SLB-NGINX-02 \
+    -f /data/lib/kvm/UAT-SLB-NGINX-02-SDA.img \
+    -m 52:54:0A:01:02:37
+
+mv /data/lib/kvm/UAT-BIGDATA-010-SDB-clone.img /data/lib/kvm/UAT-SLB-NGINX-02-SDB.img
+virsh define UAT-SLB-NGINX-02.xml
+
+hostnamectl set-hostname UAT-SLB-NGINX-02 --transient
+hostnamectl set-hostname UAT-SLB-NGINX-02 --static
+hostnamectl set-hostname UAT-SLB-NGINX-02 --pretty
+sed -i 's/10.1.2.60/10.1.2.65/' /etc/sysconfig/network-scripts/ifcfg-ens3
+
+virsh setvcpus UAT-SLB-NGINX-02 4 --maximum --config
+virsh setvcpus UAT-SLB-NGINX-02 4 --config
+virsh shutdown UAT-SLB-NGINX-02
+
+virsh setvcpus UAT-SLB-NGINX-02 4 --current
+virsh start UAT-SLB-NGINX-02
+
+virsh dominfo UAT-SLB-NGINX-02
+virsh autostart UAT-SLB-NGINX-02
+
 ```
 
 
