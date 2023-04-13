@@ -18,7 +18,15 @@ do
    do
       mkdir -p $(dirname $DEF)
       kubectl get $DEF -o yaml \
-      | yq eval 'del(.metadata.resourceVersion, .metadata.uid, .metadata.annotations, .metadata.creationTimestamp, .metadata.selfLink, .metadata.managedFields)' - > $DEF.yaml 
+      | yq eval '
+      del(
+        .metadata.resourceVersion, 
+        .metadata.uid, 
+        .metadata.annotations, 
+        .metadata.creationTimestamp, 
+        .metadata.selfLink, 
+        .metadata.managedFields
+      )' - > $DEF.yaml 
    done
 done 
 ```
@@ -60,13 +68,13 @@ function do_secrets(){
 ${kubectl_old} get secrets -o name -l 8ops.top=true -o yaml | \
     yq eval '
         del( 
-            .items[].metadata.annotations, 
-	    .items[].metadata.creationTimestamp, 
-	    .items[].metadata.resourceVersion, 
-	    .items[].metadata.selfLink, 
-	    .items[].metadata.uid, 
-	    .metadata
-	)' - | \
+          .items[].metadata.annotations, 
+	        .items[].metadata.creationTimestamp, 
+	        .items[].metadata.resourceVersion, 
+	        .items[].metadata.selfLink, 
+	        .items[].metadata.uid, 
+	        .metadata
+	      )' - | \
     yq eval '
         .items[].metadata.labels["8ops.top"]="true" | 
         .items[].metadata.namespace="kube-app"
@@ -80,23 +88,23 @@ function do_services(){
 ${kubectl_old} get services -l k8s-app -o yaml | \
     yq eval '
         del( 
-      .items[].metadata.annotations, 
-	    .items[].metadata.creationTimestamp, 
-	    .items[].metadata.resourceVersion, 
-	    .items[].metadata.selfLink, 
-	    .items[].metadata.uid, 
-	    .items[].spec.clusterIP,
-	    .items[].spec.externalTrafficPolicy,
-	    .items[].spec.sessionAffinity,
-	    .items[].spec.ports[].nodePort,
-	    .items[].status, 
-	    .metadata
-	)' - | \
+          .items[].metadata.annotations, 
+	        .items[].metadata.creationTimestamp, 
+	        .items[].metadata.resourceVersion, 
+	        .items[].metadata.selfLink, 
+	        .items[].metadata.uid, 
+	        .items[].spec.clusterIP,
+	        .items[].spec.externalTrafficPolicy,
+	        .items[].spec.sessionAffinity,
+	        .items[].spec.ports[].nodePort,
+	        .items[].status, 
+	        .metadata
+	      )' - | \
     yq eval '
-        .items[].metadata.namespace="kube-app" |
-        .items[].metadata.labels["8ops.top"]="true" |
-        .items[].spec.type="ClusterIP"
-        ' - > 12-services.yaml
+      .items[].metadata.namespace="kube-app" |
+      .items[].metadata.labels["8ops.top"]="true" |
+      .items[].spec.type="ClusterIP"
+      ' - > 12-services.yaml
 }
 
 #-----------------------------------------------------------------------------#
@@ -106,15 +114,15 @@ function do_deployments(){
 ${kubectl_old} get deployments -l k8s-app -o yaml | \
     yq eval '
         del( 
-	    .items[].metadata.annotations, 
-	    .items[].metadata.creationTimestamp, 
-	    .items[].metadata.generation, 
-	    .items[].metadata.resourceVersion, 
-	    .items[].metadata.selfLink, 
-	    .items[].metadata.uid, 
-	    .items[].status, 
-	    .metadata 
-	)' - | \
+	        .items[].metadata.annotations, 
+	        .items[].metadata.creationTimestamp, 
+	        .items[].metadata.generation, 
+	        .items[].metadata.resourceVersion, 
+	        .items[].metadata.selfLink, 
+	        .items[].metadata.uid, 
+	        .items[].status, 
+	        .metadata 
+	      )' - | \
     yq eval '
        .items[].metadata.namespace="kube-app" | 
        .items[].metadata.labels["8ops.top"]="true" |
@@ -133,22 +141,22 @@ function do_ingresses(){
 ${kubectl_old} get ingress -l k8s-app,8ops.top/ingress.class=external -o yaml | \
     yq eval '
         del( 
-      .items[].metadata.annotations["kubernetes.io/ingress.class"],  
-      .items[].metadata.annotations["kubectl.kubernetes.io/last-applied-configuration"],
-	    .items[].metadata.creationTimestamp, 
-	    .items[].metadata.generation, 
-	    .items[].metadata.resourceVersion, 
-	    .items[].metadata.selfLink, 
-	    .items[].metadata.uid, 
-	    .items[].status, 
-	    .metadata 
-	)' - | \
+          .items[].metadata.annotations["kubernetes.io/ingress.class"],  
+          .items[].metadata.annotations["kubectl.kubernetes.io/last-applied-configuration"],
+	        .items[].metadata.creationTimestamp, 
+	        .items[].metadata.generation, 
+	        .items[].metadata.resourceVersion, 
+	        .items[].metadata.selfLink, 
+	        .items[].metadata.uid, 
+	        .items[].status, 
+	        .metadata 
+	      )' - | \
     yq eval '
-        .items[].apiVersion="networking.k8s.io/v1" |
-        .items[].metadata.namespace="kube-app" |
-        .items[].metadata.labels["8ops.top"]="true" |
-    	  .items[].spec.ingressClassName="external" 
-	' - | \
+      .items[].apiVersion="networking.k8s.io/v1" |
+      .items[].metadata.namespace="kube-app" |
+      .items[].metadata.labels["8ops.top"]="true" |
+    	.items[].spec.ingressClassName="external" 
+	    ' - | \
     sed \
         -e '/path:/a \
                 pathType: Prefix' \
@@ -161,22 +169,22 @@ ${kubectl_old} get ingress -l k8s-app,8ops.top/ingress.class=external -o yaml | 
 ${kubectl_old} get ingress -l k8s-app,8ops.top/ingress.class=internal -o yaml | \
     yq eval '
         del( 
-      .items[].metadata.annotations["kubernetes.io/ingress.class"],  
-      .items[].metadata.annotations["kubectl.kubernetes.io/last-applied-configuration"],
-	    .items[].metadata.creationTimestamp, 
-	    .items[].metadata.generation, 
-	    .items[].metadata.resourceVersion, 
-	    .items[].metadata.selfLink, 
-	    .items[].metadata.uid, 
-	    .items[].status, 
-	    .metadata 
-	)' - | \
+          .items[].metadata.annotations["kubernetes.io/ingress.class"],  
+          .items[].metadata.annotations["kubectl.kubernetes.io/last-applied-configuration"],
+	        .items[].metadata.creationTimestamp, 
+	        .items[].metadata.generation, 
+	        .items[].metadata.resourceVersion, 
+	        .items[].metadata.selfLink, 
+	        .items[].metadata.uid, 
+	        .items[].status, 
+	        .metadata 
+	      )' - | \
     yq eval '
-        .items[].apiVersion="networking.k8s.io/v1" |
-        .items[].metadata.namespace="kube-app" |
-        .items[].metadata.labels["8ops.top"]="true" |
+      .items[].apiVersion="networking.k8s.io/v1" |
+      .items[].metadata.namespace="kube-app" |
+      .items[].metadata.labels["8ops.top"]="true" |
     	.items[].spec.ingressClassName="internal" 
-	' - | \
+	    ' - | \
     sed \
         -e '/path:/a \
                 pathType: Prefix' \
@@ -192,23 +200,21 @@ function do_endpoints(){
 ${kubectl_old} get endpoints -l k8s-ep=custom-ep -o yaml | \
     yq eval '
         del( 
-	    .items[].metadata.annotations, 
-	    .items[].metadata.creationTimestamp, 
-	    .items[].metadata.generation, 
-	    .items[].metadata.resourceVersion, 
-	    .items[].metadata.selfLink, 
-	    .items[].metadata.uid, 
-	    .items[].metadata.labels["k8s-ep"], 
-	    .items[].status, 
-	    .metadata 
-	)' - | \
+	        .items[].metadata.annotations, 
+	        .items[].metadata.creationTimestamp, 
+	        .items[].metadata.generation, 
+	        .items[].metadata.resourceVersion, 
+	        .items[].metadata.selfLink, 
+	        .items[].metadata.uid, 
+	        .items[].metadata.labels["k8s-ep"], 
+	        .items[].status, 
+	        .metadata 
+	      )' - | \
     yq eval '
-        .items[].metadata.labels["8ops.top"]="true" |
-        .items[].metadata.labels["8ops.top/endpoints.custom"]="true" | 
-        .items[].metadata.namespace="kube-app" 
-       ' - | \
-    sed \
-	-e '' > 15-endpoints.yaml
+      .items[].metadata.labels["8ops.top"]="true" |
+      .items[].metadata.labels["8ops.top/endpoints.custom"]="true" | 
+      .items[].metadata.namespace="kube-app" 
+      ' - > 15-endpoints.yaml
 
 }
 
@@ -253,5 +259,63 @@ kubectl -n kube-app get po | \
 kubectl -n kube-app scale --replicas=0 `kubectl -n kube-app get deploy | \
 	awk 'NR>1&&$3!=$4{printf("deploy/%s ",$1)}'` | \
 	sh
+```
+
+## 三、番外篇
+
+```bash
+#!/bin/bash
+
+###############################################################################
+#
+# Archive kubernetes's resource
+# @Jesse
+# 2023-04-13
+#
+###############################################################################
+
+set -e
+
+kubectl -n kube-app get configmap --field-selector metadata.name!="kube-root-ca.crt" -o yaml | \
+    yq eval '
+        del(
+        .items[].metadata.annotations,
+        .items[].metadata.creationTimestamp,
+        .items[].metadata.resourceVersion,
+        .items[].metadata.selfLink,
+        .items[].metadata.uid,
+        .metadata
+    )' - > 10-archive-configmap.yaml
+
+kubectl -n kube-app get deployments -l k8s-app -o yaml | \
+    yq eval '
+        del(
+        .items[].metadata.annotations,
+        .items[].metadata.creationTimestamp,
+        .items[].metadata.generation,
+        .items[].metadata.resourceVersion,
+        .items[].metadata.selfLink,
+        .items[].metadata.uid,
+        .items[].status,
+        .metadata
+    )' - > 11-archive-deployments.yaml
+
+kubectl -n kube-app get services -o yaml | \
+    yq eval '
+        del(
+        .items[].metadata.annotations,
+        .items[].metadata.creationTimestamp,
+        .items[].metadata.resourceVersion,
+        .items[].metadata.selfLink,
+        .items[].metadata.uid,
+        .items[].spec.clusterIP,
+        .items[].spec.externalTrafficPolicy,
+        .items[].spec.sessionAffinity,
+        .items[].status,
+        .metadata
+    )' - > 12-archive-serices.yaml
+
+
+exit 0
 ```
 
