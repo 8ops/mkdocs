@@ -68,7 +68,7 @@ function do_secrets(){
 ${kubectl_old} get secrets -o name -l 8ops.top=true -o yaml | \
     yq eval '
         del( 
-          .items[].metadata.annotations, 
+	        .items[].metadata.annotations, 
 	        .items[].metadata.creationTimestamp, 
 	        .items[].metadata.resourceVersion, 
 	        .items[].metadata.selfLink, 
@@ -141,8 +141,8 @@ function do_ingresses(){
 ${kubectl_old} get ingress -l k8s-app,8ops.top/ingress.class=external -o yaml | \
     yq eval '
         del( 
-          .items[].metadata.annotations["kubernetes.io/ingress.class"],  
-          .items[].metadata.annotations["kubectl.kubernetes.io/last-applied-configuration"],
+	        .items[].metadata.annotations["kubernetes.io/ingress.class"],  
+	        .items[].metadata.annotations["kubectl.kubernetes.io/last-applied-configuration"],
 	        .items[].metadata.creationTimestamp, 
 	        .items[].metadata.generation, 
 	        .items[].metadata.resourceVersion, 
@@ -152,9 +152,9 @@ ${kubectl_old} get ingress -l k8s-app,8ops.top/ingress.class=external -o yaml | 
 	        .metadata 
 	      )' - | \
     yq eval '
-      .items[].apiVersion="networking.k8s.io/v1" |
-      .items[].metadata.namespace="kube-app" |
-      .items[].metadata.labels["8ops.top"]="true" |
+    	.items[].apiVersion="networking.k8s.io/v1" |
+    	.items[].metadata.namespace="kube-app" |
+    	.items[].metadata.labels["8ops.top"]="true" |
     	.items[].spec.ingressClassName="external" 
 	    ' - | \
     sed \
@@ -169,8 +169,8 @@ ${kubectl_old} get ingress -l k8s-app,8ops.top/ingress.class=external -o yaml | 
 ${kubectl_old} get ingress -l k8s-app,8ops.top/ingress.class=internal -o yaml | \
     yq eval '
         del( 
-          .items[].metadata.annotations["kubernetes.io/ingress.class"],  
-          .items[].metadata.annotations["kubectl.kubernetes.io/last-applied-configuration"],
+	        .items[].metadata.annotations["kubernetes.io/ingress.class"],  
+	        .items[].metadata.annotations["kubectl.kubernetes.io/last-applied-configuration"],
 	        .items[].metadata.creationTimestamp, 
 	        .items[].metadata.generation, 
 	        .items[].metadata.resourceVersion, 
@@ -180,9 +180,9 @@ ${kubectl_old} get ingress -l k8s-app,8ops.top/ingress.class=internal -o yaml | 
 	        .metadata 
 	      )' - | \
     yq eval '
-      .items[].apiVersion="networking.k8s.io/v1" |
-      .items[].metadata.namespace="kube-app" |
-      .items[].metadata.labels["8ops.top"]="true" |
+    	.items[].apiVersion="networking.k8s.io/v1" |
+    	.items[].metadata.namespace="kube-app" |
+    	.items[].metadata.labels["8ops.top"]="true" |
     	.items[].spec.ingressClassName="internal" 
 	    ' - | \
     sed \
