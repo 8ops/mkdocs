@@ -20,7 +20,7 @@ theme:
   language: zh
   logo: logo.png
   favicon: favicon.ico
-  custom_dir: templates/
+  custom_dir: templates
   static_templates:
     - 404.html
   include_search_page: false
