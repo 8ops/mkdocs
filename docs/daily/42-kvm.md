@@ -272,39 +272,51 @@ sed -i 's/10.1.2.70/10.1.2.77/' /etc/sysconfig/network-scripts/ifcfg-eth0
 
 ### 1.4 笔记
 
+#### 1.4.1 克隆后变更CPU+内存
+
 ```bash
-# create machine UAT-SLB-NGINX-02 modify cpu
-virt-clone --auto-clone -o UAT-BIGDATA-010 -n UAT-SLB-NGINX-02 \
-    -f /data/lib/kvm/UAT-SLB-NGINX-02-SDA.img \
-    -m 52:54:0A:01:02:37
+# create machine PRD-SLB-NGINX-02
+virt-clone --auto-clone -o TEMPLATE -n PRD-SLB-NGINX-02 \
+    -f /data/lib/kvm/PRD-SLB-NGINX-01-SDA.img \
+    -m 52:54:0A:01:01:37
 
-mv /data/lib/kvm/UAT-BIGDATA-010-SDB-clone.img /data/lib/kvm/UAT-SLB-NGINX-02-SDB.img
-sed -i 's/UAT-BIGDATA-010-SDB-clone.img/UAT-SLB-NGINX-02-SDB.img/' /etc/libvirt/qemu/UAT-SLB-NGINX-02.xml
-virsh define /etc/libvirt/qemu/UAT-SLB-NGINX-02.xml
+mv /data/lib/kvm/TEMPLATE-SDB-clone.img /data/lib/kvm/PRD-SLB-NGINX-02-SDB.img
+sed -i 's/TEMPLATE-SDB-clone.img/PRD-SLB-NGINX-02-SDB.img/' /etc/libvirt/qemu/PRD-SLB-NGINX-02.xml
+virsh define /etc/libvirt/qemu/PRD-SLB-NGINX-02.xml
 
-virsh setvcpus UAT-SLB-NGINX-02 4 --maximum --config
-virsh setvcpus UAT-SLB-NGINX-02 4 --config
-virsh shutdown UAT-SLB-NGINX-02
+virsh setvcpus  PRD-SLB-NGINX-02 4 --maximum --config
+virsh setvcpus  PRD-SLB-NGINX-02 4 --config
+virsh setmaxmem PRD-SLB-NGINX-02 8388608 --config
 
-virsh setvcpus UAT-SLB-NGINX-02 4 --current
-virsh start    UAT-SLB-NGINX-02
+virsh setvcpus PRD-SLB-NGINX-02 4 --current
+virsh start    PRD-SLB-NGINX-02
 
-virsh autostart UAT-SLB-NGINX-02
-virsh dominfo   UAT-SLB-NGINX-02
-virsh console   UAT-SLB-NGINX-02
+virsh setmem    PRD-SLB-NGINX-02 8388608 --live --config
+virsh dominfo   PRD-SLB-NGINX-02
+virsh autostart PRD-SLB-NGINX-02
+virsh console   PRD-SLB-NGINX-02
 
-hostnamectl set-hostname UAT-SLB-NGINX-02 --transient
-hostnamectl set-hostname UAT-SLB-NGINX-02 --static
-hostnamectl set-hostname UAT-SLB-NGINX-02 --pretty
-sed -i 's/10.1.2.60/10.1.2.65/' /etc/sysconfig/network-scripts/ifcfg-ens3
+hostnamectl set-hostname PRD-SLB-NGINX-02 --transient
+hostnamectl set-hostname PRD-SLB-NGINX-02 --static
+hostnamectl set-hostname PRD-SLB-NGINX-02 --pretty
+sed -i 's/10.10.10.10/10.1.1.55/' /etc/sysconfig/network-scripts/ifcfg-eth0
+cat /etc/sysconfig/network-scripts/ifcfg-eth0
 
-# create machine PRD-KUBENODE-103 modify cpu/memory/disk
-virt-clone --auto-clone -o PRD-BIGDATA-000 -n PRD-KUBENODE-103 \
+reboot
+```
+
+
+
+#### 1.4.2 克隆后变更CPU+内存+磁盘
+
+```bash
+# create machine PRD-KUBENODE-103 
+virt-clone --auto-clone -o TEMPLATE -n PRD-KUBENODE-103 \
     -f /data/lib/kvm/PRD-KUBENODE-103-SDA.img \
     -m 52:54:0A:01:01:38
 
-mv /data/lib/kvm/PRD-BIGDATA-000-SDB-clone.img /data/lib/kvm/PRD-KUBENODE-103-SDB.img
-sed -i 's/PRD-BIGDATA-000-SDB-clone.img/PRD-KUBENODE-103-SDB.img/' /etc/libvirt/qemu/PRD-KUBENODE-103.xml
+mv /data/lib/kvm/TEMPLATE-SDB-clone.img /data/lib/kvm/PRD-KUBENODE-103-SDB.img
+sed -i 's/TEMPLATE-SDB-clone.img/PRD-KUBENODE-103-SDB.img/' /etc/libvirt/qemu/PRD-KUBENODE-103.xml
 virsh define /etc/libvirt/qemu/PRD-KUBENODE-103.xml
 
 virsh setvcpus  PRD-KUBENODE-103 8 --maximum --config
@@ -317,13 +329,14 @@ virsh start    PRD-KUBENODE-103
 virsh setmem    PRD-KUBENODE-103 33554432 --live --config
 virsh dominfo   PRD-KUBENODE-103
 virsh autostart PRD-KUBENODE-103
+virsh console   PRD-KUBENODE-103
 
-virsh console PRD-KUBENODE-103
-
+ip a
 hostnamectl set-hostname PRD-KUBENODE-103 --transient
 hostnamectl set-hostname PRD-KUBENODE-103 --static
 hostnamectl set-hostname PRD-KUBENODE-103 --pretty
 sed -i 's/10.1.1.100/10.1.1.56/' /etc/sysconfig/network-scripts/ifcfg-eth0
+cat /etc/sysconfig/network-scripts/ifcfg-eth0
 
 virsh shutdown PRD-KUBENODE-103
 qemu-img resize /data/lib/kvm/PRD-KUBENODE-103-SDB.img +400G
@@ -331,14 +344,11 @@ virsh start PRD-KUBENODE-103
 
 virsh console PRD-KUBENODE-103
 xfs_growfs /dev/sda
-
 ```
 
 
 
-
-
-## 二、随带操作
+## 二、番外操作
 
 网络相关
 
