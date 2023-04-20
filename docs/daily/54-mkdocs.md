@@ -19,13 +19,63 @@ mkdocs gh-deploy --force
 
 
 
-## 二、Comment
+## 二、添加评论
 
-[gitalk](https://stardusten.github.io/coding-notes/tools/Mkdocs/)
+这里使用 [Gitalk](https://github.com/gitalk/gitalk)
+
+### 2.1 申请 ClientID+ClientSecret
+
+[Reference](https://github.com/settings/applications/new)
+
+![申请样例](../images/mkdocs/gitalk-01.png)
+
+### 2.2 添加模板
+
+> vim mkdocs.yml
+
+```bash
+……
+theme:
+  name: material
+  custom_dir: templates
+……
+```
 
 
 
-## 三、效果演示
+> vim templates/main.html
+
+```bash
+{% extends "base.html" %}
+
+{% block content %}
+  {{ super() }}
+<h2 id="__comments">{{ lang.t("meta.comments") }}</h2>
+  <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+  <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+  <div id="gitalk-container"></div>
+
+  <script>
+const gitalk = new Gitalk({
+  clientID: 'xx',
+  clientSecret: 'xx',
+  repo: 'mkdocs',
+  owner: '8ops',
+  admin: ['xtso520ok'],
+  id: location.pathname,
+  distractionFreeMode: false
+})
+
+gitalk.render('gitalk-container')
+  </script>
+{% endblock %}
+```
+
+
+
+
+
+## 三、编辑效果
 
 ```bash
 - [x] a
@@ -61,6 +111,19 @@ $a^2$
     # text2 = "world!"
     # print text1 + text2
     #```
+
+??? abstract "摘要，总结" abstract, summary, tldr
+??? tip "贴士" tip, hint, important
+??? note "注释，代码片段，说明" note, snippet, seealso
+??? example "举例，列表" example
+??? quote "引用，参考链接" quote, cite
+??? info "提示，TODO" info, todo
+??? warning "警告" warning, caution, attention
+??? danger "危险" danger, error
+??? success "成功，勾选，完成" success, check, done
+??? fail "失败" failure, fail, missing
+??? faq "问题，疑问，帮助" question, help, faq
+??? bug "BUG" bug    
 ```
 
 - [x] a
