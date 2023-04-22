@@ -2,7 +2,7 @@
 
 ## 一、使用实例
 
-```golang
+```golang title="screen.go"
 package screen
 
 import (

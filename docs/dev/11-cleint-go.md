@@ -4,7 +4,7 @@
 
 ## 一、简单使用
 
-```go
+```golang title="main.go"
 import (
     "k8s.io/client-go/tools/clientcmd"
     "k8s.io/client-go/kubernetes"
