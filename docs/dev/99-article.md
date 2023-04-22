@@ -2,15 +2,17 @@
 
 使用 markdown 的方式编写文章，一处编辑多处发布。
 
+https://books.8ops.top/
+
 
 
 ## 渠道一，公众号
 
-`微信公众号`
+`运维虾`
 
 > 美化
 
-1. [美化站点](http://md.aclickall.com/)
+1. [美化站点](https://editor.mdnice.com/)
 2. 代码主题：github
 3. 一键排版：标题倒挂
 
@@ -32,7 +34,7 @@
 
 ## 渠道二，知乎
 
-`知乎`
+https://www.zhihu.com/people/8ops
 
 > 发布
 
@@ -45,7 +47,7 @@
 
 ## 渠道三、自有站点
 
-`docsify.8ops.top `
+https://docsify.8ops.top 
 
 采用docsify
 
@@ -53,6 +55,6 @@
 
 ## 渠道四、自有站点
 
-`mkdocs.8ops.top`
+https://mkdocs.8ops.top
 
 采用 mkdocs

@@ -4,7 +4,7 @@
 
 ## 一、简单使用
 
-```golang title="main.go"
+```golang linenums="1" title="main.go"
 import (
     "k8s.io/client-go/tools/clientcmd"
     "k8s.io/client-go/kubernetes"
@@ -99,9 +99,11 @@ func int32Ptr2(i int32) *int32 { return &i }
 
 ## 二、相关资源
 
+
+
 ### 2.1 deployment
 
-```go
+```golang
 //声明deployment对象
 var deployment *v1beta1.Deployment
 //构造deployment对象
@@ -119,9 +121,11 @@ deploymentList, err := clientset.AppsV1beta1().Deployments(<namespace>).List(&me
 watchInterface, err := clientset.AppsV1beta1().Deployments(<namespace>).Watch(&meta_v1.ListOptions{})
 ```
 
-### 2.2 service
 
-```go
+
+### 2.2 services
+
+```golang
 //声明service对象
 var service *v1.Service
 //构造service对象
@@ -139,9 +143,11 @@ serviceList, err := clientset.CoreV1().Services(<namespace>).List(&meta_v1.ListO
 watchInterface, err := clientset.CoreV1().Services(<namespace>).Watch(&meta_v1.ListOptions{})
 ```
 
+
+
 ### 2.3 pod
 
-```go
+```golang
 //声明pod对象
 var pod *v1.Pod
 //创建pod

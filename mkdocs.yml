@@ -154,15 +154,6 @@ nav:
       - daily/47-elastic.md
       - daily/48-mysql.md
       - daily/50-denyhosts.md
-    - 【文档工具】:
-      - daily/52-gitbook.md
-      - daily/53-docsify.md
-      - daily/54-mkdocs.md
-      - daily/58-html.md
-      - daily/59-vue.md
-    - 【未做分类】:
-      - daily/96-macbook.md
-      - daily/99-article.md
   - Kubernetes:
     - 【快速搭建】: 
       - kubernetes/01-cluster-init.md
@@ -221,6 +212,15 @@ nav:
       - dev/13-smtp.md
     - 【Python】:
       - dev/20-python.md
+    - 【HTML】:
+      - dev/80-html.md
+      - dev/81-vue.md
+    - 【MarkDown】:
+      - dev/90-gitbook.md
+      - dev/91-docsify.md
+      - dev/92-mkdocs.md
+      - dev/96-macbook.md
+      - dev/99-article.md
   - 数据处理: 
     - data/01-mysql.md
     - data/02-neo4j.md

@@ -2,7 +2,7 @@
 
 ## 一、实例代码
 
-```golang title="email.go"
+```golang linenums="1" title="email.go"
 package email
 
 import (

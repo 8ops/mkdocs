@@ -1,6 +1,6 @@
 # python
 
-## 编译笔记
+## 一、编译笔记
 
 ```bash
 yum install zlib zlib-devel (注意顺序这个先装，否则后面安装解压时python出错)
@@ -85,7 +85,7 @@ pip install lxml
 
 > <optional>安装openssl
 
-```bash
+```bash linenums="1"
 # openssl 版本过低
 # Installing Python-3.10.2...
 # ERROR: The Python ssl extension was not compiled. Missing the OpenSSL lib?
@@ -128,22 +128,22 @@ CONFIGURE_OPTS="--with-openssl=/usr/local/openssl"
 
 
 
-## 编译安装
+## 二、编译安装
 
-```bash
+```bash linenums="1"
 ./configure --prefix=/usr/local/python-3.8.4 --enable-optimizations --with-openssl=/usr/local/openssl
 make && make install
 ```
 
 
 
-## pyenv
+## 三、pyenv
 
 <optoinal>`cache `提前下载`Python-xx.tar.xz`至`~/.pyenv/cache/`
 
-> [pyenv](https://github.com/pyenv/pyenv)
+### 3.1 [pyenv](https://github.com/pyenv/pyenv)
 
-```bash
+```bash linenums="1"
 # 1.下载pyenv
 rm -rf ~/.pyenv
 PYENV_VERSION=2.2.4-1
@@ -172,9 +172,9 @@ pyenv --version
 
 
 
-> [python](https://www.python.org/downloads/source/)
+### 3.2 [python](https://www.python.org/downloads/source/)
 
-```bash
+```bash linenums="1"
 
 mkdir -p ~/.pyenv/cache
 curl -s -o ~/.pyenv/cache/Python-3.10.2.tar.xz https://m.8ops.top/python/Python-3.10.2.tar.xz
@@ -212,9 +212,9 @@ pip install --upgrade pip
 
 
 
-> MacBook Pro
+### 3.3 MacBook
 
-```bash
+```bash linenums="1"
 mkdir -p ~/.pyenv/cache
 
 wget https://www.python.org/ftp/python/3.11.2/Python-3.11.2.tar.xz \
@@ -232,11 +232,11 @@ env \
 
 ```
 
-## 常用模块
+## 四、常用模块
 
 [Reference](https://docs.python.org/3/py-modindex.html)
 
-```bash
+```bash linenums="1"
 python -m http.server 8000
 ```
 

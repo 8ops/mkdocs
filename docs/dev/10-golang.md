@@ -1,8 +1,8 @@
 # Golang
 
-## 环境配置
+## 一、环境配置
 
-```bash
+```bash linenums="1"
 export GO_HOME=/usr/local/go
 export PATH=${GO_HOME}/bin:${PATH}
 export GOROOT=${GO_HOME}
@@ -25,11 +25,17 @@ export GOLANG_PROTOBUF_REGISTRATION_CONFLICT=warn
 
 
 
-## Goland激活
+## 二、IED
+
+### 2.1 Goland
+
+[Reference](https://www.jetbrains.com/go/)
+
+
 
 更多操作见https://zhile.io/
 
-> 2020.1.1前
+> 2020.1.1前激活操作如下
 
 ```
 使用方法:
@@ -58,7 +64,16 @@ export GOLANG_PROTOBUF_REGISTRATION_CONFLICT=warn
         如果你需要自定义License name，请访问：https://zhile.io/custom-license.html
 ```
 
-> 2020.1.2后
+破解麻烦建议放弃，再说我们应使用正版来尊重工具开发者。
 
-果断使用 `VS Code`
+### 2.2 VS code
 
+[Reference](https://code.visualstudio.com/)
+
+- ++shift+command+p++ : `install code`
+- ++shift+command+u++ : `install plugin`
+  - golang
+  - python
+  - yaml
+  - jupyter
+  - kubernetes

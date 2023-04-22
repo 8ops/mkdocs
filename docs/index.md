@@ -21,8 +21,8 @@ hide:
 | 笔记 | https://books.8ops.top |
 | 笔记 - docsify | <https://docsify.8ops.top/>                |
 | 笔记 - docsify | <https://8ops.github.io/docsify>            |
-| 笔记^{mkdocs}$ | <https://mkdocs.8ops.top/> |
-| 笔记^{mkdocs | <https://8ops.github.io/mkdocs/> |
+| 笔记 - mkdocs | <https://mkdocs.8ops.top/> |
+| 笔记 - mkdocs | <https://8ops.github.io/mkdocs/> |
 | Json格式化 - jsonviewer | <https://jsonviewer.8ops.top>                   |
 | Json格式化 - bejson | <https://jsonviewer.8ops.top/bejson/index.html> |
 | 图形设计        | <https://asciiflow.8ops.top/> |

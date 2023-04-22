@@ -77,12 +77,26 @@ gitalk.render('gitalk-container')
 
 ## 三、编辑效果
 
-```bash
-- [x] a
-- [ ] b
-- [x] c
+[Reference](https://squidfunk.github.io/mkdocs-material/reference)
 
-$a^2$
+### 3.1 常规效果
+
+```bash
+- 加粗 bold
+- 斜体字 斜体字
+- 加粗斜体 粗斜体
+- 下划线 ^^Insert me^^
+- 删除线 Delete me
+- 增加 {++ add ++}
+- 修改 {~ is ~> are ~}
+- 删除 {– del –}
+- 高亮 {== highlight ==}
+- 注释 {>> comment <<}
+- 上标 H^2^O, text^a\ superscript^
+- 下标 CH3CH2OH, texta\ subscript
+- 行内代码高亮：:::java System.out.println("hello"); or #!python println('hello')
+- 键盘快捷键标签：++ctrl+alt+f++
+```
 
 - 加粗 bold
 - 斜体字 斜体字
@@ -99,19 +113,36 @@ $a^2$
 - 行内代码高亮：:::java System.out.println("hello"); or #!python println('hello')
 - 键盘快捷键标签：++ctrl+alt+f++
 
+
+
+### 3.2 复选框
+
+```bash
+- [x] a
+- [ ] b
+- [x] c
+```
+
+- [x] a
+- [ ] b
+- [x] c
+
+### 3.3 数学表达式
+
+```bash
+$a^2$
+```
+
+$a^2$
+
+### 3.3 特别提示
+
+```bash
+# 特别提示
 !!! note "custom title or blank"
     text
 
-# 可折叠，+默认打开
-???+ danger highlight blink "custom title or blank"
-    text vtext text, text, v<br>
-    text vtext text, text, v
-    #```python
-    # text1 = "Hello, "
-    # text2 = "world!"
-    # print text1 + text2
-    #```
-
+# 其他效果
 ??? abstract "摘要，总结" abstract, summary, tldr
 ??? tip "贴士" tip, hint, important
 ??? note "注释，代码片段，说明" note, snippet, seealso
@@ -124,29 +155,20 @@ $a^2$
 ??? fail "失败" failure, fail, missing
 ??? faq "问题，疑问，帮助" question, help, faq
 ??? bug "BUG" bug    
+
+# 可折叠，+默认打开
+???+ danger highlight blink "custom title or blank"
+    text vtext text, text, v<br>
+    text vtext text, text, v
+    #```python
+    # text1 = "Hello, "
+    # text2 = "world!"
+    # print text1 + text2
+    #```
+
 ```
 
-- [x] a
-- [ ] b
-- [x] c
 
-$a^2$
-
-
-- 加粗 bold
-- 斜体字 *斜体字*
-- 加粗斜体 *粗斜体*
-- 下划线 ^^Insert me^^
-- 删除线 Delete me
-- 增加 {++ add ++}
-- 修改 {~ is ~> are ~}
-- 删除 {– del –}
-- 高亮 {== highlight ==}
-- 注释 {>> comment <<}
-- 上标 H^2^O, text^a\ superscript^
-- 下标 CH_3CH2OH, texta\ subscript
-- 行内代码高亮：`:::java System.out.println("hello");` or `#!python println('hello')`
-- 键盘快捷键标签：++ctrl+alt+f++
 
 !!! note "custom title or blank"
     text

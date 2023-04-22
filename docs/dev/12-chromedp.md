@@ -2,7 +2,7 @@
 
 ## 一、使用实例
 
-```golang title="screen.go"
+```golang linenums="1" title="screen.go"
 package screen
 
 import (
@@ -128,7 +128,7 @@ func (s *screen) Area(selector string, height int64) error {
 ### 2.1 linux或docker下运少缺少google-chromedp
 
 ```bash
-# 采用RemoteAllocator
+# 采用 RemoteAllocator
 docker run -d -p 9222:9222 --rm --name headless-shell chromedp/headless-shell:114.0.5720.4
 
 ```
@@ -139,8 +139,10 @@ docker run -d -p 9222:9222 --rm --name headless-shell chromedp/headless-shell:11
 
 ```bash
 # 原因是缺少中文字体
-apt-get install -y ttf-wqy-microhei ttf-wqy-zenhei xfonts-wqy 
+apt-get install -y ttf-wqy-microhei ttf-wqy-zenhei xfonts-wqy #(1)
 ```
+
+1. 默认镜像使用的 debian
 
 
 
@@ -148,5 +150,6 @@ apt-get install -y ttf-wqy-microhei ttf-wqy-zenhei xfonts-wqy
 
 ```bash
 # TODO
+
 ```
 
