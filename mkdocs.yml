@@ -214,8 +214,13 @@ nav:
     - ops/03-aiops.md
     - ops/04-xops.md
   - 运维开发: 
-    - dev/01-golang.md
-    - dev/02-python.md
+    - 【Golang】:
+      - dev/10-golang.md
+      - dev/11-client-go.md
+      - dev/12-chromedp.md
+      - dev/13-smtp.md
+    - 【Python】:
+      - dev/20-python.md
   - 数据处理: 
     - data/01-mysql.md
     - data/02-neo4j.md
