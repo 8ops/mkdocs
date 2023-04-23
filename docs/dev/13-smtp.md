@@ -2,6 +2,8 @@
 
 ## 一、实例代码
 
+### 1.1 email.go
+
 ```golang linenums="1" title="email.go"
 package email
 
@@ -139,6 +141,78 @@ func (e *email) Send(subject, content string) error {
 }
 
 ```
+
+### 1.2 email_test.go
+
+```golang linenums="1" title="email_test.go"
+package email_test
+
+import (
+	"ops-report/pkg/config"
+	"ops-report/pkg/email"
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+)
+
+var e = email.NewEmail()
+
+func init() {
+	conf := config.Conf
+
+	e.SetNickName(conf.Email.NickName).
+		SetUserName(conf.Email.UserName).
+		SetPassport(conf.Email.Passport).
+		SetHost(conf.Email.Host).
+		SetPort(conf.Email.Port).
+		SetTo(conf.Email.TO...).
+		SetCC(conf.Email.CC...).
+		SetAttachMent(conf.Email.AttachMent...)
+}
+
+func TestSendTEXT(t *testing.T) {
+	var (
+		subject = "【文本报告】This is Subject - " + time.Now().Format("20060201150405")
+		content = "<h1>This is Content</h1>"
+	)
+
+	err := e.Send(subject, content)
+	if assert.NoError(t, err); err != nil {
+		t.Logf("Send OK.")
+	}
+}
+func TestSendHTML(t *testing.T) {
+	var (
+		subject = "【网页报告】This is Subject - " + time.Now().Format("20060201150405")
+		content = "<h2>This is Content</h2>"
+	)
+
+	e.SetType(email.HTML)
+	err := e.Send(subject, content)
+	if assert.NoError(t, err); err != nil {
+		t.Logf("Send OK.")
+	}
+}
+
+func TestSendIMAGE(t *testing.T) {
+	var (
+		subject = "【图表报告】This is Subject - " + time.Now().Format("20060201150405")
+		content = "<h2>This is Content</h2>"
+	)
+
+	e.SetType(email.IMAGE).
+		SetAttachMent("/Users/jesse/Downloads/books.png").
+		SetImageView("HEADER", "FOOTER", "/Users/jesse/Downloads/books.png", "https://books.8ops.top")
+	err := e.Send(subject, content)
+	if assert.NoError(t, err); err != nil {
+		t.Logf("Send OK.")
+	}
+}
+
+```
+
+
 
 ## 二、常见问题
 

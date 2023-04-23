@@ -137,7 +137,7 @@ function do_ingresses(){
 #${kubectl_old} label ing `${kubectl_old} get ing | awk '$2~/services.dev.ofc/{printf("%s ",$1)}'` 8ops.top/ingress.class=internal
 #${kubectl_old} label ing `${kubectl_old} get ing | awk '$2!~/services.dev.ofc/{printf("%s ",$1)}'` 8ops.top/ingress.class=external
 
-#${kubectl_old} get ingress -l k8s-app=a.guanaitong,8ops.top/ingress.class=external -o yaml | \
+#${kubectl_old} get ingress -l k8s-app=a.example.com,8ops.top/ingress.class=external -o yaml | \
 ${kubectl_old} get ingress -l k8s-app,8ops.top/ingress.class=external -o yaml | \
     yq eval '
         del( 

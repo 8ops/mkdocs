@@ -71,7 +71,7 @@ export GOLANG_PROTOBUF_REGISTRATION_CONFLICT=warn
 [Reference](https://code.visualstudio.com/)
 
 - ++shift+command+p++ : `install code`
-- ++shift+command+u++ : `install plugin`
+- ++shift+command+x++ : `install plugin`
   - golang
   - python
   - yaml

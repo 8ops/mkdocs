@@ -2,15 +2,18 @@
 
 ## 一、编译笔记
 
+### 1.1 编译过程
+
 ```bash
-yum install zlib zlib-devel (注意顺序这个先装，否则后面安装解压时python出错)
+# 注意顺序这个先装，否则后面安装解压时python出错
+yum install zlib zlib-devel
 wget --no-check-certificate https://www.python.org/ftp/python/2.7.12/Python-2.7.12.tgz
 tar xvzf Python-2.7.12.tgz 
 cd Python-2.7.12
 ./configure --prefix=/usr/local/python
 make && make install
 
-需要注意yum; which yum
+# 需要注意yum; which yum
 cat > /etc/profile.d/sqlite3-env.sh << EOF
 export SQLITE3_HOME=/usr/local/sqlite3
 export PATH=${SQLITE3_HOME}/bin:$PATH
@@ -25,34 +28,32 @@ easy_install pymongo
 easy_install redis
 easy_install simplejson
 
-CentOS7.0 or Ubuntu 需要注意特殊情况
+# CentOS7.0 or Ubuntu 需要注意特殊情况
 yum install -y mysql-devel.x86_64
 easy_install MySQL-python
 
-配置国内的源
+# 配置国内的源
 mkdir -p ~/.pip
 cat > ~/.pip/pip.conf <<EOF
-
 [global]  
 index-url=http://mirrors.aliyun.com/pypi/simple
-
 EOF
 
-遇到“ImportError: No module named _sqlite3”问题。
-解决办法：需先编译sqlite3.
+# 遇到“ImportError: No module named _sqlite3”问题。
+# 解决办法：需先编译sqlite3.
 wget http://www.sqlite.org/sqlite-amalgamation-3.6.20.tar.gz
 tar zxvf  sqlite-amalgamation-3.6.20.tar.gz
 cd  sqlite-3.5.6
 ./configure –prefix=/usr/local/sqlite3
-make && make install  (这样，sqlite3编译完成）
+make && make install  #(这样，sqlite3编译完成）
 
-再来编译python2.7.12:
+# 再来编译python2.7.12:
 wget http://python.org/ftp/python/2.7.12/Python-2.7.12.tar.xz
 xz -d Python-2.7.12.tar.xz
 tar xf  Python-2.7.12.tar
 
+# 先修改Python-2.7.12目录里的setup.py 文件：
 cd  Python-2.7.12
-先修改Python-2.7.12目录里的setup.py 文件：
 sqlite_inc_paths = [ ‘/usr/include’,
      ‘/usr/include/sqlite’,
      ‘/usr/include/sqlite3’,
@@ -63,29 +64,26 @@ sqlite_inc_paths = [ ‘/usr/include’,
      ‘/usr/local/sqlite3/include’, # 添加此行
 
 ./configure --prefix=/usr/local/python
-make && make install  
-（这样，python2.7.12编译完成，解决sqlite3导入出错的问题）
+make && make install  #（这样，python2.7.12编译完成，解决sqlite3导入出错的问题）
 
 yum install -y -q libxslt-devel
 pip install lxml
 
-
 ```
-
 
 `2.x.x`注定被时代淘汰，`3.x.x`大势所趋
 
-> 常用方式
+常用安装方式
 
 - 编译安装
 - virtual
 - [pyenv](https://github.com/pyenv/pyenv)
 
+### 1.2 安装 openssl
 
+可选
 
-> <optional>安装openssl
-
-```bash linenums="1"
+```bash
 # openssl 版本过低
 # Installing Python-3.10.2...
 # ERROR: The Python ssl extension was not compiled. Missing the OpenSSL lib?
@@ -130,7 +128,7 @@ CONFIGURE_OPTS="--with-openssl=/usr/local/openssl"
 
 ## 二、编译安装
 
-```bash linenums="1"
+```bash
 ./configure --prefix=/usr/local/python-3.8.4 --enable-optimizations --with-openssl=/usr/local/openssl
 make && make install
 ```
@@ -139,11 +137,13 @@ make && make install
 
 ## 三、pyenv
 
-<optoinal>`cache `提前下载`Python-xx.tar.xz`至`~/.pyenv/cache/`
+`cache `提前下载`Python-xx.tar.xz`至`~/.pyenv/cache/`
+
+可选
 
 ### 3.1 [pyenv](https://github.com/pyenv/pyenv)
 
-```bash linenums="1"
+```bash
 # 1.下载pyenv
 rm -rf ~/.pyenv
 PYENV_VERSION=2.2.4-1
@@ -174,7 +174,7 @@ pyenv --version
 
 ### 3.2 [python](https://www.python.org/downloads/source/)
 
-```bash linenums="1"
+```bash
 
 mkdir -p ~/.pyenv/cache
 curl -s -o ~/.pyenv/cache/Python-3.10.2.tar.xz https://m.8ops.top/python/Python-3.10.2.tar.xz
@@ -214,7 +214,7 @@ pip install --upgrade pip
 
 ### 3.3 MacBook
 
-```bash linenums="1"
+```bash
 mkdir -p ~/.pyenv/cache
 
 wget https://www.python.org/ftp/python/3.11.2/Python-3.11.2.tar.xz \
@@ -236,7 +236,7 @@ env \
 
 [Reference](https://docs.python.org/3/py-modindex.html)
 
-```bash linenums="1"
+```bash
 python -m http.server 8000
 ```
 

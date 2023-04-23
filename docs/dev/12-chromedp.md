@@ -2,6 +2,8 @@
 
 ## 一、使用实例
 
+### 1.1 screen.go
+
 ```golang linenums="1" title="screen.go"
 package screen
 
@@ -117,6 +119,64 @@ func (s *screen) Area(selector string, height int64) error {
 	}
 
 	return nil
+}
+
+```
+
+### 1.2 screen_test.go
+
+```golang linenums="1" title="screen_test.go"
+package screen_test
+
+import (
+	"ops-report/pkg/screen"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
+
+func TestPDF(t *testing.T) {
+	s := screen.NewScreen(
+		"https://books.8ops.top",
+		"/Users/jesse/Downloads/books.pdf",
+	)
+
+	err := s.PDF()
+
+	if assert.NoError(t, err) {
+		t.Logf("Output [%s]", s.Output)
+	}
+}
+
+func TestFull(t *testing.T) {
+	s := screen.NewScreen(
+		"https://books.8ops.top",
+		"/Users/jesse/Downloads/books.jpeg",
+	)
+
+	err := s.Full()
+
+	if assert.NoError(t, err) {
+		t.Logf("Output [%s]", s.Output)
+	}
+}
+
+func TestArea(t *testing.T) {
+	// books
+	s := screen.NewScreen(
+		"https://books.8ops.top",
+		"/Users/jesse/Downloads/books.png",
+	)
+	err := s.Area("/html/body", 0)
+	if assert.NoError(t, err) {
+		t.Logf("Output [%s]", s.Output)
+	}
+
+	s.SetOutput("/Users/jesse/Downloads/books-inner.png")
+	err = s.Area("div.md-main__inner", 1200)
+	if assert.NoError(t, err) {
+		t.Logf("Output [%s]", s.Output)
+	}
 }
 
 ```
