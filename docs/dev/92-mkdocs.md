@@ -82,11 +82,11 @@ gitalk.render('gitalk-container')
 ### 3.1 常规效果
 
 ```bash
-- 加粗 bold
-- 斜体字 斜体字
+- 加粗 **bold**
+- 斜体字 *斜体字*
 - 加粗斜体 粗斜体
-- 下划线 ^^Insert me^^
-- 删除线 Delete me
+- 下划线 ^^Insert me^^ OR abc
+- 删除线 ~~Delete me~~
 - 增加 {++ add ++}
 - 修改 {~ is ~> are ~}
 - 删除 {– del –}
@@ -98,19 +98,19 @@ gitalk.render('gitalk-container')
 - 键盘快捷键标签：++ctrl+alt+f++
 ```
 
-- 加粗 bold
-- 斜体字 斜体字
-- 加粗斜体 粗斜体
-- 下划线 ^^Insert me^^
-- 删除线 Delete me
-- 增加 {++ add ++}
+- 加粗 **bold**
+- 斜体字 *斜体字*
+- 加粗斜体 **粗斜体**
+- 下划线 ^^Insert me^^ OR <u>abc</u>
+- 删除线 ~~Delete me~~
+- 增加  {++ add ++}
 - 修改 {~ is ~> are ~}
 - 删除 {– del –}
 - 高亮 {== highlight ==}
 - 注释 {>> comment <<}
 - 上标 H^2^O, text^a\ superscript^
 - 下标 CH3CH2OH, texta\ subscript
-- 行内代码高亮：:::java System.out.println("hello"); or #!python println('hello')
+- 行内代码高亮：:::java System.out.println("hello"); or #!python println('hello'):::
 - 键盘快捷键标签：++ctrl+alt+f++
 
 
@@ -127,7 +127,7 @@ gitalk.render('gitalk-container')
 - [ ] b
 - [x] c
 
-### 3.3 数学表达式
+### 3.3 数学公式
 
 ```bash
 $a^2$
@@ -135,7 +135,7 @@ $a^2$
 
 $a^2$
 
-### 3.3 特别提示
+### 3.4 特别提示
 
 ```bash
 # 特别提示
@@ -144,8 +144,8 @@ $a^2$
 
 # 其他效果
 ??? abstract "摘要，总结" abstract, summary, tldr
-??? tip "贴士" tip, hint, important
-??? note "注释，代码片段，说明" note, snippet, seealso
+??? tip "贴士，TIP" tip, hint, important
+??? note "注释，代码说明" note, snippet, seealso
 ??? example "举例，列表" example
 ??? quote "引用，参考链接" quote, cite
 ??? info "提示，TODO" info, todo
@@ -170,19 +170,65 @@ $a^2$
 
 
 
-!!! note "custom title or blank"
+!!! note "note - 注释说明，默认打开"
+    text
+
+??? note "note - 注释说明，默认关闭"
+    text
+
+??? abstract "abstract - 摘要，总结" 
+    text
+
+??? tip "tip - 贴士，TIPS"
+    text
+
+??? example "example  - 举例，列表" 
+    text
+
+??? quote "quote  - 引用，参考链接"
+    text
+
+??? info "info  - 提示，TODO" 
+    text
+
+??? warning "warning  - 警告"
+    text
+
+??? danger "danger  - 危险" 
+    text
+
+??? success "success  - 成功，勾选，完成" 
+    text
+
+??? fail "fail  - 失败" 
+    text
+
+??? faq "faq  - 问题，疑问，帮助" 
+    text
+
+??? bug "bug  - BUG" 
     text
 
 
 
-可折叠，+默认打开
-
-???+ danger highlight blink "custom title or blank"
-    text vtext text, text, v<br>
-    text vtext text, text, v
+???+ danger  "可折叠，+默认打开，-默认折叠"
+    A: text text text text <br>
+    B: text text text text 
 
     ```python
     text1 = "Hello, "
     text2 = "world!"
     print text1 + text2
     ```
+
+### 3.5 水平TAB
+
+===  "A"
+    this is A
+
+===  "B"
+    this is B
+
+===  "C"
+    this is C
+
