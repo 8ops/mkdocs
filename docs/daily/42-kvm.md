@@ -272,7 +272,7 @@ sed -i 's/10.1.2.70/10.1.2.77/' /etc/sysconfig/network-scripts/ifcfg-eth0
 
 ### 1.4 笔记
 
-#### 1.4.1 克隆后变更CPU+内存
+#### 1.4.1 克隆+CPU+内存
 
 ```bash
 # create machine PRD-SLB-NGINX-02
@@ -307,7 +307,7 @@ reboot
 
 
 
-#### 1.4.2 克隆后变更CPU+内存+磁盘
+#### 1.4.2 克隆+CPU+内存+磁盘
 
 ```bash
 # create machine PRD-KUBENODE-103 

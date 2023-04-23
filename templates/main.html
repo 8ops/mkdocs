@@ -15,7 +15,7 @@ const gitalk = new Gitalk({
   repo: 'mkdocs',
   owner: '8ops',
   admin: ['xtso520ok'],
-  id: (location.pathname).split("/").pop().substring(0, 49),
+  id: location.pathname,
   distractionFreeMode: true
 })
 
