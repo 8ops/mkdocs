@@ -203,7 +203,11 @@ nav:
     - ops/01-devops.md
     - ops/02-dataops.md
     - ops/03-aiops.md
-    - ops/04-xops.md
+    - ops/04-devsecops.md
+    - ops/05-chatops.md
+    - ops/06-finops.md
+    - ops/50-sre.md
+    - ops/99-xops.md
   - 运维开发: 
     - 【Golang】:
       - dev/10-golang.md

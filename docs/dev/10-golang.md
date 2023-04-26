@@ -11,10 +11,9 @@ export PATH=${GOPATH}/bin:${PATH}
 
 export CGO_ENABLED=0
 
-export GOPROXY=https://goproxy.io
-# export GOPROXY=https://athens.azurefd.net
-# export GOPROXY=https://goproxy.cn
-# export GOPROXY=https://gocenter.io
+export GOPROXY=https://goproxy.io,direct
+# export GOPROXY=https://goproxy.cn,direct
+# export GOPROXY=https://athens.azurefd.net,direct
 
 export GOPRIVATE="*.8ops.top"
 export GONOPROXY="*.8ops.top"
