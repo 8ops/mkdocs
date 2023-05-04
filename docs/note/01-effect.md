@@ -1,4 +1,4 @@
-# 心理学效应
+# 心理效应
 
 摘录于[华南理工大学](https://www2.scut.edu.cn/sie_cn/2017/0424/c5030a165132/page.htm)
 
