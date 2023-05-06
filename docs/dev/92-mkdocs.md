@@ -223,6 +223,20 @@ $a^2$
 
 ### 3.5 水平TAB
 
+```bash
+===  "A"
+    this is A
+
+===  "B"
+    this is B
+
+===  "C"
+    this is C
+
+```
+
+
+
 ===  "A"
     this is A
 
