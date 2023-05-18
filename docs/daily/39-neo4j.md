@@ -40,6 +40,12 @@ match ()-[r:follow]->() return id(r),type(r)
 # delete
 match ()-[r]-() delete r
 match (p:Person) delete p
+# detach same as delete r+p
+match (n) detach delete n 
+
+# remove
+remove p:Person
+remove n.property
 
 # relation followers/following
 match (p:Person{name:"A"}) create (p)-[:follow{name:"follower 1st"}]->(:Person{name:"G"})

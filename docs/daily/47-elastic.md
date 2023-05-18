@@ -69,13 +69,23 @@ vm.max_map_count = 262144
 
 **通过 kibana's Dev Tools** 
 
-[ILM](../kubernetes/25-elastic.md)
+#### 2.2.1 ILM
 
-> 添加节点后不让主动调度 rebalance。
+[Reference](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/index-lifecycle-management.html)
+
+[一次使用](../kubernetes/25-elastic.md#42-ilm)
+
+
+
+#### 2.2.2  rebalance
+
+> 禁用调度
+
+用于添加节点后不让主动调度 rebalance。
 
 默认情况下当 elastic cluster 有新节点加入的时候，节点上的 shards 会自动均衡存储在所有可用的节点，故新节点加入时会产生大量的 replica 动作，节点负载变高，IO 消耗变高。
 
-`none` OR `true`
+可选配置值：none | true
 
 ```bash
 GET /_cluster/settings
@@ -116,3 +126,6 @@ POST /_cluster/reroute
 
 
 
+#### 2.2.3 mapping 
+
+[Reference](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/dynamic-templates.html)
