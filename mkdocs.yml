@@ -154,6 +154,7 @@ nav:
       - daily/47-elastic.md
       - daily/48-mysql.md
       - daily/50-denyhosts.md
+      - daily/51-sentry.md
   - Kubernetes:
     - 【快速搭建】: 
       - kubernetes/01-cluster-init.md
