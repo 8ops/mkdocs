@@ -219,6 +219,7 @@ nav:
     - 【Python】:
       - dev/20-python.md
     - 【HTML】:
+      - dev/70-admin.md
       - dev/80-html.md
       - dev/81-vue.md
     - 【MarkDown】:
