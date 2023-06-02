@@ -145,7 +145,7 @@ github的提交方式
 
 ```
 
-## 二、安装
+## 二、安装gitlab
 
 [Reference](https://gitlab.cn/install/)
 
@@ -217,4 +217,131 @@ docker exec -t gitlab-web-1 gitlab-backup create \
 ```
 
 
+
+## 三、安装gitlab-runner
+
+[Reference](https://docs.gitlab.com/runner/install/docker.html)
+
+### 3.1 docker engine
+
+```bash
+mkdir -p /ops/lib/gitlab-runner/config
+
+docker run -d --name gitlab-runner-01 --restart always \
+  -v /ops/lib/gitlab-runner/config:/etc/gitlab-runner \
+  -v /usr/bin/docker:/usr/bin/docker \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v /ops/lib/gitlab-runner/cache:/cache \
+  -v /ops/lib/gitlab-runner/npm:/root/.npm \
+  hub.8ops.top/gitlab/gitlab-runner:ubuntu-v15.11.0
+
+docker exec -it gitlab-runner-01 bash
+
+root@2d1ad818473b:/# gitlab-runner register
+Runtime platform                                    arch=amd64 os=linux pid=43 revision=436955cb version=15.11.0
+Running in system-mode.
+
+Enter the GitLab instance URL (for example, https://gitlab.com/):
+https://git.8ops.top/
+Enter the registration token:
+1-EfKb5frVSZJyQivzHZ
+Enter a description for the runner:
+[2d1ad818473b]: 10.101.9.137
+Enter tags for the runner (comma-separated):
+normal
+Enter optional maintenance note for the runner:
+Jesse
+WARNING: Support for registration tokens and runner parameters in the 'register' command has been deprecated in GitLab Runner 15.6 and will be replaced with support for authentication tokens. For more information, see https://gitlab.com/gitlab-org/gitlab/-/issues/380872
+Registering runner... succeeded                     runner=1-EfKb5f
+Enter an executor: docker, docker-windows, parallels, ssh, virtualbox, docker-ssh+machine, instance, custom, docker-ssh, shell, docker-autoscaler, docker+machine, kubernetes:
+docker
+Enter the default Docker image (for example, ruby:2.7):
+alpine:latest
+Runner registered successfully. Feel free to start it, but if it's running already the config should be automatically reloaded!
+
+Configuration (with the authentication token) was saved in "/etc/gitlab-runner/config.toml"
+root@2d1ad818473b:/# cat /etc/gitlab-runner/config.toml
+concurrent = 1
+check_interval = 0
+shutdown_timeout = 0
+
+[session_server]
+  session_timeout = 1800
+
+[[runners]]
+  name = "10.101.9.137"
+  url = "https://git.8ops.top/"
+  id = 10
+  token = "CybARF7TCRmjmwCg59xz"
+  token_obtained_at = 2023-06-02T03:48:38Z
+  token_expires_at = 0001-01-01T00:00:00Z
+  executor = "docker"
+  [runners.cache]
+    MaxUploadedArchiveSize = 0
+  [runners.docker]
+    tls_verify = false
+    image = "alpine:latest"
+    privileged = false
+    disable_entrypoint_overwrite = false
+    oom_kill_disable = false
+    disable_cache = false
+    volumes = ["/cache"]
+    shm_size = 0
+```
+
+
+
+### 3.2 docker-compose
+
+```bash
+mkdir -p /opt/lib/gitlab-runner/{config,cache,npm}
+
+cd /opt/lib/gitlab-runner
+cat > docker-compose.yaml <<EOF
+version: '3.2'
+
+services:
+  gitlab:
+    image: hub.8ops.top/gitlab/gitlab-runner:ubuntu-v15.11.0
+    container_name: "gitlab-runner-01"
+    restart: always
+    volumes:
+      - "/opt/lib/gitlab-runner/config:/etc/gitlab-runner"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "/opt/lib/gitlab-runner/cache:/cache"
+      - "/opt/lib/gitlab-runner/npm:/root/.npm"
+EOF  
+
+cat > config/config.toml <<EOF
+concurrent = 10
+check_interval = 0
+shutdown_timeout = 0
+
+[session_server]
+  session_timeout = 1800
+
+[[runners]]
+  name = "docker-runner"
+  url = "https://git.8ops.top/"
+  id = 2
+  token = "WtJP7sS8m8DuphDkrYxJ"
+  token_expires_at = 0001-01-01T00:00:00Z
+  executor = "docker"
+  [runners.custom_build_dir]
+  [runners.cache]
+    MaxUploadedArchiveSize = 0
+    [runners.cache.s3]
+    [runners.cache.gcs]
+    [runners.cache.azure]
+  [runners.docker]
+    tls_verify = false
+    image = "alpine:latest"
+    privileged = true
+    disable_entrypoint_overwrite = false
+    oom_kill_disable = false
+    disable_cache = false
+    volumes = ["/var/run/docker.sock:/var/run/docker.sock", "/opt/lib/gitlab-runner/cache:/cache" ,"/opt/lib/gitlab-runner/npm:/root/.npm"]
+    shm_size = 0
+EOF
+```
 

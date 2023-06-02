@@ -3,6 +3,8 @@
 [ `dirname $0` == "./bin" ] || exit 1
 set -e
 
+grep -r wuxingdev docs && exit 2
+
 mkdocs build
 CTX_NAME=jesse-8ops-mkdocs
 upx switch ${CTX_NAME}
