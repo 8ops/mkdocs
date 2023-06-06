@@ -1,6 +1,6 @@
 # 资源集锦
 
-| 内容                                                         | 应用场景                                                     |
+| 资源                                                         | 应用场景                                                     |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | [rancher](https://rancher.com/)                              | From datacenter to cloud to edge, Rancher lets you deliver Kubernetes-as-a-Service. |
 | [argocd](https://argoproj.github.io/cd/)                     | Argo CD is a declarative, GitOps continuous delivery tool for Kubernetes. |

@@ -188,6 +188,7 @@ nav:
       - kubernetes/29-controller.md
       - kubernetes/29-rancher.md
     - 【日常应用】:
+      - kubernetes/30-resource.md
       - kubernetes/30-readme.md
       - kubernetes/09-account.md
       - kubernetes/10-access-image.md
@@ -196,7 +197,7 @@ nav:
       - kubernetes/33-statefulset.md
       - kubernetes/39-etcd.md
       - kubernetes/44-jsonpath.md
-      - kubernetes/40-mgr.md
+      - kubernetes/45-taint-and-toleration.md
     - 【存储】: 
       - kubernetes/51-minio.md
       - kubernetes/52-nfs-provider.md
