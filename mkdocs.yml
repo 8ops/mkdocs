@@ -136,6 +136,7 @@ nav:
       - daily/18-git.md
       - daily/19-firewall.md
       - daily/20-curl.md
+      - daily/21-oauth2.md
     - 【常用组件】:
       - daily/33-ppp.md
       - daily/34-kickstart.md

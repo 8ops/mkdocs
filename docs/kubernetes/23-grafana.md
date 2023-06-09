@@ -39,6 +39,8 @@ helm -n kube-server uninstall grafana
 
 CREATE DATABASE `grafana` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 
+# reset admin exec container
+grafana-cli admin reset-admin-password "admin"
 ```
 
 

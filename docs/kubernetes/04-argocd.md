@@ -1104,7 +1104,7 @@ argocd app create prometheus-extention \
     --revision master \
     --sync-policy automated \
     --label author=jesse \
-    --label tier=helm 
+    --label tier=directory 
 ```
 
 
@@ -1280,7 +1280,23 @@ argocd app create kafka \
     --label tier=helm \
     --values values-ops.yaml
 
+# kafka-ui
+argocd app create kafka-extention \
+    --repo https://git.8ops.top/ops/control-plane-ops.git \
+    --path kafka/extention \
+    --project control-plane-proj \
+    --directory-recurse \
+    --dest-namespace elastic-system \
+    --dest-server https://kubernetes.default.svc \
+    --revision master \
+    --sync-policy automated \
+    --auto-prune \
+    --label author=jesse \
+    --label tier=directory \
+    --label owner=ops 
 ```
+
+[Reference](https://books.8ops.top/attachment/kafka/95-kafka-ui.yaml)
 
 #### 3.11.4 logstash
 
