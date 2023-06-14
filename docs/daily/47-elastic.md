@@ -129,3 +129,36 @@ POST /_cluster/reroute
 #### 2.2.3 mapping 
 
 [Reference](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/dynamic-templates.html)
+
+
+
+### 2.3 beats配置
+
+
+
+#### 2.3.1 filebeat
+
+[Reference](https://www.elastic.co/guide/en/beats/filebeat/7.17/filebeat-input-journald.html)
+
+```bash
+filebeat.inputs:
+- type: log # 仅可输入提前内置的log/stdin/docker/container/journald... 
+```
+
+
+
+#### 2.3.2 processor
+
+[Reference](https://www.elastic.co/guide/en/beats/filebeat/7.17/filtering-and-enhancing-data.html)
+
+```bash
+# 有效配置
+      processors:
+      - drop_fields:
+          fields: ["agent.ephemeral_id", "agent.id", "agent.name", "agent.type", "agent.version", "ecs", "host"]
+drop 
+# 无效配置
+#          fields: ["agent.ephemeral_id", "agent.id", "agent.name", "agent.type", "agent.version", "ecs", "host", "fields.topic", "input.type", "log"]
+# 怀疑 "host", "fields.topic", "input.type", "log" 字段不允许
+```
+

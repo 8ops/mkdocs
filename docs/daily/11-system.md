@@ -148,8 +148,8 @@ cat datafile | \
   -u "subject" \
   -s smtp.126.com \
   -q \
-  -xu youja_autosend@126.com \
-  -xp uplus510 \
+  -xu xx@126.com \
+  -xp xx \
   -a $datafile \
   -o message-charset=utf8 \
   -o message-content-type=html 

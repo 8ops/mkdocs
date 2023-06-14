@@ -1325,6 +1325,7 @@ argocd app create logstash \
 #### 3.11.5 filebeat
 
 ```bash
+# demo
 argocd app create logstash-extention \
     --repo https://git.8ops.top/ops/control-plane-ops.git \
     --path logstash/extention \
@@ -1336,6 +1337,26 @@ argocd app create logstash-extention \
     --sync-policy automated \
     --label author=jesse \
     --label tier=helm     
+    
+# daemonset
+helm search repo filebeat
+helm pull elastic/filebeat --version 7.17.3 -d /tmp
+tar xf /tmp/filebeat-7.17.3.tgz -C .
+
+vim values-ops.yaml
+
+argocd app create filebeat \
+    --repo https://git.8ops.top/ops/control-plane-ops.git \
+    --path filebeat \
+    --project infrastructure \
+    --dest-namespace elastic-system \
+    --dest-server https://kubernetes.default.svc \
+    --revision master \
+    --sync-policy automated \
+    --label author=jesse \
+    --label tier=helm \
+    --label owner=ops \
+    --values values-ops.yaml
 ```
 
 
