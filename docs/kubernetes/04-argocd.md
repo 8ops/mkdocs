@@ -1363,6 +1363,105 @@ argocd app create filebeat \
 
 
 
+### 3.12 zookeeper
+
+```bash
+argocd proj get infrastructure
+argocd proj add-destination infrastructure \
+    https://kubernetes.default.svc cmdb-system
+    
+helm search repo zookeeper
+helm pull bitnami/zookeeper --version 11.4.2 -d /tmp
+tar xf /tmp/zookeeper-11.4.2.tgz -C .
+
+vim values-ops.yaml
+
+argocd app create zookeeper \
+    --repo https://git.8ops.top/ops/control-plane-ops.git \
+    --path zookeeper \
+    --project infrastructure \
+    --dest-namespace cmdb-system \
+    --dest-server https://kubernetes.default.svc \
+    --revision master \
+    --sync-policy automated \
+    --label author=jesse \
+    --label tier=helm \
+    --label owner=ops \
+    --values values-ops.yaml
+
+```
+
+### 3.13 mongo
+
+[Reference](https://www.runoob.com/mongodb/mongodb-sharding.html)
+
+```bash
+helm search repo mongodb
+helm pull bitnami/mongodb --version 13.15.1 -d /tmp
+tar xf /tmp/mongodb-13.15.1.tgz -C .
+
+vim values-single.yaml
+# vim values-replicaset.yaml
+# vim values-sharded.yaml
+
+# standalone
+argocd app create mongodb \
+    --repo https://git.8ops.top/ops/control-plane-ops.git \
+    --path mongodb \
+    --project infrastructure \
+    --dest-namespace cmdb-system \
+    --dest-server https://kubernetes.default.svc \
+    --revision master \
+    --sync-policy automated \
+    --label author=jesse \
+    --label tier=helm \
+    --label owner=ops \
+    --values values-standalone.yaml
+
+# replicaset
+argocd app create mongodb \
+    --repo https://git.8ops.top/ops/control-plane-ops.git \
+    --path mongodb \
+    --project infrastructure \
+    --dest-namespace cmdb-system \
+    --dest-server https://kubernetes.default.svc \
+    --revision master \
+    --sync-policy automated \
+    --label author=jesse \
+    --label tier=helm \
+    --label owner=ops \
+    --values values-replicaset.yaml
+    
+helm search repo mongodb-sharded
+helm pull bitnami/mongodb-sharded --version 6.5.3 -d /tmp
+tar xf /tmp/mongodb-sharded-6.5.3.tgz -C .
+
+# sharded
+argocd app create mongodb-sharded \
+    --repo https://git.8ops.top/ops/control-plane-ops.git \
+    --path mongodb-sharded \
+    --project infrastructure \
+    --dest-namespace cmdb-system \
+    --dest-server https://kubernetes.default.svc \
+    --revision master \
+    --sync-policy automated \
+    --label author=jesse \
+    --label tier=helm \
+    --label owner=ops \
+    --values values-sharded.yaml    
+
+mongosh -u root -p jesse
+show dbs
+show users;
+rs.status();
+use test;
+db.createUser({user: "test",pwd: "test",roles: [ { role: "readWrite", db: "test" } ]});
+```
+
+
+
+
+
 ## 四、常见问题
 
 
