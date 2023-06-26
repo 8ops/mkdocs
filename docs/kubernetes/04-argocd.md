@@ -1075,6 +1075,9 @@ vim values-server.yaml
 vim values-alertmanager.yaml
 vim values-extra.yaml
 
+  # strategy:
+  #   type: Recreate
+
 argocd app create prometheus \
     --repo https://git.8ops.top/ops/control-plane-ops.git \
     --path prometheus \

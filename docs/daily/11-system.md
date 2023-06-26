@@ -113,7 +113,7 @@ systemctl enable cockpit.socket  # 启动该服务，随系统启动一同启动
 
 ## 六、SHELL
 
-发送邮件
+### 6.1 发送邮件
 
 ```bash
 # 说明
@@ -157,4 +157,70 @@ cat datafile | \
 
 
 
-## 
+### 6.2 getopts
+
+```bash
+#!/bin/bash
+
+echo "[$OPTIND] [$#] [$*]"
+
+while getopts ":a:bc:" opt
+do
+case $opt in
+  a)
+    echo "OUTPUT A[$OPTIND][$OPTARG]"
+    ;;
+  b)
+    echo "OUTPUT B[$OPTIND][$OPTARG]"
+    ;;
+  c)
+    echo "OUTPUT C[$OPTIND][$OPTARG]"
+    ;;
+  *)
+    echo "OUTPUT *[$OPTIND][$OPTARG]"
+    ;;
+esac
+done
+
+shift $(($OPTIND-1))
+echo "[$#] [$*]"
+```
+
+<u>debug</u>
+
+```bash
+$ ./getopts.sh
+[1] [0] []
+[0] []
+
+$ ./getopts.sh -a
+[1] [1] [-a]
+OUTPUT *[2][a]
+[0] []
+
+$ ./getopts.sh -a a
+[1] [2] [-a a]
+OUTPUT A[3][a]
+[0] []
+
+$ ./getopts.sh -a a -b
+[1] [3] [-a a -b]
+OUTPUT A[3][a]
+OUTPUT B[4][]
+[0] []
+
+$ ./getopts.sh -a a -b -c c
+[1] [5] [-a a -b -c c]
+OUTPUT A[3][a]
+OUTPUT B[4][]
+OUTPUT C[6][c]
+[0] []
+
+$ ./getopts.sh -a a -b -c c xyz
+[1] [6] [-a a -b -c c xyz]
+OUTPUT A[3][a]
+OUTPUT B[4][]
+OUTPUT C[6][c]
+[1] [xyz]
+```
+
