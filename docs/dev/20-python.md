@@ -126,6 +126,23 @@ CONFIGURE_OPTS="--with-openssl=/usr/local/openssl"
 
 
 
+补充
+
+```bash
+# 执行以下命令可以解决上面的错误：
+# CentOS
+sudo ln -s /usr/local/lib64/libssl.so.1.1 /usr/lib64/
+sudo ln -s /usr/local/lib64/libcrypto.so.1.1 /usr/lib64/
+# 在 Ubuntu 上也更新了 OpenSSL，这里的命令有些不一样：
+
+sudo ln -s /usr/local/lib/libcrypto.so.1.1 /usr/lib/x86_64-linux-gnu/libcrypto.so.1.1
+sudo ln -s /usr/local/lib/libssl.so.1.1 /usr/lib/x86_64-linux-gnu/libssl.so.1.1
+```
+
+
+
+
+
 ## 二、编译安装
 
 ```bash

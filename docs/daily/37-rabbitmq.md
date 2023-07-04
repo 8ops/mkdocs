@@ -1,13 +1,317 @@
 # rabbitmq
 
+[tutorials](https://rabbitmq.com/getstarted.html)
+
+| hostname               | IP            |      |
+| ---------------------- | ------------- | ---- |
+| GAT-GSDEV-ORCH-NODE-01 | 10.101.11.116 |      |
+| GAT-GSDEV-ORCH-NODE-02 | 10.101.11.186 |      |
+| GAT-GSDEV-ORCH-NODE-03 | 10.101.11.94  |      |
+
+
+
+## 一、install
+
+[Reference](https://rabbitmq.com/install-rpm.html)
+
+[cluster](https://rabbitmq.com/clustering.html)
+
+### 1.1 bare metal 
+
+[erlang support](https://www.rabbitmq.com/which-erlang.html)
+
+
+
+> upgrade openssl
+
 ```bash
+Older distributions can also lack a recent enough version of OpenSSL. Erlang 24 cannot be used on distributions that do not provide OpenSSL 1.1 as a system library. CentOS 7 and Fedora releases older than 26 are examples of such distributions
+```
+#### 1.1.1 perl
+
+```bash
+# install perl's IPC/Cmd.pm
+# perl --version: v5.16.3
+yum install perl-CPAN -y -q
+
+# method 1
+rm -f ~/.cpan/CPAN/MyConfig.pm
+PERL_MM_USE_DEFAULT=1 perl -MCPAN -e 'CPAN::HandleConfig->edit("urllist", "unshift", "https://mirrors.tuna.tsinghua.edu.cn/CPAN/"); mkmyconfig'
+
+# method 2
+perl -MCPAN -e shell
+o conf 查看配置信息
+o conf urllist 查看当前源地址
+o conf urllist pop http://www.cpan.org/
+o conf urllist push http://mirrors.aliyun.com/CPAN/ 添加阿里云的源地址
+o conf commit 确认添加
+o conf urllist ftp://mirrors.sohu.com/CPAN/ http://mirrors.163.com/cpan/ http://mirrors.ustc.edu.cn/CPAN/ 一次添加多个源地址
+o conf urllist pop http://mirrors.163.com/cpan/ ftp://mirrors.sohu.com/CPAN/ 移除源地址
+
+perl -MCPAN -e shell
+install IPC/Cmd.pm
+
+```
 
 
-# 安装过程集锦
 
-================================================================================
-资源下载（以下都是最新release版本 ~ 2014-05-13）
-参考版本号
+#### 1.1.2 openssl
+
+[Referernce](https://www.openssl.org/source)
+
+```bash
+# download
+OPENSSL_VERSION=3.1.1
+wget --no-check-certificate -O openssl-${OPENSSL_VERSION}.tar.gz https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz
+tar -zxf openssl-${OPENSSL_VERSION}.tar.gz  -C .
+
+# configure
+yum install gcc gcc-c++ make binutils -q -y 
+cd openssl-${OPENSSL_VERSION}
+./config --prefix=/usr/local/openssl 
+make && make install
+
+# link
+ln -s /usr/local/openssl/include/openssl /usr/include/openssl
+ln -s /usr/local/openssl/lib64/libssl.so.3 /usr/local/lib64/libssl.so.3
+ln -s /usr/local/openssl/lib64/libcrypto.so.3 /usr/local/lib64/libcrypto.so.3
+
+cat > /etc/profile.d/openssl-env.sh <<EOF
+export OPENSSL_HOME=/usr/local/openssl/
+export PATH=\${OPENSSL_HOME}/bin:\${PATH}
+EOF
+. /etc/profile.d/openssl-env.sh
+
+# load
+echo "/usr/local/openssl/lib64/" > /etc/ld.so.conf.d/openssl-x86_64.conf
+ldconfig -v
+
+# output
+openssl version
+
+# # env
+# LD_RUN_PATH="/usr/local/openssl/lib64" \
+# LDFLAGS="-L/usr/local/openssl/lib64" \
+# CPPFLAGS="-I/usr/local/openssl/include" \
+# CFLAGS="-I/usr/local/openssl/include" \
+# CONFIGURE_OPTS="--with-openssl=/usr/local/openssl" 
+```
+
+
+
+#### 1.1.3 erlang
+
+[Reference](https://github.com/rabbitmq/erlang-rpm)
+
+```bash
+ERLANG_VERSION=v26.0.2
+https://github.com/rabbitmq/erlang-rpm/releases/download/${ERLANG_VERSION}/erlang-${ERLANG_VERSION}-1.el7.x86_64.rpm
+# https://github.com/rabbitmq/erlang-rpm/archive/refs/tags/${ERLANG_VERSION}.tar.gz
+
+rpm -i erlang-${ERLANG_VERSION}-1.el7.x86_64.rpm
+```
+
+
+
+#### 1.1.4 rabbitmq
+
+[Reference](https://www.rabbitmq.com/download.html)
+
+```bash
+RABBITMQ_VERSION=3.12.1
+wget https://github.com/rabbitmq/rabbitmq-server/releases/download/v${RABBITMQ_VERSION}/rabbitmq-server-generic-unix-${RABBITMQ_VERSION}.tar.xz
+
+xz -d rabbitmq-server-generic-unix-${RABBITMQ_VERSION}.tar.xz
+tar xf rabbitmq-server-generic-unix-${RABBITMQ_VERSION}.tar -C /usr/local
+
+ln -s /usr/local/rabbitmq_server-${RABBITMQ_VERSION} /usr/local/rabbitmq_server
+
+cat > /etc/profile.d/rabbitmq-env.sh <<EOF
+export RABBITMQ_HOME=/usr/local/rabbitmq_server
+export PATH=\${RABBITMQ_HOME}/sbin:${PATH}
+EOF
+. /etc/profile.d/rabbitmq-env.sh
+
+rabbitmqctl version
+mkdir -p /data1/lib/rabbitmq && ln -s /data1/lib/rabbitmq /usr/local/rabbitmq_server/var
+
+# service
+cat > /usr/lib/systemd/system/rabbitmq-server.service <<EOF
+[Unit]
+Description=RabbitMQ broker
+After=network.target epmd@0.0.0.0.socket
+Wants=network.target epmd@0.0.0.0.socket
+
+[Service]
+# Note: You *may* wish to uncomment the following lines to apply systemd
+# hardening effort to RabbitMQ, to prevent your system from being illegally 
+# modified by undiscovered vulnerabilities in RabbitMQ.
+# ProtectSystem=full
+# ProtectHome=true
+# PrivateDevices=true
+# ProtectHostname=true
+# ProtectClock=true
+# ProtectKernelTunables=true
+# ProtectKernelModules=true
+# ProtectKernelLogs=true
+# ProtectControlGroups=true
+# RestrictRealtime=true
+Type=notify
+User=root
+Group=root
+NotifyAccess=all
+TimeoutStartSec=3600
+
+Restart=on-failure
+RestartSec=10
+WorkingDirectory=/usr/local/rabbitmq_server
+ExecStart=/usr/local/rabbitmq_server/sbin/rabbitmq-server
+ExecStop=/usr/local/rabbitmq_server/sbin/rabbitmqctl stop
+ExecStop=/bin/sh -c "while ps -p $MAINPID >/dev/null 2>&1; do sleep 1; done"
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl daemon-reload
+systemctl start rabbitmq-server
+
+systemctl enable rabbitmq-server
+systemctl is-enabled rabbitmq-server
+
+journalctl -u rabbitmq-server -f
+
+# cookie
+echo -n 'QDNNEBJPNBMNTJEIKOWV' > ~/.erlang.cookie
+chmod 400 ~/.erlang.cookie
+ls -l ~/.erlang.cookie && md5sum ~/.erlang.cookie
+
+# start
+rabbitmq-server -detached
+rabbitmqctl stop 
+rabbitmqctl status
+
+# plugin
+rabbitmq-plugins enable rabbitmq_management
+rabbitmq-plugins enable rabbitmq_prometheus
+
+# cluster
+rabbitmqctl cluster_status
+
+# user
+rabbitmqctl list_users
+rabbitmqctl add_user ops jesse
+rabbitmqctl set_user_tags ops administrator
+rabbitmqctl set_permissions -p / ops ".*" ".*" ".*"
+
+rabbitmqctl delete_user guest
+rabbitmqctl add_user guest guest
+rabbitmqctl set_user_tags guest administrator
+rabbitmqctl set_permissions -p / guest ".*" ".*" ".*"
+
+# node
+# default local [--node <node>]
+rabbitmqctl stop_app 
+rabbitmqctl join_cluster --ram rabbit@GAT-GSDEV-ORCH-NODE-01
+rabbitmqctl start_app
+
+rabbitmqctl --node rabbit@GAT-GSDEV-ORCH-NODE-02 stop_app
+rabbitmqctl forget_cluster_node rabbit@GAT-GSDEV-ORCH-NODE-02
+
+# queue
+rabbitmqctl list-queue
+
+```
+
+
+
+
+
+### 1.2 docker
+
+```bash
+# RabbitMQ 3.12.1
+# Erlang 25.3.2.3
+# OpenSSL 3.1.1 30 May 2023 (Library: OpenSSL 3.1.1 30 May 2023)
+
+docker run -d -it --rm --name rabbitmq -p 5672:5672 -p 15672:15672 \
+  hub.8ops.top/middleware/rabbitmq:3.12-management
+
+
+```
+
+
+
+
+
+
+
+## 二、use
+
+### 2.1 config
+
+[Reference](https://www.rabbitmq.com/configure.html)
+
+
+
+### 2.2 quorum
+
+[Reference](https://www.rabbitmq.com/quorum-queues.html)
+
+
+
+### 2.3 perf
+
+[Reference](https://rabbitmq.github.io/rabbitmq-perf-test/stable/htmlsingle/)
+
+```bash
+docker run -it --rm pivotalrabbitmq/perf-test:latest --help
+
+docker run -it --rm pivotalrabbitmq/perf-test:latest -x 1 -y 2 -u "throughput-test-1" -a --id "test 1"
+
+docker network create perf-test
+docker run -d -it --rm --network perf-test --name rabbitmq -p 5672:5672 -p 15672:15672 \
+  hub.8ops.top/middleware/rabbitmq:3.12-management
+
+# 1
+docker run -it --rm --network perf-test --name perf-test \
+  pivotalrabbitmq/perf-test:latest \
+  --uri amqp://rabbitmq \
+  -x 1 -y 2 -u "throughput-test-queue" -a --id "test id" -z 10 -mf compact
+
+id: test id, sending rate avg: 43191 msg/s
+id: test id, receiving rate avg: 43030 msg/s
+id: test id, consumer latency min/median/75th/95th/99th 6040/617771/664521/743283/824080 µs
+
+# 2
+docker run -it --rm --network perf-test --name perf-test \
+  pivotalrabbitmq/perf-test:latest \
+  --uri amqp://ops:jesse@10.101.11.116:5672 \
+  -x 2 -y 2 -u "throughput-test-queue" -a --id "test id" -z 10 -mf compact
+
+sending rate avg: 41610 msg/s
+receiving rate avg: 41610 msg/s
+consumer latency min/median/75th/95th/99th 474/912685/1796650/2000966/2074222 µs
+
+# 感觉受限测试客户端性能
+```
+
+
+
+### 2.4 ram & disk
+
+<u>TODO</u>
+
+- 磁盘存储消息量
+- 区别
+
+
+
+## 三、note
+
+### 3.1 case 1
+
+```bash
 erlang　R16B03-1
 rabbitmq-server 3.2.4
 simplejson 3.4.0
@@ -35,11 +339,13 @@ yum install -y xmlto.x86_64
 
 wget -O /etc/yum.repos.d/epel-erlang.repo http://repos.fedorapeople.org/repos/peter/erlang/epel-erlang.repo
 yum install erlang.x86_64
+```
 
-================================================================================
-RabbitMQ 的安装与使用
-单机搭建
 
+
+### 3.2 case 2
+
+```bash
 测试机器
 192.168.1.50 
 CentOS6.4-x64
@@ -248,18 +554,19 @@ client_flow_blocked].
 
 ---
 
-python 简单使用 Demo
-
-安装以下依赖库
+python依赖库
 amqplib-1.0.2           
 pika-0.9.13            
 python-txamqp-0.3
 
-同时依赖这三个库
-使用见 git@github.com:xtso520ok/rabbitmq-demo.git
 
-================================================================================
+```
 
+
+
+### 3.3 case 3
+
+```bash
 Cluster 搭建与使用
 
 参考官方文档 https://www.rabbitmq.com/clustering.html
@@ -360,15 +667,12 @@ http://www.erlang.org/doc/man/config.html
 or
 /etc/rabbitmq/rabbitmq.conf
 
-
-
 ================================================================================
 
 注意使用区别
 
 rabbitmq-server -detached ==> rabbitmqctl stop
 rabbitmqctl start_app     ==> rabbitmqctl stop_app
-
 
 
 Web API 插件
@@ -415,8 +719,6 @@ rabbitmqctl -n r1@s151 set_policy ha-test-exactly "^test.exactly" '{"ha-mode":"e
 指定固定几个节点内镜像
 
 rabbitmqctl -n r1@s151 set_policy ha-test-nodes "^test.nodes" '{"ha-mode":"nodes","ha-params":["r1@s151","r2@s151"]}'
-
-
 
 ```
 

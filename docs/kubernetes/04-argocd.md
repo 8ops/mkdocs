@@ -1372,7 +1372,8 @@ argocd app create filebeat \
 argocd proj get infrastructure
 argocd proj add-destination infrastructure \
     https://kubernetes.default.svc cmdb-system
-    
+
+ # app version: 3.8.1
 helm search repo zookeeper
 helm pull bitnami/zookeeper --version 11.4.2 -d /tmp
 tar xf /tmp/zookeeper-11.4.2.tgz -C .
@@ -1403,6 +1404,7 @@ helm search repo mongodb
 helm pull bitnami/mongodb --version 13.15.1 -d /tmp
 tar xf /tmp/mongodb-13.15.1.tgz -C .
 
+# app version: 6.0.6
 vim values-single.yaml
 # vim values-replicaset.yaml
 # vim values-sharded.yaml
