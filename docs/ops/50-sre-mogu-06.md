@@ -12,11 +12,11 @@
 
 好了，我们先回顾下在第1讲的时候，提到故障处理的环节就是MTTR，它又细分为4个指标：MTTI、MTTK、MTTF和MTTV，之所以分组分块，也是为了更加有目的性地做到系统稳定性。
 
-![MTTR](../images/sre/mttr.jpg)
+![MTTR](../images/sre/mogu/mttr.jpg)
 
 那么，这四个环节，在我们故障处理MTTR又各自占多长时间呢？下面这个MTTR的时长分布图，是IBM在做了大量的统计分析之后给出的。
 
-![MTTR time cost](../images/sre/mttr-time-ibm.jpg)
+![MTTR time cost](../images/sre/mogu/mttr-time-ibm.jpg)
 
 
 
@@ -32,7 +32,7 @@
 
 因此，从分布式系统的实际情况来看，整个MTTR的时间占比分布大致是这样的：
 
-![MTTR time cost](../images/sre/mttr-time-dis.jpg)
+![MTTR time cost](../images/sre/mogu/mttr-time-dis.jpg)
 
 其实，不管是不是分布式系统，我们针对处理故障的目的都是比较明确的，就是要提升每个环节的处理效率，缩短它们的处理时间，这样才会缩短整个MTTR，减少对不可用时长的消耗。
 
@@ -48,7 +48,7 @@ MTTI，就是故障的平均确认时间，也就是从故障实际发生时间�
 
 解决方案很明确，就是利用我们在[《04 | 错误预算：达成稳定性目标的共识机制》](https://time.geekbang.org/column/article/215649)中讲过的，根据错误预算制定故障等级的方式来判定响应方式。我们把trade_cart购物车的案例再拿出来，你可以再看下，作为参考。
 
-![MTTR Error Level](../images/sre/error-budget-level.jpg)
+![MTTR Error Level](../images/sre/mogu/error-budget-level.jpg)
 
 在没有SLO和错误预算这个体系时，我们通常会根据用户投诉，或客服对同一问题的重复反馈来判断。比如10分钟内，有超过50个用户投诉无法购买商品、支付不成功或者优惠券未生效等问题，我们就会启动应急响应。不过，一旦等用户和客服反馈，就说明故障影响已经非常恶劣了，用户也已经处于无法忍受的状态了。
 

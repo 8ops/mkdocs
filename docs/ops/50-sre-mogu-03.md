@@ -41,7 +41,7 @@ SLI和SLO这两个概念比较有意思，看字面意思好像就已经很明�
 
 在下面这张图中，我列举了系统中常见的监控指标。
 
-![SLIs](../images/sre/slis.jpg)
+![SLIs](../images/sre/mogu/slis.jpg)
 
 这些指标是不是都很熟悉？那该怎么选呢？好像每一个指标都很重要啊！
 
@@ -107,7 +107,7 @@ Tickets的SLO可以想象成它的中文含义：门票。一个周期内，门�
 
 这里我给出一个Google提供的，针对类似于我们trade_cart的一个应用服务，基于VALET设计出来的SLO的Dashboard样例，结合上面我们介绍的部分，就一目了然了。
 
-![VALET](../images/sre/valet.jpg)
+![VALET](../images/sre/mogu/valet.jpg)
 
 
 

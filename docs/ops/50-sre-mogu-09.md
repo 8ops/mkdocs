@@ -10,7 +10,7 @@
 
 好，那我们就开始吧，先给你看一张技术架构图。
 
-![TECH TOPO](../images/sre/tech-topo.jpg)
+![TECH TOPO](../images/sre/mogu/tech-topo.jpg)
 
 这是蘑菇街基于微服务和分布式技术的High-Level的架构图，也是非常典型的互联网技术架构图，自下而上共四层，分别是基础设施层、业务&技术中台层、业务前台层以及接入层，在右侧还有一个技术保障体系。如果你平时经常看一些架构方面的图书和文章，或者听过一些技术大会演讲的话，对这样的图应该不陌生。
 
@@ -30,7 +30,7 @@ SRE这个岗位，或者说这个通过最佳实践提炼出来的方法论，�
 
 这样一套架构方法体系，也构成了现在非常流行和火热的概念：云原生架构。
 
-![Cloud Native](../images/sre/cloud-native.jpg)
+![Cloud Native](../images/sre/mogu/cloud-native.jpg)
 
 所以，不得不承认，这里的现实情况就是，基本所有的SRE经验都是基于微服务和分布式架构的，也都是在这样一个基础下产生的。大到BAT、头条和美团等，中等规模如蘑菇街，甚至是在传统行业中落地比较突出的，如部分运营商和银行。
 
@@ -94,7 +94,7 @@ PE这个角色，是我们未来引入SRE实践的非常关键一环，PE要跟�
 
 如果我们用一张组织架构图来展示的话，基本形态就是下图：
 
-![Org Topo](../images/sre/org-topo.jpg)
+![Org Topo](../images/sre/mogu/org-topo.jpg)
 
 
 

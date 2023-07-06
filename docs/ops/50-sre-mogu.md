@@ -1,4 +1,4 @@
-# SRE
+# SRE实战手册
 
 摘录于蘑菇街赵成的分享《[SRE 实战手册](https://time.geekbang.org/column/intro/100048201)》《[运维体系管理](https://time.geekbang.org/column/intro/100003401)》。
 
@@ -26,7 +26,7 @@
 
 ### 1.1 统一共识
 
-![SRE稳定性保障规划图](../images/sre/intro.jpg)
+![SRE稳定性保障规划图](../images/sre/mogu/intro.jpg)
 
 > 术语
 
@@ -53,7 +53,7 @@
 - **时间纬度**：Availability = Uptime / (Uptime + Downtime)。
 - **请求纬度**：Availability = Successful request / Total request。
 
-![系统可用度对照表](../images/sre/ratio.jpg)
+![系统可用度对照表](../images/sre/mogu/ratio.jpg)
 
 ===  "时间纬度三要素"
 
@@ -100,7 +100,7 @@ SLO是SLI要达成的目标。
 
 
 
-![SLI集合](../images/sre/slis.jpg)
+![SLI集合](../images/sre/mogu/slis.jpg)
 
 合理对指标分层，不是所有指标都是适合做SLI指标。
 
@@ -121,7 +121,7 @@ SLO是SLI要达成的目标。
 - **E** - Errors，错误率。
 - **T** - Tickets，人工介入。低效现象。
 
-![VALET](../images/sre/valet.jpg)
+![VALET](../images/sre/mogu/valet.jpg)
 
 
 
@@ -139,7 +139,7 @@ SLO是SLI要达成的目标。
 
 #### 1.2.4 Error Budget
 
-![Error Budget](../images/sre/error-budget.jpg)
+![Error Budget](../images/sre/mogu/error-budget.jpg)
 
 > 应用场景
 
@@ -150,9 +150,9 @@ SLO是SLI要达成的目标。
 
 
 
-![稳定性燃尽图](../images/sre/error-budget-burndown.jpg)
+![稳定性燃尽图](../images/sre/mogu/error-budget-burndown.jpg)
 
-![故障定级](../images/sre/error-budget-level.jpg)
+![故障定级](../images/sre/mogu/error-budget-level.jpg)
 
 
 

@@ -22,7 +22,7 @@ SLO是目标，定目标总是一件激动人心的事，但是目标定了之�
 
 我们还是以trade_cart购物车这个应用为例，SLO目标就是我们上节课定过的。假设在4周的时间，这个应用所有的请求次数是4,653,680，按照给出的SLO反向推导，就可以得到容许的错误次数，这就是错误预算。
 
-![Error Budget](../images/sre/error-budget.jpg)
+![Error Budget](../images/sre/mogu/error-budget.jpg)
 
 你看，错误预算的计算很简单，起到的警示效果又更强烈，所以**在SLO落地实践时，我们通常就把SLO转化为错误预算，以此来推进稳定性目标达成**。
 
@@ -42,7 +42,7 @@ SLO是目标，定目标总是一件激动人心的事，但是目标定了之�
 
 这里，可以参考Google给出的一个错误预算的燃尽图，这个从技术上，通过你日常使用的监控平台配置一个Metric就可以实现，并不复杂。
 
-![Error Budget burndown](../images/sre/error-budget-burndown.jpg)
+![Error Budget burndown](../images/sre/mogu/error-budget-burndown.jpg)
 
 
 
@@ -64,7 +64,7 @@ SLO是目标，定目标总是一件激动人心的事，但是目标定了之�
 
 trade_cart请求成功率SLO对应的错误预算是25,000次，如果一个问题产生的错误请求数超过了5000次，也就是错误预算一下就被消耗掉20%以上，这时，我们可以把这次故障定为P2级。以此类推，如果消耗30%以上，我们定为P1级，消耗50%以上，定为P0级等等。
 
-![Error Budget Level](../images/sre/error-budget-level.jpg)
+![Error Budget Level](../images/sre/mogu/error-budget-level.jpg)
 
 当然，我这里是举例，在真正实际工作中，这个具体数值可以根据实际业务情况和容忍度来制定。
 
@@ -117,7 +117,7 @@ trade_cart请求成功率SLO对应的错误预算是25,000次，如果一个问�
 
 
 
-基于错误预算的告警就会涉及到AIOps相关的领域，我就不再展开讲了。这里我分享一个链接，<a href="https://landing.google.com/sre/workbook/chapters/alerting-on-slos/">谷歌基于SLO和错误预算的几种告警算法</a>，你可以学习下里面用到的方法。
+基于错误预算的告警就会涉及到AIOps相关的领域，我就不再展开讲了。这里我分享一个链接，<a href="https://landing.google.com/sre/mogu/workbook/chapters/alerting-on-slos/">谷歌基于SLO和错误预算的几种告警算法</a>，你可以学习下里面用到的方法。
 
 讲到这里，基于错误预算的4个应用场景就介绍完了，我们小结一下。我们将SLO反向推导出了错误预算，为了让错误预算的警示效果更显著，我们可以利用燃尽图的方式呈现出来；同时，还可以根据每次问题消耗的错误预算比例来制定故障等级，这样就做到了对故障的量化管理；有了量化数据，在向周边团队和上级领导沟通时，也会显得有理有据；最后，基于错误预算我们还可以做到告警收敛，让告警更准确，更具备行动指导价值。
 
@@ -139,7 +139,7 @@ trade_cart请求成功率SLO对应的错误预算是25,000次，如果一个问�
 
 总共3个维度，每个维度有2种情况，组合起来就是8种情况，我们直接引用Google给出的图表和建议。
 
-![Error Budget Response](../images/sre/error-budget-resp.jpg)
+![Error Budget Response](../images/sre/mogu/error-budget-resp.jpg)
 
 针对这8种情况，我们分别给出对应策略。总结一下，应对方式可以分为3类。
 

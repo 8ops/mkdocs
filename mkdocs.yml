@@ -211,7 +211,8 @@ nav:
     - ops/06-finops.md
     - ops/07-autoops.md
     - ops/08-xops.md
-    - ops/50-sre.md
+    - ops/50-sre-mogu.md
+    - ops/51-sre-didi.md
   - 运维开发: 
     - 【Golang】:
       - dev/10-golang.md

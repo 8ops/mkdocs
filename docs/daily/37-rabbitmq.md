@@ -212,18 +212,20 @@ rabbitmqctl set_permissions -p / guest ".*" ".*" ".*"
 # node
 # default local [--node <node>]
 rabbitmqctl stop_app 
+# rabbitmqctl reset # 当不是disc节点时将脱离cluster
 rabbitmqctl join_cluster --ram rabbit@GAT-GSDEV-ORCH-NODE-01
 rabbitmqctl start_app
 
 rabbitmqctl --node rabbit@GAT-GSDEV-ORCH-NODE-02 stop_app
 rabbitmqctl forget_cluster_node rabbit@GAT-GSDEV-ORCH-NODE-02
 
+rabbitmqctl stop_app 
+rabbitmqctl change_cluster_node_type disc
+
 # queue
 rabbitmqctl list-queue
 
 ```
-
-
 
 
 
@@ -239,10 +241,6 @@ docker run -d -it --rm --name rabbitmq -p 5672:5672 -p 15672:15672 \
 
 
 ```
-
-
-
-
 
 
 
@@ -265,15 +263,16 @@ docker run -d -it --rm --name rabbitmq -p 5672:5672 -p 15672:15672 \
 [Reference](https://rabbitmq.github.io/rabbitmq-perf-test/stable/htmlsingle/)
 
 ```bash
-docker run -it --rm pivotalrabbitmq/perf-test:latest --help
+docker run -it --rm pivotalrabbitmq/perf-test:2.19.0 --help
 
-docker run -it --rm pivotalrabbitmq/perf-test:latest -x 1 -y 2 -u "throughput-test-1" -a --id "test 1"
+docker run -it --rm pivotalrabbitmq/perf-test:2.19.0 -x 1 -y 2 -u "throughput-test-1" -a --id "test 1"
 
 docker network create perf-test
-docker run -d -it --rm --network perf-test --name rabbitmq -p 5672:5672 -p 15672:15672 \
+docker run -d -it --rm --network perf-test --name rabbitmq \
+  -p 5672:5672 -p 15692:15692 -p 15672:15672 \
   hub.8ops.top/middleware/rabbitmq:3.12-management
 
-# 1
+# 1, for docker 1 node
 docker run -it --rm --network perf-test --name perf-test \
   pivotalrabbitmq/perf-test:latest \
   --uri amqp://rabbitmq \
@@ -283,9 +282,9 @@ id: test id, sending rate avg: 43191 msg/s
 id: test id, receiving rate avg: 43030 msg/s
 id: test id, consumer latency min/median/75th/95th/99th 6040/617771/664521/743283/824080 µs
 
-# 2
+# 2, for cluster 3 nodes
 docker run -it --rm --network perf-test --name perf-test \
-  pivotalrabbitmq/perf-test:latest \
+  pivotalrabbitmq/perf-test:2.19.0 \
   --uri amqp://ops:jesse@10.101.11.116:5672 \
   -x 2 -y 2 -u "throughput-test-queue" -a --id "test id" -z 10 -mf compact
 
@@ -293,17 +292,55 @@ sending rate avg: 41610 msg/s
 receiving rate avg: 41610 msg/s
 consumer latency min/median/75th/95th/99th 474/912685/1796650/2000966/2074222 µs
 
-# 感觉受限测试客户端性能
+# 3, big client, for docker 1 node
+docker run -it --rm --network perf-test --name perf-test \
+  hub.8ops.top/middleware/rabbitmq-perf-test:2.19.0 \
+  --uri amqp://rabbitmq \
+  -x 10 -y 20 -u "throughput-test-queue" -a --id "test id" -z 10 -mf compact 
+  
+sending rate avg: 124405 msg/s
+receiving rate avg: 124386 msg/s
+consumer latency min/median/75th/95th/99th 8609/4767950/5220653/5692634/5878773 µs
+
+# 4, big client, for cluster 3 nodes
+docker run -it --rm --network perf-test --name perf-test \
+  hub.8ops.top/middleware/rabbitmq-perf-test:2.19.0 \
+  --uri amqp://ops:jesse@10.101.11.116:5672 \
+  -x 10 -y 20 -u "throughput-test-queue" -a --id "test id" -z 10 -mf compact 
+
+sending rate avg: 42197 msg/s
+receiving rate avg: 42197 msg/s
+consumer latency min/median/75th/95th/99th 8981/1129273/1297606/1403971/1442604 µs
+
 ```
 
 
 
-### 2.4 ram & disk
+### 2.4 ram disc
 
-<u>TODO</u>
+<u>区别</u>
 
-- 磁盘存储消息量
-- 区别
+- ram，仅存储元信息
+- disc，至少有一个节点需要设置成disk，durable时会持久化
+
+
+
+<u>磁盘存储消息量</u>
+
+映射关系，`12 byte x 968,997 = 11.09 MB 产生持久数据 226 MB` 
+
+
+
+### 2.5 restart stop
+
+```bash
+
+systemctl stop rabbitmq-server
+
+systemctl start rabbitmq-server
+```
+
+
 
 
 

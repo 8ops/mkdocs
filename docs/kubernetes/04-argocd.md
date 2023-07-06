@@ -1364,9 +1364,9 @@ argocd app create filebeat \
 
 
 
+### 3.12 cmdb
 
-
-### 3.12 zookeeper
+#### 3.12.1 zookeeper
 
 ```bash
 argocd proj get infrastructure
@@ -1395,7 +1395,7 @@ argocd app create zookeeper \
 
 ```
 
-### 3.13 mongo
+#### 3.13.2 mongo
 
 [Reference](https://www.runoob.com/mongodb/mongodb-sharding.html)
 
