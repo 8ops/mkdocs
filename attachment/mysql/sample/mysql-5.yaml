@@ -1,0 +1,151 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  data:
+    my.cnf: |
+      # For explanations see
+      # http://dev.mysql.com/doc/mysql/en/server-system-variables.html
+      [mysqld]
+      pid-file = /var/run/mysqld/mysqld.pid
+      socket   = /var/run/mysqld/mysqld.sock
+      datadir  = /var/lib/mysql
+      #log-error    = /var/log/mysql/error.log
+      #bind-address = 127.0.0.1
+      symbolic-links = 0
+      skip-host-cache
+      skip-name-resolve
+      [mysql]
+      [mysqldump]
+      quick
+      quote-names
+      max_allowed_packet = 16M
+  kind: ConfigMap
+  metadata:
+    labels:
+      app: mysql-5
+      component: mysql
+      version: 5.7.37
+    name: mysql-5
+    namespace: kube-server
+- apiVersion: v1
+  kind: PersistentVolume
+  metadata:
+    annotations:
+      pv.kubernetes.io/bound-by-controller: "yes"
+    finalizers:
+    - kubernetes.io/pv-protection
+    labels:
+      pvname: pv-mysql-5
+    name: pv-mysql-5
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    capacity:
+      storage: 20Gi
+    local:
+      path: /opt/data/mysql-5
+    nodeAffinity:
+      required:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: kubernetes.io/hostname
+            operator: In
+            values:
+            - k-kube-lab-09
+    persistentVolumeReclaimPolicy: Retain
+    storageClassName: mysql-5
+    volumeMode: Filesystem
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    annotations:
+      pv.kubernetes.io/bind-completed: "yes"
+      pv.kubernetes.io/bound-by-controller: "yes"
+    finalizers:
+    - kubernetes.io/pvc-protection
+    labels:
+      addonmanager.kubernetes.io/mode: EnsureExists
+      kubernetes.io/cluster-service: "true"
+    name: pvc-mysql-5
+    namespace: kube-server
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: 20Gi
+    storageClassName: mysql-5
+    volumeMode: Filesystem
+    volumeName: pv-mysql-5
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    labels:
+      k8s-app: mysql-5
+    name: mysql-5
+    namespace: kube-server
+  spec:
+    replicas: 1
+    revisionHistoryLimit: 5
+    selector:
+      matchLabels:
+        k8s-app: mysql-5
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
+      metadata:
+        labels:
+          k8s-app: mysql-5
+      spec:
+        containers:
+        - env:
+          - name: MYSQL_ROOT_PASSWORD
+            value: jesse
+          image: hub.8ops.top/third/mysql:5.7.37
+          imagePullPolicy: IfNotPresent
+          name: mysql
+          ports:
+          - containerPort: 3306
+            protocol: TCP
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 200m
+              memory: 256Mi
+          volumeMounts:
+          - mountPath: /etc/mysql
+            name: mysql-config
+          - mountPath: /var/lib/mysql
+            name: mysql-data
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        volumes:
+        - configMap:
+            defaultMode: 420
+            name: mysql-5
+          name: mysql-config
+        - name: mysql-data
+          persistentVolumeClaim:
+            claimName: pvc-mysql-5
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      k8s-app: mysql-5
+    name: mysql-5
+    namespace: kube-server
+  spec:
+    ports:
+    - port: 3306
+      protocol: TCP
+      targetPort: 3306
+      nodePort: 30306
+    selector:
+      k8s-app: mysql-5
+    type: NodePort
+kind: List
