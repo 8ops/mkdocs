@@ -99,6 +99,8 @@ spec:
 
 > 当需要指定某个群组时
 
+[roles](https://docs.gitlab.com/ee/api/members.html#valid-access-levels)
+
 ```bash
 # 在gitlab里面创建一个群组，成员可以访问
         - --gitlab-group="echoserver-group,abc-group"

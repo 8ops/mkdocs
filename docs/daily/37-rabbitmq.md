@@ -24,7 +24,7 @@
 
 > upgrade openssl
 
-```bash
+```
 Older distributions can also lack a recent enough version of OpenSSL. Erlang 24 cannot be used on distributions that do not provide OpenSSL 1.1 as a system library. CentOS 7 and Fedora releases older than 26 are examples of such distributions
 ```
 #### 1.1.1 perl
@@ -109,6 +109,11 @@ https://github.com/rabbitmq/erlang-rpm/releases/download/${ERLANG_VERSION}/erlan
 # https://github.com/rabbitmq/erlang-rpm/archive/refs/tags/${ERLANG_VERSION}.tar.gz
 
 rpm -i erlang-${ERLANG_VERSION}-1.el7.x86_64.rpm
+
+# cookie
+echo -n 'QDNNEBJPNBMNTJEIKOWV' > ~/.erlang.cookie
+chmod 400 ~/.erlang.cookie
+ls -l ~/.erlang.cookie && md5sum ~/.erlang.cookie
 ```
 
 
@@ -181,11 +186,6 @@ systemctl is-enabled rabbitmq-server
 
 journalctl -u rabbitmq-server -f
 
-# cookie
-echo -n 'QDNNEBJPNBMNTJEIKOWV' > ~/.erlang.cookie
-chmod 400 ~/.erlang.cookie
-ls -l ~/.erlang.cookie && md5sum ~/.erlang.cookie
-
 # start
 rabbitmq-server -detached
 rabbitmqctl stop 
@@ -194,6 +194,7 @@ rabbitmqctl status
 # plugin
 rabbitmq-plugins enable rabbitmq_management
 rabbitmq-plugins enable rabbitmq_prometheus
+rabbitmq-plugins enable rabbitmq_shovel # 迁移数据
 
 # cluster
 rabbitmqctl cluster_status
@@ -255,6 +256,13 @@ docker run -d -it --rm --name rabbitmq -p 5672:5672 -p 15672:15672 \
 ### 2.2 quorum
 
 [Reference](https://www.rabbitmq.com/quorum-queues.html)
+
+```bash
+rabbitmqctl update_vhost_metadata / --default-queue-type quorum
+
+# 当节点发生变化时
+rabbitmq-queues rebalance quorum
+```
 
 
 
