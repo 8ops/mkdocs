@@ -262,6 +262,29 @@ rabbitmqctl update_vhost_metadata / --default-queue-type quorum
 
 # 当节点发生变化时
 rabbitmq-queues rebalance quorum
+
+x-quorum-initial-group-size
+
+raft.wal_max_size_bytes 1GB
+
+
+# queue demo
+    {
+      "name": "grus-demo-queue",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "durable": true,
+        "x-app-name": "grus-demo",
+        "x-expires": 2419200000,
+        "x-max-length": 10000000,
+        "x-message-ttl": 604800000,
+        "x-overflow": "reject-publish",
+        "x-queue-type": "quorum",
+        "x-quorum-initial-group-size": 2
+      }
+    }
 ```
 
 

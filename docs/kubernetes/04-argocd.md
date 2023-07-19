@@ -1139,6 +1139,8 @@ argocd app create prometheus-blackbox-exporter \
 
 [mysql](#mysql)
 
+[auth.gitlab](https://grafana.com/docs/grafana/latest/setup-grafana/configure-security/configure-authentication/gitlab/)
+
 ```bash
 helm repo add grafana https://grafana.github.io/helm-charts
 helm repo update grafana
@@ -1160,6 +1162,44 @@ argocd app create grafana \
     --label author=jesse \
     --label tier=helm \
     --values values-ops.yaml
+```
+
+> grafana.ini
+
+```bash
+
+grafana.ini:
+  paths:
+    data: /var/lib/grafana/
+    logs: /var/log/grafana
+    plugins: /var/lib/grafana/plugins
+    provisioning: /etc/grafana/provisioning
+  analytics:
+    check_for_updates: true
+  log:
+    mode: console
+  server:
+    domain: "{{ if (and .Values.ingress.enabled .Values.ingress.hosts) }}{{ .Values.ingress.hosts | first }}{{ end }}"
+    root_url: "https://{{ if (and .Values.ingress.enabled .Values.ingress.hosts) }}{{ .Values.ingress.hosts | first }}{{ end }}"
+  database:
+    type: mysql
+    host: mysql-standalone
+    name: grafana
+    user: grafana
+    password: grafana
+  auth.anonymous:
+    enabled: true # 允许匿名访问
+  auth.gitlab:
+    enabled: true
+    allow_sign_up: true
+    auto_login: true
+    client_id: a1fd48ae1a25482c9fda1377065f424c5b519e5a91c4e385a5ab97cce65556e7
+    client_secret: d06a9893f80001e9c714fb3dc231d41e16a2a2a9b900acaf8340304cfb686871
+    scopes: read_api
+    auth_url: https://git.8ops.top/oauth/authorize
+    token_url: https://git.8ops.top/oauth/token
+    api_url: https://git.8ops.top/api/v4
+    tls_skip_verify_insecure: true # 允许私有证书
 ```
 
 
@@ -1471,7 +1511,7 @@ db.createUser({user: "test",pwd: "test",roles: [ { role: "readWrite", db: "test"
 
 
 
-### 3.1 加入集群认证问题
+### 4.1 加入集群认证问题
 
 1. 白名单
 2. 通过 token 走 insecure
@@ -1479,7 +1519,7 @@ db.createUser({user: "test",pwd: "test",roles: [ { role: "readWrite", db: "test"
 
 
 
-### 3.2 kubernetes cluster 多套 argocd 
+### 4.2 kubernetes cluster 多套 argocd 
 
 ```bash
 # helm values
@@ -1492,9 +1532,23 @@ crds:
 
 
 
-### 3.3 界面 PARAMETERS 无法识别出 values.yaml
+### 4.3 界面 PARAMETERS 无法识别出 values.yaml
 
 ```bash
 argocd proj add-source argo-example-proj https://git.8ops.top/gce/argocd-example-apps.git
+```
+
+
+
+### 4.4 生成的configmap未跨行
+
+```bash
+# 是由于yaml文件存在行末有空格
+
+# e.g.
+a:
+  b:
+  - 1
+  - 2 xxxxx
 ```
 
