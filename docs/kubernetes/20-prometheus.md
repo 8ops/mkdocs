@@ -26,7 +26,7 @@ prometheus是目前人气较高的一款监控软件，活跃的社区吸引了�
 
 
 
-### 1.1 安装
+### 1.1 prometheus
 
 通过helm安装prometheus
 
@@ -207,7 +207,9 @@ Redis Dashboard for Prometheus Redis Exporter
 
 
 
-### 1.4 告警全家桶
+### 1.4 alertcenter
+
+告警全家桶
 
 推荐 [prometheus-alert-center](https://github.com/feiyu563/PrometheusAlert)
 
@@ -352,11 +354,27 @@ templates:
 
 
 
+## 三、使用向导
 
 
-## 三、常见问题
 
-### 3.1 TSDB被锁
+### 3.1 scrape
+
+[Sample](https://books.8ops.top/attachment/prometheus/85-prometheus-server.yaml)
+
+
+
+### 3.2 rules
+
+[Reference](https://github.com/samber/awesome-prometheus-alerts/tree/master/dist/rules)
+
+[Sample](https://books.8ops.top/attachment/prometheus/90-prometheus-metadata-rules.yaml)
+
+
+
+## 四、常见问题
+
+### 4.1 TSDB被锁
 
 常出现在升级prometheus，或重启prometheus
 
@@ -374,7 +392,7 @@ ts=2022-05-13T23:29:02.926Z caller=main.go:1077 level=error err="opening storage
 
 
 
-### 3.2 获取指标
+### 4.2 获取指标
 
 ```bash
 # apiserver
@@ -392,7 +410,7 @@ curl -s https://10.101.11.183:2379/metrics \
 
 
 
-### 3.3 获取 etcd's metrices
+### 4.3 获取 etcd's metrices
 
 ```bash
 # 1. 创建证书
