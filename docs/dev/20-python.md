@@ -152,19 +152,21 @@ make && make install
 
 
 
-## 三、pyenv
+## 三、虚拟环境
 
 `cache `提前下载`Python-xx.tar.xz`至`~/.pyenv/cache/`
 
 可选
 
-### 3.1 [pyenv](https://github.com/pyenv/pyenv)
+### 3.1 pyenv
+
+[Reference](https://github.com/pyenv/pyenv)
 
 ```bash
 # 1.下载pyenv
 rm -rf ~/.pyenv
-PYENV_VERSION=2.2.4-1
-curl -s -o /tmp/pyenv-${PYENV_VERSION}.tar.gz https://m.8ops.top/python/pyenv-${PYENV_VERSION}.tar.gz
+PYENV_VERSION=v2.3.22
+curl -s -o /tmp/pyenv-${PYENV_VERSION}.tar.gz https://github.com/pyenv/pyenv/archive/refs/tags/${PYENV_VERSION}.tar.gz
 tar xzf /tmp/pyenv-${PYENV_VERSION}.tar.gz
 mv pyenv-${PYENV_VERSION} ~/.pyenv
 
@@ -183,13 +185,17 @@ EOF
 
 . ~/.bashrc
 
-# validate
+# usage
 pyenv --version
+pyenv versions
+
 ```
 
 
 
-### 3.2 [python](https://www.python.org/downloads/source/)
+### 3.2 python
+
+[Reference](https://www.python.org/downloads/source/)
 
 ```bash
 

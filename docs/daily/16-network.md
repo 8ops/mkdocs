@@ -17,9 +17,106 @@
 
 ## 二、Proxy
 
-[goproxy](https://github.com/snail007/goproxy)
+### 2.1 goproxy
 
-[frp](https://github.com/fatedier/frp)
+[Reference](https://github.com/snail007/goproxy)
+
+
+
+### 2.2 frp
+
+[Reference](https://github.com/fatedier/frp)
+
+<u>Download</u>
+
+```bash
+cd /usr/local
+FRP_VERSION=0.51.1
+wget  https://github.com/fatedier/frp/releases/download/v${FRP_VERSION}/frp_${FRP_VERSION}_linux_amd64.tar.gz
+tar xzf frp_${FRP_VERSION}_linux_amd64.tar.gz 
+ln -s frp_${FRP_VERSION}_linux_amd64 frp
+```
+
+
+
+<u>Server</u>
+
+```bash
+# config frps.ini
+dashboard_user = admin
+dashboard_pwd = 
+token = 
+allow_ports = 50000-51000,56000-57000
+subdomain_host = 8ops.top
+
+# vhost_http_port = 80
+# vhost_https_port = 443
+
+#[plugin.user-manager]
+#addr = 127.0.0.1:9000
+#path = /handler
+#ops = Login
+#
+#[plugin.port-manager]
+#addr = 127.0.0.1:9001
+#path = /handler
+#ops = NewProxy
+
+# service
+cat > /usr/lib/systemd/system/frps.service <<EOF
+[Unit]
+Description=Frp Server Service
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/usr/local/frp
+User=nobody
+Restart=on-failure
+RestartSec=5s
+ExecStart=/usr/local/frp/frps -c /usr/local/frp/frps.ini
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl daemon-reload
+systemctl start frps
+systemctl enable frps
+systemctl is-enabled frps
+systemctl status frps
+```
+
+
+
+<u>Client</u>
+
+```bash
+# service
+cat > /usr/lib/systemd/system/frpc.service <<EOF
+[Unit]
+Description=Frp Client Service
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/usr/local/frp
+User=nobody
+Restart=on-failure
+RestartSec=5s
+ExecStart=/usr/local/frp/frpc tcp -n demo -t token -p tcp -s frps.8ops.top:7000 -r 56666 -i 127.0.0.1 -l 12622
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl daemon-reload
+systemctl start frpc
+systemctl enable frpc
+systemctl is-enabled frpc
+systemctl status frpc
+
+```
 
 
 
