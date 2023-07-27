@@ -187,3 +187,49 @@ SMTP_FROM = DenyHosts <xx>
 ```
 
 2. 通过其他客户端进行多次失败登录尝试 
+
+
+
+## 八、同类工具
+
+[fail2ban](https://www.linuxprobe.com/fail2ban-ssh-crack.html)
+
+> install
+
+```bash
+yum install fail2ban -y -q 
+```
+
+
+
+> config
+
+```
+[DEFAULT]
+# 以空格分隔的列表，可以是 IP 地址、CIDR 前缀或者 DNS 主机名
+# 用于指定哪些地址可以忽略 fail2ban 防御
+ignoreip = 127.0.0.1 172.31.0.0/24 10.10.0.0/24 192.168.0.0/24
+
+# 客户端主机被禁止的时长（秒）
+bantime = 86400
+
+# 客户端主机被禁止前允许失败的次数 
+maxretry = 5
+
+# 查找失败次数的时长（秒）
+findtime = 600
+
+mta = sendmail
+
+[ssh-iptables]
+enabled = true
+filter = sshd
+action = iptables[name=SSH, port=ssh, protocol=tcp]
+sendmail-whois[name=SSH, dest=your@email.com, sender=fail2ban@email.com]
+# Debian 系的发行版 
+logpath = /var/log/auth.log
+# Red Hat 系的发行版
+logpath = /var/log/secure
+# ssh 服务的最大尝试次数 
+maxretry = 3
+```

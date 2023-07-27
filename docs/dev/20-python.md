@@ -208,7 +208,10 @@ apt install -y gcc make binutils build-essential zlib1g-dev \
     libreadline-dev lib64readline-dev libncurses5-dev libncursesw5-dev libssl-dev 
 
 ## centos's install require package
-# yum install gcc gcc-c++ autoconf automake binutils make cmake wget openssl-devel libsqlite3x libffi-devel httpd-devel libsqlite3x-devel ncurses-devel bzip2-devel bzip2-libs bzip2 readline-devel readline mod-wsgi
+yum install gcc gcc-c++ autoconf automake binutils \
+    make cmake wget openssl-devel libsqlite3x libffi-devel \
+    httpd-devel libsqlite3x-devel ncurses-devel \
+    bzip2-devel bzip2-libs bzip2 readline-devel readline mod-wsgi
 
 pyenv install 3.10.2
 

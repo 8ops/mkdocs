@@ -372,9 +372,48 @@ templates:
 
 
 
-## 四、常见问题
+## 四、exporter
 
-### 4.1 TSDB被锁
+### 4.1 haproxy
+
+```bash
+EXPORTER_VERSION=0.15.0
+curl -s -o /tmp/haproxy_exporter-${EXPORTER_VERSION}.linux-amd64.tar.gz \
+https://github.com/prometheus/haproxy_exporter/releases/download/v${EXPORTER_VERSION}/haproxy_exporter-${EXPORTER_VERSION}.linux-amd64.tar.gz
+tar xzf /tmp/haproxy_exporter-${EXPORTER_VERSION}.linux-amd64.tar.gz -C /tmp/
+mv /tmp/haproxy_exporter-${EXPORTER_VERSION}.linux-amd64/haproxy_exporter /usr/local/sbin/
+
+cat > /usr/lib/systemd/system/haproxy_exporter.service <<EOF
+[Unit]
+Description=HAProxy_exporter
+After=syslog.target network.target
+
+[Service]
+ExecStart=/usr/local/sbin/haproxy_exporter --haproxy.scrape-uri=http://admin:xxxx@localhost:9200/stats;csv
+ExecReload=/bin/kill -s HUP $MAINPID
+ExecStop=/bin/kill -s QUIT $MAINPID
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl daemon-reload
+systemctl enable haproxy_exporter
+systemctl is-enabled haproxy_exporter
+systemctl start  haproxy_exporter
+systemctl status haproxy_exporter
+
+curl http://127.0.0.1:9101/metrics
+```
+
+
+
+
+
+## 五、常见问题
+
+### 5.1 TSDB被锁
 
 常出现在升级prometheus，或重启prometheus
 
@@ -392,7 +431,7 @@ ts=2022-05-13T23:29:02.926Z caller=main.go:1077 level=error err="opening storage
 
 
 
-### 4.2 获取指标
+### 5.2 获取指标
 
 ```bash
 # apiserver
@@ -410,7 +449,7 @@ curl -s https://10.101.11.183:2379/metrics \
 
 
 
-### 4.3 获取 etcd's metrices
+### 5.3 获取 etcd's metrices
 
 ```bash
 # 1. 创建证书
@@ -503,5 +542,17 @@ EOF
 kubectl -n kube-system label services/kube-etcd app.kubernetes.io/name=etcd
 kubectl -n kube-system get services/kube-etcd endpoints/kube-etcd
 
+```
+
+
+
+### 5.4 删除数据
+
+```bash
+# 匹配标签删除数据
+curl -X POST -g 'http://localhost:9090/api/v1/admin/tsdb/delete_series?match[]={instance=".*"}'
+
+# 根据时间删除数据
+curl -X POST -g 'http://localhost:9090/api/v1/admin/tsdb/delete_series?match[]={instance=".*"}&start<2023-07-01T00:00:00Z&end=2023-07-30T00:00:00Z'
 ```
 
