@@ -68,7 +68,14 @@ helm install grafana grafana/grafana \
 
 ## 三、Template
 
+<u>Category</u>
 
+- Application
+- GenDash
+- Kubernetes
+- Middleware
+- Network
+- General
 
 ```bash
 https://books.8ops.top/attachment/grafana/template/kube-state-metrics.json

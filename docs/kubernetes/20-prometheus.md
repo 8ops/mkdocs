@@ -360,11 +360,15 @@ templates:
 
 ### 3.1 scrape
 
+[configuration](https://prometheus.io/docs/prometheus/latest/configuration/configuration/)
+
 [Sample](https://books.8ops.top/attachment/prometheus/85-prometheus-server.yaml)
 
 
 
 ### 3.2 rules
+
+[configuration](https://prometheus.io/docs/alerting/latest/configuration/)
 
 [Reference](https://github.com/samber/awesome-prometheus-alerts/tree/master/dist/rules)
 

@@ -345,7 +345,7 @@ data:
       tls_config:
         insecure_skip_verify: true
       http_sd_configs:
-      - url: https://hawk.wuxingdev.cn/api/lab-ofc/node.json
+      - url: https://sd.8ops.top/api/lab-ofc/node.json
     - job_name: haproxy
       honor_timestamps: true
       scrape_interval: 1m
@@ -355,7 +355,7 @@ data:
       tls_config:
         insecure_skip_verify: true
       http_sd_configs:
-      - url: https://hawk.wuxingdev.cn/api/lab-ofc/haproxy.json
+      - url: https://sd.8ops.top/api/lab-ofc/haproxy.json
     - job_name: dnsmasq
       honor_timestamps: true
       scrape_interval: 1m
@@ -364,7 +364,7 @@ data:
       tls_config:
         insecure_skip_verify: true
       http_sd_configs:
-      - url: https://hawk.wuxingdev.cn/api/lab-ofc/dnsmasq.json
+      - url: https://sd.8ops.top/api/lab-ofc/dnsmasq.json
     alerting:
       alertmanagers:
       - kubernetes_sd_configs:
