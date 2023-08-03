@@ -256,10 +256,10 @@ mysql -uprometheus_alert -pprometheus_alert -Dprometheus_alert < prometheusalert
 
 **第四步，添加模板**
 
+<u>企业微信</u>
+
 ```bash
 # 模版名称：prometheus-wx-v2
-
-# 模版类型：企业微信
 
 # 模版内容
 {{$var:=.commonLabels}}{{ range $k,$v:=.alerts }}{{if  eq $v.status "resolved"}}<font color="comment">**【恢复】**</font>**{{$v.labels.alertname}}**
@@ -275,6 +275,24 @@ mysql -uprometheus_alert -pprometheus_alert -Dprometheus_alert < prometheusalert
 > {{$v.annotations.description}}
 > {{ $urimsg:=""}}{{ range $key,$value:=$var }}{{$urimsg =  print $urimsg $key "%3D%22" $value "%22%2C" }}{{end}}[☞点我屏蔽该告警☜](https://alertmanager.8ops.top/#/silences/new?filter=%7B{{SplitString $urimsg 0 -3}}%7D){{end}}{{end}}
 ```
+
+<u>阿里短信</u>
+
+```bash
+# 模版名称：prometheus-aly-dx
+
+# 模版内容
+{{ range $k,$v:=.alerts }}{{if eq $v.status "resolved"}}恢复/{{$v.labels.alertname}}
+开始时间：{{TimeFormat $v.startsAt "15:04"}} 
+环境信息：{{$v.labels.env}}
+故障主机：{{$v.labels.instance}}
+{{$v.annotations.summary}}{{else}}告警/{{$v.labels.alertname}}
+环境信息：{{$v.labels.env}}
+故障主机：{{$v.labels.instance}}
+{{$v.annotations.summary}}{{end}}{{end}}
+```
+
+
 
 
 
