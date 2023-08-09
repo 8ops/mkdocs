@@ -263,15 +263,18 @@ mysql -uprometheus_alert -pprometheus_alert -Dprometheus_alert < prometheusalert
 
 # 模版内容
 {{$var:=.commonLabels}}{{ range $k,$v:=.alerts }}{{if  eq $v.status "resolved"}}<font color="comment">**【恢复】**</font>**{{$v.labels.alertname}}**
-> <font color="comment">告警级别：</font> {{$v.labels.severity}}
-> <font color="comment">开始时间：</font> {{$v.startsAt}}
-> <font color="comment">结束时间：</font> {{$v.endsAt}}
-> <font color="comment">故障实例：</font> {{$v.labels.instance}}
-> {{$v.annotations.description}}{{else}}<font color="warning">**【告警】**</font>** {{$v.labels.alertname}} **
-> <font color="warning">告警级别：</font> {{$v.labels.severity}}
-> <font color="warning">开始时间：</font> {{$v.startsAt}}
-> <font color="warning">结束时间：</font> {{$v.endsAt}}
-> <font color="warning">故障实例：</font> {{$v.labels.instance}}
+> <font color="comment">级别：</font>{{$v.labels.severity}}
+> <font color="comment">环境：</font>{{$v.labels.env}}
+> <font color="comment">开始：</font>{{GetCSTtime $v.startsAt}}
+> <font color="comment">结束：</font>{{GetCSTtime $v.endsAt}}
+> <font color="comment">主机：</font>{{$v.labels.ip}}
+> {{$v.annotations.description}}
+{{else}}<font color="warning">**【告警】**</font>** {{$v.labels.alertname}} **
+> <font color="warning">级别：</font>{{$v.labels.severity}}
+> <font color="warning">环境：</font>{{$v.labels.env}}
+> <font color="warning">开始：</font>{{GetCSTtime $v.startsAt}}
+> <font color="warning">结束：</font>{{GetCSTtime $v.endsAt}}
+> <font color="warning">主机：</font>{{$v.labels.ip}}
 > {{$v.annotations.description}}
 > {{ $urimsg:=""}}{{ range $key,$value:=$var }}{{$urimsg =  print $urimsg $key "%3D%22" $value "%22%2C" }}{{end}}[☞点我屏蔽该告警☜](https://alertmanager.8ops.top/#/silences/new?filter=%7B{{SplitString $urimsg 0 -3}}%7D){{end}}{{end}}
 ```
@@ -283,12 +286,11 @@ mysql -uprometheus_alert -pprometheus_alert -Dprometheus_alert < prometheusalert
 
 # 模版内容
 {{ range $k,$v:=.alerts }}{{if eq $v.status "resolved"}}恢复/{{$v.labels.alertname}}
-开始时间：{{TimeFormat $v.startsAt "15:04"}} 
-环境信息：{{$v.labels.env}}
-故障主机：{{$v.labels.instance}}
+环境：{{$v.labels.env}}
+主机：{{$v.labels.ip}}
 {{$v.annotations.summary}}{{else}}告警/{{$v.labels.alertname}}
-环境信息：{{$v.labels.env}}
-故障主机：{{$v.labels.instance}}
+环境：{{$v.labels.env}}
+主机：{{$v.labels.ip}}
 {{$v.annotations.summary}}{{end}}{{end}}
 ```
 
