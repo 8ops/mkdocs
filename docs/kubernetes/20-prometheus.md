@@ -262,21 +262,20 @@ mysql -uprometheus_alert -pprometheus_alert -Dprometheus_alert < prometheusalert
 # 模版名称：prometheus-wx-v2
 
 # 模版内容
-{{$var:=.commonLabels}}{{ range $k,$v:=.alerts }}{{if  eq $v.status "resolved"}}<font color="comment">**【恢复】**</font>**{{$v.labels.alertname}}**
-> <font color="comment">级别：</font>{{$v.labels.severity}}
-> <font color="comment">环境：</font>{{$v.labels.env}}
-> <font color="comment">开始：</font>{{GetCSTtime $v.startsAt}}
-> <font color="comment">结束：</font>{{GetCSTtime $v.endsAt}}
-> <font color="comment">主机：</font>{{$v.labels.ip}}
-> {{$v.annotations.description}}
-{{else}}<font color="warning">**【告警】**</font>** {{$v.labels.alertname}} **
+{{$var:=.commonLabels}}{{ range $k,$v:=.alerts }}{{if  eq $v.status "resolved"}}<font color="info">**【恢复】**</font>**{{$v.labels.alertname}}**
+> <font color="info">级别：</font>{{$v.labels.severity}}
+> <font color="info">环境：</font>{{GetString $v.labels.env}}
+> <font color="info">持续：</font>{{GetTimeDuration $v.startsAt}}
+> <font color="info">开始：</font>{{GetCSTtime $v.startsAt}}
+> <font color="info">主机：</font>{{GetString $v.labels.ip}}
+> {{$v.annotations.description}}{{else}}<font color="warning">**【告警】**</font>** {{$v.labels.alertname}} **
 > <font color="warning">级别：</font>{{$v.labels.severity}}
-> <font color="warning">环境：</font>{{$v.labels.env}}
+> <font color="warning">环境：</font>{{GetString $v.labels.env}}
+> <font color="warning">持续：</font>{{GetTimeDuration $v.startsAt}}
 > <font color="warning">开始：</font>{{GetCSTtime $v.startsAt}}
-> <font color="warning">结束：</font>{{GetCSTtime $v.endsAt}}
-> <font color="warning">主机：</font>{{$v.labels.ip}}
+> <font color="warning">主机：</font>{{GetString $v.labels.ip}}
 > {{$v.annotations.description}}
-> {{ $urimsg:=""}}{{ range $key,$value:=$var }}{{$urimsg =  print $urimsg $key "%3D%22" $value "%22%2C" }}{{end}}[☞点我屏蔽该告警☜](https://alertmanager.8ops.top/#/silences/new?filter=%7B{{SplitString $urimsg 0 -3}}%7D){{end}}{{end}}
+> {{ $urimsg:=""}}{{ range $key,$value:=$var }}{{$urimsg =  print $urimsg $key "%3D%22" $value "%22%2C" }}{{end}}[☞点我屏蔽该告警☜](https://alertmanager-ops.8ops.top/#/silences/new?filter=%7B{{SplitString $urimsg 0 -3}}%7D){{end}}{{end}}
 ```
 
 <u>阿里短信</u>
@@ -286,15 +285,17 @@ mysql -uprometheus_alert -pprometheus_alert -Dprometheus_alert < prometheusalert
 
 # 模版内容
 {{ range $k,$v:=.alerts }}{{if eq $v.status "resolved"}}恢复/{{$v.labels.alertname}}
-环境：{{$v.labels.env}}
-主机：{{$v.labels.ip}}
+环境：{{GetString $v.labels.env}}
+持续：{{GetTimeDuration $v.startsAt}}
+主机：{{GetString $v.labels.ip}}
 {{$v.annotations.summary}}{{else}}告警/{{$v.labels.alertname}}
-环境：{{$v.labels.env}}
-主机：{{$v.labels.ip}}
+环境：{{GetString $v.labels.env}}
+持续：{{GetTimeDuration $v.startsAt}}
+主机：{{GetString $v.labels.ip}}
 {{$v.annotations.summary}}{{end}}{{end}}
 ```
 
-
+- 阿里短信内容中不允许有特殊字符`【,】`
 
 
 
@@ -374,6 +375,89 @@ templates:
 
 
 
+```bash
+# 下载最新二进制程序
+PROMETHEUS_VERSION=2.46.0
+wget -c -q https://github.com/prometheus/prometheus/releases/download/v${PROMETHEUS_VERSION}/prometheus-${PROMETHEUS_VERSION}.linux-amd64.tar.gz \
+-O prometheus-${PROMETHEUS_VERSION}.linux-amd64.tar.gz
+tar xzf prometheus-${PROMETHEUS_VERSION}.linux-amd64.tar.gz -C .
+mv prometheus-${PROMETHEUS_VERSION}.linux-amd64.tar.gz /usr/local/
+ln -s /usr/local/prometheus-${PROMETHEUS_VERSION}.linux-amd64 /usr/local/prometheus
+
+# add prometheus.yml
+cat > /usr/local/prometheus/prometheus.yml <<EOF
+scrape_configs:
+- job_name: prometheus-instance
+  honor_timestamps: true
+  scrape_interval: 1m
+  scrape_timeout: 1m
+  metrics_path: /metrics
+  scheme: https
+  tls_config:
+    insecure_skip_verify: true
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+  - targets:
+    - prometheus-ops.8ops.top
+- job_name: prometheus-federate
+  honor_labels: true
+  honor_timestamps: true
+  params:
+    match[]:
+    - '{job=~".*"}'
+  scrape_interval: 2m
+  scrape_timeout: 2m
+  metrics_path: /federate
+  scheme: https
+  tls_config:
+    insecure_skip_verify: true
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+  - targets:
+    - prometheus-ops.8ops.top
+EOF
+
+# add prometheus-federation.service
+mkdir -p /data1/lib/prometheus
+cat > /usr/lib/systemd/system/prometheus-federate.service <<EOF
+[Unit]
+Description=Prometheus main process.
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/usr/local/prometheus
+ExecStart=/usr/local/prometheus/prometheus \\
+        --web.listen-address=0.0.0.0:9091 \\
+        --web.page-title="Federation" \\
+        --storage.tsdb.retention.time=365d \\
+        --config.file=/usr/local/prometheus/prometheus.yml \\
+        --storage.tsdb.path=/data1/lib/prometheus \\
+        --web.console.libraries=/usr/local/prometheus/console_libraries \\
+        --web.console.templates=/usr/local/prometheus/consoles \\
+        --web.enable-lifecycle \\
+        --web.enable-admin-api \\
+        --web.enable-remote-write-receiver
+ExecReload=/bin/kill -HUP \$MAINPID
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl daemon-reload
+systemctl start prometheus-federate
+systemctl enable prometheus-federate
+systemctl is-enabled prometheus-federate
+systemctl status prometheus-federate
+```
+
+
+
+
+
 ## 三、使用向导
 
 
@@ -388,12 +472,17 @@ templates:
 
 ### 3.2 rules
 
-[configuration](https://prometheus.io/docs/alerting/latest/configuration/)
+[configuration](https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/)
 
 [Reference](https://github.com/samber/awesome-prometheus-alerts/tree/master/dist/rules)
 
 [Sample](https://books.8ops.top/attachment/prometheus/90-prometheus-metadata-rules.yaml)
 
+
+
+### 3.3 alertmanager
+
+[configuration](https://prometheus.io/docs/alerting/latest/configuration/)
 
 
 ## 四、exporter

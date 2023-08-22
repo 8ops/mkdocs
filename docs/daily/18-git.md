@@ -198,6 +198,10 @@ services:
       - '443:443'
       - '80:80'
       - '22:22'
+      - '9090:9090' # optional
+      - '9093:9093' # optional
+      - '9168:9168' # optional
+      - '3000:3000' # optional
     volumes:
       - '\$GITLAB_HOME/config:/etc/gitlab'
       - '\$GITLAB_HOME/logs:/var/log/gitlab'
@@ -215,6 +219,29 @@ docker exec -t gitlab-web-1 gitlab-backup create \
     SKIP=artifacts,repositories,registry,uploads,builds,pages,lfs,packages,terraform_state
 
 ```
+
+
+
+### 2.3 publish port
+
+```bash
+vim /etc/gitlab/gitlab.rb
+
+
+prometheus['listen_address'] = '0.0.0.0:9090'
+
+alertmanager['listen_address'] = '0.0.0.0:9093'
+
+gitlab_exporter['listen_address'] = '0.0.0.0'
+gitlab_exporter['listen_port'] = '9168'
+
+grafana['enable'] = true
+grafana['http_addr'] = '0.0.0.0'
+grafana['http_port'] = 3000
+
+```
+
+
 
 
 
@@ -344,4 +371,32 @@ shutdown_timeout = 0
     shm_size = 0
 EOF
 ```
+
+## 四、github PR
+
+PR步骤，在github中经常看到很多好的开源项目，有些功能没有覆盖到，或暴露出些bug可以通过PR帮其完善
+
+```bash
+# 第一步，fork repo 到自己帐号下
+
+# 第二步，克隆到本地
+git clone git@xxx
+
+# 第三步，与原 repo 建立链接
+git remote add upstream https://github.com/xx/yy.git
+git remote -v
+
+# 第四步，建立分支
+git checkout -b feature-xx
+
+# 第五步，coding，commit
+git commit -m "add feature xx" .
+
+# 第六步，push
+git push --set-upstream origin feature-xx
+
+# 第七步，自己帐号下创建 PR 到原 repo，描述相关内容
+```
+
+
 
