@@ -275,7 +275,7 @@ mysql -uprometheus_alert -pprometheus_alert -Dprometheus_alert < prometheusalert
 > <font color="warning">开始：</font>{{GetCSTtime $v.startsAt}}
 > <font color="warning">主机：</font>{{GetString $v.labels.ip}}
 > {{$v.annotations.description}}
-> {{ $urimsg:=""}}{{ range $key,$value:=$var }}{{$urimsg =  print $urimsg $key "%3D%22" $value "%22%2C" }}{{end}}[☞点我屏蔽该告警☜](https://alertmanager-ops.8ops.top/#/silences/new?filter=%7B{{SplitString $urimsg 0 -3}}%7D){{end}}{{end}}
+> {{ $urimsg:=""}}{{ range $key,$value:=$var }}{{$urimsg =  print $urimsg $key "%3D%22" $value "%22%2C" }}{{end}}[☞点我屏蔽该告警☜](https://alertmanager-ops.{{$v.labels.env}}.8ops.top/#/silences/new?filter=%7B{{SplitString $urimsg 0 -3}}%7D){{end}}{{end}}
 ```
 
 <u>阿里短信</u>

@@ -180,7 +180,6 @@ nav:
       - kubernetes/23-grafana.md
       - kubernetes/24-redis.md
       - kubernetes/25-elastic.md
-      - kubernetes/20-promql.md
       - kubernetes/26-harbor.md
       - kubernetes/27-kong.md
       - kubernetes/28-rabbitmq.md
@@ -193,6 +192,8 @@ nav:
       - kubernetes/30-readme.md
       - kubernetes/09-account.md
       - kubernetes/10-access-image.md
+      - kubernetes/20-promql.md
+      - kubernetes/20-promql-func.md
       - kubernetes/31-kubeconfig.md
       - kubernetes/32-daemonset.md
       - kubernetes/33-statefulset.md
