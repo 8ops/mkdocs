@@ -1,0 +1,34 @@
+prometheus:
+  scrapeAnnotations: true
+
+controller:
+  enabled: true
+  logLevel: info
+  image:
+    repository: hub.8ops.top/google_containers/metallb-controller
+    tag: v0.13.5
+
+  resources:
+    limits:
+      cpu: 100m
+      memory: 100Mi
+    requests:
+      cpu: 100m
+      memory: 100Mi
+
+speaker:
+  enabled: true
+  logLevel: info
+  image:
+    repository: hub.8ops.top/google_containers/metallb-speaker
+    tag: v0.13.5
+
+  resources:
+    limits:
+      cpu: 100m
+      memory: 100Mi
+    requests:
+      cpu: 100m
+      memory: 100Mi
+
+
