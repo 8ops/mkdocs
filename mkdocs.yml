@@ -216,7 +216,7 @@ nav:
     - 【SRE】:
       - ops/50-sre-mogu.md
       - ops/51-sre-didi.md
-    - 【监控】
+    - 【监控】:
       - ops/60-monitor.md
   - 运维开发: 
     - 【Golang】:
