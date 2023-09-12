@@ -2,11 +2,11 @@
 
 [tutorials](https://rabbitmq.com/getstarted.html)
 
-| hostname               | IP            |      |
-| ---------------------- | ------------- | ---- |
-| GAT-GSDEV-ORCH-NODE-01 | 10.101.11.116 |      |
-| GAT-GSDEV-ORCH-NODE-02 | 10.101.11.186 |      |
-| GAT-GSDEV-ORCH-NODE-03 | 10.101.11.94  |      |
+| hostname           | IP            |      |
+| ------------------ | ------------- | ---- |
+| K-Lab-ORCH-NODE-01 | 10.101.11.116 |      |
+| K-Lab-ORCH-NODE-02 | 10.101.11.186 |      |
+| K-Lab-ORCH-NODE-03 | 10.101.11.94  |      |
 
 
 
@@ -214,11 +214,11 @@ rabbitmqctl set_permissions -p / guest ".*" ".*" ".*"
 # default local [--node <node>]
 rabbitmqctl stop_app 
 # rabbitmqctl reset # 当不是disc节点时将脱离cluster
-rabbitmqctl join_cluster --ram rabbit@GAT-GSDEV-ORCH-NODE-01
+rabbitmqctl join_cluster --ram rabbit@K-Lab-ORCH-NODE-01
 rabbitmqctl start_app
 
-rabbitmqctl --node rabbit@GAT-GSDEV-ORCH-NODE-02 stop_app
-rabbitmqctl forget_cluster_node rabbit@GAT-GSDEV-ORCH-NODE-02
+rabbitmqctl --node rabbit@K-Lab-ORCH-NODE-02 stop_app
+rabbitmqctl forget_cluster_node rabbit@K-Lab-ORCH-NODE-02
 
 rabbitmqctl stop_app 
 rabbitmqctl change_cluster_node_type disc
@@ -635,29 +635,28 @@ python-txamqp-0.3
 ### 3.3 case 3
 
 ```bash
-Cluster 搭建与使用
+# Cluster 搭建与使用
 
-参考官方文档 https://www.rabbitmq.com/clustering.html
+# 参考官方文档 https://www.rabbitmq.com/clustering.html
 
-前题：
-1，Erlang 与 RabbitMQ_Server 版本一致
-2，RabbitMQ_Server 使用的 cookies 一致
+# 前题：
+# 1，Erlang 与 RabbitMQ_Server 版本一致
+# 2，RabbitMQ_Server 使用的 cookies 一致
 
-演示操作
+# 演示操作
 node0: 192.168.1.50/24
 node1: 192.168.1.51/24
 node2: 192.168.1.52/24
 
-配置 hosts 信息 or 内部 dns 信息
+# 配置 hosts 信息 or 内部 dns 信息
 10.0.10.50  s50
 10.0.10.51  s51
 10.0.10.52  s52
 
-第一步：启动各节点 rabbitmq_server
-启动 rabbitmq_server
+# 第一步：启动各节点 rabbitmq_server,启动 rabbitmq_server
 rabbitmq_server -detached
 
-查看集群状态
+# 查看集群状态
 rabbitmqctl cluster_status
 
 [{nodes,[{disc,[rabbit@s50]}]},{running_nodes,[rabbit@s50]},{partitions,[]}]
@@ -677,56 +676,52 @@ or
     {partitions,[]}
 ]
 
-第二步：同步 cookie 
+# 第二步：同步 cookie 
 
-停止 node2 rabbitmq-server
+# 停止 node2 rabbitmq-server
 rabbitmqctl stop_app
 /root/.erlang.cookie
 
-第三步：将 node2 加入集群
+# 第三步：将 node2 加入集群
 
-启动 node2 --> rabbitmq-server 
+# 启动 node2 --> rabbitmq-server 
 rabbitmqctl stop_app
 rabbitmqctl join_cluster --ram rabbit@s50
 rabbitmqctl start_app
 
----- 这样 cluster 就搭建起来了
+# ---- 这样 cluster 就搭建起来了
 
-验证效果  rabbitmqctl list_queues
+# 验证效果  rabbitmqctl list_queues
 
-启动节点监控代理
+# 启动节点监控代理
 rabbitmqctl stop
 rabbitmq-plugins enable rabbitmq_management_agent
 rabbitmq-plugins list
 rabbitmq-server -detached
 
-第四步：节点管理
-
-改变节点类型（非必须）
+# 第四步：节点管理,改变节点类型（非必须）
 rabbitmqctl stop_app
 rabbitmqctl change_cluster_node_type disc
 rabbitmqctl start_app
 
 rabbitmqctl cluster_status
 
-主动脱离集群
-进入node1
+# 主动脱离集群,进入node1
 rabbitmqctl stop_app
 rabbitmqctl reset
 rabbitmqct1 start_app
 
-再查看集群状态，和脱离节点状态 cluster_status
+# 再查看集群状态，和脱离节点状态 cluster_status
 
-集群丢弃节点
-进入node2
+# 集群丢弃节点,进入node2
 rabbitmqctl stop_app
 
-进入node1
+# 进入node1
 rabbitmqctl forget_cluster_node rabbit@s52
 
-第五步：使用 rabbitmq.conf & rabbitmq-env.conf 配置启动服务
+# 第五步：使用 rabbitmq.conf & rabbitmq-env.conf 配置启动服务
 
-参考
+# 参考
 https://www.rabbitmq.com/configure.html#configuration-file
 http://www.erlang.org/doc/man/config.html
 
@@ -735,22 +730,22 @@ http://www.erlang.org/doc/man/config.html
 or
 /etc/rabbitmq/rabbitmq.conf
 
-================================================================================
+# ================================================================================
 
-注意使用区别
+# 注意使用区别
 
 rabbitmq-server -detached ==> rabbitmqctl stop
 rabbitmqctl start_app     ==> rabbitmqctl stop_app
 
 
-Web API 插件
+# Web API 插件
 rabbitmq_web_stomp                      web 接口
 rabbitmq_web_stomp_examples             实例
 RabbitMQ Management HTTP API            所有功能接口
 
-================================================================================
+# ================================================================================
 
-指定配置搭建集群 Cluster
+# 指定配置搭建集群 Cluster
 
 RABBITMQ_CONFIG_FILE=/usr/local/rabbitmq_server-3.2.4/etc/rabbitmq/rabbitmq_r1 RABBITMQ_NODE_PORT=5671 RABBITMQ_SERVER_START_ARGS="-rabbitmq_management listener [{port,15671}]" RABBITMQ_NODENAME=r1 /usr/local/rabbitmq_server-3.2.4/sbin/rabbitmq-server -detached
 sleep 5
@@ -772,21 +767,28 @@ rabbitmqctl -n r1 stop
 rabbitmqctl -n r2 stop
 rabbitmqctl -n r3 stop
 
-镜像队列
-
-全部镜像 
-
+# 镜像队列,全部镜像 
 rabbitmqctl -n r1@s151 set_policy ha-all "^ha." '{"ha-mode":"all"}'
 rabbitmqctl -n r1@s151 set_policy ha-queue "^queue" '{"ha-mode":"all"}'
 rabbitmqctl -n r1@s151 set_policy ha-uplus "^uplus" '{"ha-mode":"all"}'
 
-指定个数的镜像，任意两个节点机器 
+# 指定个数的镜像，任意两个节点机器 
 
 rabbitmqctl -n r1@s151 set_policy ha-test-exactly "^test.exactly" '{"ha-mode":"exactly","ha-params":2}'
 
-指定固定几个节点内镜像
+# 指定固定几个节点内镜像
 
 rabbitmqctl -n r1@s151 set_policy ha-test-nodes "^test.nodes" '{"ha-mode":"nodes","ha-params":["r1@s151","r2@s151"]}'
 
+```
+
+### 3.4 重启失败
+
+```bash
+# 释放所有进程
+kill $pid
+
+# 反复启动
+systemctl start rabbitmq-server
 ```
 

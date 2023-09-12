@@ -53,3 +53,25 @@ yum search docker-compose
 yum install -y docker-compose
 ```
 
+
+
+## 二、CRI
+
+|                     | docker            | ctr（containerd）            | crictl（kubernetes） |
+| :------------------ | :---------------- | :--------------------------- | :------------------- |
+| 查看运行的容器      | docker ps         | ctr task ls/ctr container ls | crictl ps            |
+| 查看镜像            | docker images     | ctr image ls                 | crictl images        |
+| 查看容器日志        | docker logs       | 无                           | crictl logs          |
+| 查看容器数据信息    | docker inspect    | ctr container info           | crictl inspect       |
+| 查看容器资源        | docker stats      | 无                           | crictl stats         |
+| 启动/关闭已有的容器 | docker start/stop | ctr task start/kill          | crictl start/stop    |
+| 运行一个新的容器    | docker run        | ctr run                      | 无（最小单元为 pod） |
+| 修改镜像标签        | docker tag        | ctr image tag                | 无                   |
+| 创建一个新的容器    | docker create     | ctr container create         | crictl create        |
+| 导入镜像            | docker load       | ctr image import             | 无                   |
+| 导出镜像            | docker save       | ctr image export             | 无                   |
+| 删除容器            | docker rm         | ctr container rm             | crictl rm            |
+| 删除镜像            | docker rmi        | ctr image rm                 | crictl rmi           |
+| 拉取镜像            | docker pull       | ctr image pull               | ctictl pull          |
+| 推送镜像            | docker push       | ctr image push               | 无                   |
+| 在容器内部执行命令  | docker exec       | 无                           | crictl exec          |
