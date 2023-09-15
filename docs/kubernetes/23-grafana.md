@@ -10,7 +10,7 @@
 
 
 
-## 一、Install
+## 一、安装
 
 ```bash
 helm repo add grafana https://grafana.github.io/helm-charts
@@ -45,7 +45,7 @@ grafana-cli admin reset-admin-password "admin"
 
 
 
-## 二、Upgrade
+## 二、升级
 
 ```bash
 
@@ -66,7 +66,7 @@ helm install grafana grafana/grafana \
 
 
 
-## 三、Template
+## 三、模板
 
 <u>Category</u>
 
@@ -89,7 +89,7 @@ https://books.8ops.top/attachment/grafana/template/middleware-redis-ha.json
 
 
 
-## 四、演示效果
+## 四、效果
 
 [官方模板](https://grafana.com/grafana/dashboards/)
 
@@ -108,4 +108,63 @@ https://books.8ops.top/attachment/grafana/template/middleware-redis-ha.json
 ![NGINX Ingress controller](../images/grafana/middleware-nginx.png)
 
 ![Redis Dashboard for Prometheus Redis Exporter](../images/grafana/middleware-redis.png)
+
+## 五、进阶
+
+### 5.1 变量
+
+
+
+### 5.2 插件
+
+#### 5.2.1 node graph
+
+[Reference](https://grafana.com/grafana/plugins/hamedkarbasi93-nodegraphapi-datasource/)
+
+```bash
+# 插件名称
+hamedkarbasi93-nodegraphapi-datasource
+
+
+```
+
+
+
+#### 5.2.2 echarts
+
+```bash
+# 插件名称
+volkovlabs-echarts-panel
+
+```
+
+
+
+#### 5.2.3 static database
+
+```bash
+# 插件名称
+marcusolsson-static-datasource
+
+```
+
+
+
+#### 5.2.4 diagram panel
+
+```bash
+# 插件名称
+jdbranham-diagram-panel
+
+# Mermaid syntax
+graph LR
+A[alias A] 
+B{alias B}
+A --> B ----> D[rect]
+B --> E[(database)]
+A --> C{{polygon}} --> F
+C --> G((circle))
+G ---->|long line| I
+G ----> J(round rect)
+```
 
