@@ -176,7 +176,7 @@ RestartSec=10
 WorkingDirectory=/usr/local/rabbitmq_server
 ExecStart=/usr/local/rabbitmq_server/sbin/rabbitmq-server
 ExecStop=/usr/local/rabbitmq_server/sbin/rabbitmqctl stop
-ExecStop=/bin/sh -c "while ps -p $MAINPID >/dev/null 2>&1; do sleep 1; done"
+ExecStop=/bin/sh -c "while ps -p \$MAINPID >/dev/null 2>&1; do sleep 1; done"
 
 [Install]
 WantedBy=multi-user.target
@@ -215,10 +215,12 @@ rabbitmqctl set_user_tags guest administrator
 rabbitmqctl set_permissions -p / guest ".*" ".*" ".*"
 
 # node
+# 需要在 /etc/hosts 埋好hostname互信解析
 # default local [--node <node>]
 rabbitmqctl stop_app 
 # rabbitmqctl reset # 当不是disc节点时将脱离cluster
-rabbitmqctl join_cluster --ram rabbit@K-Lab-ORCH-NODE-01
+# rabbitmqctl join_cluster --ram rabbit@K-Lab-ORCH-NODE-01
+rabbitmqctl join_cluster rabbit@K-Lab-ORCH-NODE-01
 rabbitmqctl start_app
 
 rabbitmqctl --node rabbit@K-Lab-ORCH-NODE-02 stop_app
