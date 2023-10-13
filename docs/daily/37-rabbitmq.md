@@ -34,11 +34,14 @@ Older distributions can also lack a recent enough version of OpenSSL. Erlang 24 
 # perl --version: v5.16.3
 yum install perl-CPAN -y -q
 
-# method 1
+# 替换国内源
+## method 1
 rm -f ~/.cpan/CPAN/MyConfig.pm
 PERL_MM_USE_DEFAULT=1 perl -MCPAN -e 'CPAN::HandleConfig->edit("urllist", "unshift", "https://mirrors.tuna.tsinghua.edu.cn/CPAN/"); mkmyconfig'
+# OR
+PERL_MM_USE_DEFAULT=1 perl -MCPAN -e 'CPAN::HandleConfig->edit("urllist", "unshift", "http://mirrors.aliyun.com/CPAN/"); mkmyconfig'
 
-# method 2
+## method 2
 perl -MCPAN -e shell
 o conf 查看配置信息
 o conf urllist 查看当前源地址
@@ -48,6 +51,7 @@ o conf commit 确认添加
 o conf urllist ftp://mirrors.sohu.com/CPAN/ http://mirrors.163.com/cpan/ http://mirrors.ustc.edu.cn/CPAN/ 一次添加多个源地址
 o conf urllist pop http://mirrors.163.com/cpan/ ftp://mirrors.sohu.com/CPAN/ 移除源地址
 
+# 安装依赖库
 perl -MCPAN -e shell
 install IPC/Cmd.pm
 

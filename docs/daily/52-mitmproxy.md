@@ -32,6 +32,8 @@ mitmproxy
 # iphone
 ## 设置网络代理后
 ## 浏览器访问 http://charlesproxy.com/getssl
+## 浏览器访问 http://char.pro/getssl
+
 ```
 
 

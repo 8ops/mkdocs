@@ -503,8 +503,8 @@ After=syslog.target network.target
 
 [Service]
 ExecStart=/usr/local/sbin/haproxy_exporter --haproxy.scrape-uri=http://admin:xxxx@localhost:9200/stats;csv
-ExecReload=/bin/kill -s HUP $MAINPID
-ExecStop=/bin/kill -s QUIT $MAINPID
+ExecReload=/bin/kill -s HUP \$MAINPID
+ExecStop=/bin/kill -s QUIT \$MAINPID
 Restart=on-failure
 
 [Install]

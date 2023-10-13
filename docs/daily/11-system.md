@@ -8,6 +8,10 @@
 # 获取 linux 操作系统的位数 
 getconf LONG_BIT
 
+# 生成密码
+openssl rand -base64 20
+openssl rand -hex 20
+
 ```
 
 
