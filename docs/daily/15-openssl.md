@@ -168,6 +168,20 @@ openssl req -new -key autobestdevops.com.key -out autobestdevops.com.csr
 [acme.sh](<https://github.com/Neilpang/acme.sh>)  使用 DNS 认证。e.g. dnspod
 
 ```bash
+# install
+git clone https://github.com/acmesh-official/acme.sh.git .acme.sh
+
+BASHRC_FILE=.bashrc
+[ -e ${BASHRC_FILE} ] || touch ${BASHRC_FILE}
+grep -q acme.sh ${BASHRC_FILE} || cat <<EOF >> ${BASHRC_FILE}
+# acme.sh
+export LE_WORKING_DIR="/root/.acme.sh"
+alias acme.sh="/root/.acme.sh/acme.sh"
+EOF
+. .bashrc
+acme.sh --version
+
+# 是指 DNSpod Token
 export DP_Id=
 export DP_Key=
 
@@ -175,7 +189,8 @@ export DP_Key=
 acme.sh --register-account -m email --server zerossl
 acme.sh --set-default-ca  --server zerossl
 
-# issue
+# issue 
+# 可能需要 FW
 acme.sh --issue \
     -d 8ops.top \
     -d "*.8ops.top" \
@@ -191,6 +206,9 @@ acme.sh --install-cert \
 
 # renew
 acme.sh --renew -d 8ops.top -f
+
+# crontab
+0 4 * * 1 "/root/.acme.sh"/acme.sh --cron --home "/root/.acme.sh" > /dev/null
 ```
 
 
