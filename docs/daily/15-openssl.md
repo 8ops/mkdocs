@@ -171,10 +171,14 @@ openssl req -new -key autobestdevops.com.key -out autobestdevops.com.csr
 export DP_Id=
 export DP_Key=
 
+# register https://github.com/acmesh-official/acme.sh/wiki/ZeroSSL.com-CA
+acme.sh --register-account -m email --server zerossl
+acme.sh --set-default-ca  --server zerossl
+
 # issue
 acme.sh --issue \
     -d 8ops.top \
-    -d *.8ops.top \
+    -d "*.8ops.top" \
     --dns dns_dp \
     --debug 2
 

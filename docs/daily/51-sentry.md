@@ -50,7 +50,6 @@ mail.from: 'Sentry <sentry-noreplay@8ops.top>'
 ## 二、搭建
 
 ```bash
-
 cd /usr/local
 SENTRY_VERSION=23.5.1
 wget https://github.com/getsentry/self-hosted/archive/refs/tags/${SENTRY_VERSION}.tar.gz
@@ -59,6 +58,7 @@ ln -s self-hosted-${SENTRY_VERSION} sentry
 cd sentry
 ./install.sh
 
+# 先安装，再更新配置，避免替换 system.secret-key
 ```
 
 
