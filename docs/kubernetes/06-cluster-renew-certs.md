@@ -15,6 +15,9 @@ kubeadm certs check-expiration
 ### 1.2 备份证书
 
 ```bash
+ls /etc
+ls /etc/kubernetes
+
 cp -r /etc/kubernetes /etc/kubernetes-$(date +%Y%m%d)
 ```
 
@@ -93,6 +96,11 @@ find /etc/kubernetes/pki -name '*.crt' | while read cert
 do
 printf "\nchecking [%-50s] [%s] " ${cert} "`openssl x509 -noout -enddate -in ${cert}`"
 done;echo
+
+# 核实新签发证书后进行的重启Pod
+apt install jq -y -q
+stat /etc/kubernetes/pki/apiserver-kubelet-client.crt | grep Modify
+crictl inspect `crictl ps --name kube-scheduler -q` | jq .status.createdAt
 
 # 查看kubelet最后加载时间
 systemctl status kubelet
