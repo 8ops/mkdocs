@@ -20,7 +20,7 @@ cp -r /etc/kubernetes /etc/kubernetes-$(date +%Y%m%d)
 
 
 
-### 更新证书
+### 1.3 更新证书
 
 ```bash
 # 每个control-plane节点
@@ -38,12 +38,18 @@ kubeadm certs renew all
 #   ls /etc/kubernetes/manifests/
 #   etcd.yaml  kube-apiserver.yaml  kube-controller-manager.yaml  kube-scheduler.yaml
 
-kubectl -n kube-system get po -o name | \
-  awk '/kube-apiserver|kube-controller|kube-scheduler|etcd/{printf("kubectl -n kube-system delete %s\n",$1)}' | sh
+# 查看状态
+kubectl -n kube-system get po -w
 
 mv /etc/kubernetes/manifests /etc/kubernetes/manifests-$(date +%Y%m%d)
 # sleep 60s
 mv /etc/kubernetes/manifests-$(date +%Y%m%d) /etc/kubernetes/manifests
+# Depercated
+# kubectl -n kube-system get po -o name | \
+#   awk '/kube-apiserver|kube-controller|kube-scheduler|etcd/{printf("kubectl -n kube-system delete %s\n",$1)}' | sh
+
+# 看容器创建时间
+watch 'crictl ps -a | awk "/kube-apiserver|kube-controller|kube-scheduler|etcd/"'
 
 # 重启kube-proxy
 kubectl -n kube-system rollout restart ds kube-proxy
@@ -73,7 +79,7 @@ kubectl -n kube-server scale --replicas=1 deployment.apps/prometheus-server
 
 
 
-### 验收效果
+### 1.5 验收效果
 
 ```bash
 # 获取节点
@@ -93,7 +99,7 @@ systemctl status kubelet
 
 # review etcd
 mkdir -p ~/bin
-wget --quiet --no-check-certificate m.8ops.top/linux/etcdctl-3.4.24 -O ~/bin/etcdctl
+wget --quiet --no-check-certificate https://m.8ops.top/linux/etcdctl-3.4.24 -O ~/bin/etcdctl
 chmod +x ~/bin/etcdctl
 export PATH=~/bin:$PATH
 etcdctl endpoint status -w table \
@@ -111,7 +117,7 @@ etcdctl endpoint status -w table \
 
 
 
-### 2.1 获取源码-分支 √
+### 2.1 获取源码-分支
 
 ```bash
 cd /opt
@@ -150,7 +156,7 @@ cd kubernetes-${KUBE_VERSION}
 
 
 
-### 2.2 修改源码 √
+### 2.2 修改源码 
 
 ```bash
 # v1.23.0
@@ -162,9 +168,36 @@ grep duration365d staging/src/k8s.io/client-go/util/cert/cert.go
 sed -i '50 s/time.Hour\ \*\ 24\ \*\ 365/time.Hour * 24 * 365 * 100/' cmd/kubeadm/app/constants/constants.go
 grep CertificateValidity cmd/kubeadm/app/constants/constants.go
 
+git diff .
+
 # 10y
 sed -i '50 s/time.Hour\ \*\ 24\ \*\ 365/time.Hour * 24 * 365 * 10/' cmd/kubeadm/app/constants/constants.go
 grep CertificateValidity cmd/kubeadm/app/constants/constants.go
+
+git diff .
+
+```
+
+
+
+```bash
+# v1.25.0
+
+# 100y
+sed -i '80 s/duration365d\ \*\ 10/duration365d * 100/' staging/src/k8s.io/client-go/util/cert/cert.go
+grep duration365d staging/src/k8s.io/client-go/util/cert/cert.go
+
+sed -i '51 s/time.Hour\ \*\ 24\ \*\ 365/time.Hour * 24 * 365 * 100/' cmd/kubeadm/app/constants/constants.go
+grep CertificateValidity cmd/kubeadm/app/constants/constants.go
+
+git diff .
+
+# 10y
+sed -i '51 s/time.Hour\ \*\ 24\ \*\ 365/time.Hour * 24 * 365 * 10/' cmd/kubeadm/app/constants/constants.go
+grep CertificateValidity cmd/kubeadm/app/constants/constants.go
+
+git diff .
+
 ```
 
 
@@ -274,7 +307,7 @@ cat build/build-image/cross/VERSION
 
 yum install -y -q rsync docker-ce
 
-# 配置docker代理
+# 配置docker代理下载源registry.k8s.io镜像
 [Service]
 Environment="HTTP_PROXY=http://proxy.example.com:8080/"
 Environment="HTTPS_PROXY=http://proxy.example.com:8080/"
@@ -294,6 +327,16 @@ build/run.sh make kubeadm KUBE_BUILD_PLATFORMS=linux/amd64
 ```
 
 
+
+### 2.4 续签过程
+
+```bash
+mv /usr/bin/kubeadm{,-$(kubeadm version -o short)}
+
+curl -k -s -o /usr/bin/kubeadm https://filestorage.8ops.top/ops/kubeadm/kubeadm-v1.25.0.amd64-10y
+chmod +x /usr/bin/kubeadm
+
+```
 
 
 
