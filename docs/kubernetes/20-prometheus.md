@@ -522,6 +522,32 @@ curl http://127.0.0.1:9101/metrics
 
 
 
+### 4.2 blackbox
+
+可以探测HTTPS、HTTP、TCP、DNS、ICMP、gRPC等Endpoints。
+
+```bash
+insecure_tls_verify: true
+```
+
+
+
+### 4.3 kube-prometheus-stack
+
+探测 apiserver、kubelet 组件过期
+
+
+
+### 4.4 x509-certificate
+
+通过watchFiles文件的方式探测过期时间
+
+```bash
+watchFiles:
+- /var/lib/kubelet/pki/kubelet-client-current.pem
+- /etc/kubernetes/pki/apiserver.crt
+```
+
 
 
 ## 五、常见问题
