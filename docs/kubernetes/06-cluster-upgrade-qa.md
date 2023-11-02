@@ -265,7 +265,7 @@ etcdctl member remove 1bd3101f2cbe0fab \
 
 
 
-## 三、番外
+## 三、番外篇
 
 ### 3.1 成员数量(cluser size)
 
