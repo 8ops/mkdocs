@@ -53,6 +53,7 @@ theme:
 
   palette:
     - scheme: default
+      # https://squidfunk.github.io/mkdocs-material/setup/changing-the-colors/#primary-color
       # primary: indigo
       # accent: indigo
       # primary: 'deep purple'
@@ -63,8 +64,8 @@ theme:
         icon: material/brightness-7
         name: Switch to dark mode
     - scheme: slate
-      primary: indigo
-      accent: indigo
+      primary: 'teal'
+      accent: 'teal'
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
