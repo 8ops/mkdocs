@@ -400,3 +400,21 @@ git push --set-upstream origin feature-xx
 
 
 
+## 五、变更远程分支
+
+```bash
+# 重命名远程分支对应的本地分支
+git branch -m oldName newName
+
+# 删除远程分支
+git push --delete origin oldName
+
+# 上传新命名的本地分支
+git push origin newName
+
+# 关联远程分支
+git branch --set-upstream-to origin/newName
+```
+
+
+
