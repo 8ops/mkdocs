@@ -85,3 +85,87 @@ HEALTHCHECK_TIMEOUT=1m30s
 HEALTHCHECK_RETRIES=10
 ```
 
+
+
+## 四、问题
+
+```bash
+# 配置
+https://sentry.8ops.top/manage/settings/
+
+# 1. root
+# 2. security
+# 3. limit
+
+# config.yml，若修改配置文件，则页面无法修改
+system.url-prefix: 'https://sentry.8ops.top'
+system.event-retention-days: '7'
+
+docker exec -it sentry-self-hosted_worker_1 bash
+sentry cleanup --days 7
+
+docker exec -it sentry-self-hosted_postgres_1 bash
+vacuumdb -U postgres -d postgres -v -f --analyze
+
+```
+
+### 4.1 官方设置方案
+
+修改 .env文件的以下配置
+
+```javascript
+SENTRY_EVENT_RETENTION_DAYS=7
+```
+
+
+
+### 4.2 SENTRY数据软清理
+
+```javascript
+#登录worker容器
+docker exec -it sentry_onpremise_worker_1 /bin/bash 
+
+#保留多少天的数据，cleanup使用delete命令删除postgresql数据，但对于delete,update等操作，只是将对应行标志为DEAD，并没有真正释放磁盘空间
+sentry cleanup --days 7
+```
+
+
+
+### 4.3 POSTGRES数据清理
+
+```javascript
+#登录postgres容器
+docker exec -it sentry_onpremise_postgres_1 /bin/bash
+#运行清理
+vacuumdb -U postgres -d postgres -v -f --analyze
+```
+
+
+
+### 4. 定时清理脚本参考
+
+```javascript
+0 1 * * * cd /root/onpremise && { time docker-compose run --rm worker cleanup --days 7; } &> /var/log/sentry-cleanup.log
+
+0 8 * * * { time docker exec -i $(docker ps --format "table {{.Names}}"|grep postgres) vacuumdb -U postgres -d postgres -v -f --analyze; } &> /var/logs/sentry-vacuumdb.log
+```
+
+
+
+### 4.5 清理kafka磁盘占用
+
+清理kafka占用磁盘过大的问题搜到可以配置 .env，如下:
+
+```javascript
+KAFKA_LOG_RETENTION_HOURS=24
+KAFKA_LOG_RETENTION_BYTES=53687091200   #50G
+KAFKA_LOG_SEGMENT_BYTES=1073741824      #1G
+KAFKA_LOG_RETENTION_CHECK_INTERVAL_MS=300000
+KAFKA_LOG_SEGMENT_DELETE_DELAY_MS=60000
+```
+
+
+
+### 4.6 占满100%处理
+
+如果已经占满100%，可以先去查找筛选出磁盘上其他占用很大的无用文件或者日志等，释放出一部分空间。
