@@ -118,3 +118,17 @@ systemctl enable filestorage
 systemctl status filestorage
 ```
 
+
+
+> 快捷使用
+
+```bash
+# view √
+RSYNC_PASSWORD=jesse rsync -av --list-only sync@10.101.11.236::share/
+RSYNC_PASSWORD=jesse rsync -av --list-only share/ sync@10.101.11.236::share/
+
+# put √
+RSYNC_PASSWORD=jesse rsync -av --list-only share/ sync@10.101.11.236::share/
+rsync -av --list-only --password-file=sync.password share/ sync@10.101.11.236::share/
+```
+

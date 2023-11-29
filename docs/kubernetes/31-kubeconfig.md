@@ -142,6 +142,8 @@ kubectl --kubeconfig ${USER}.kubeconfig get all
 
 ## 三、示例
 
+### 3.1 通用
+
 ```bash
 # 适用于kubernetes v1.24.0 之后的版本
 USER=guest
@@ -184,6 +186,29 @@ EOF
 kubectl -n kube-server get secret dashboard-${USER}-secret \
     -o jsonpath={.data.token} | base64 --decode > dashboard-${USER}.token
 
+```
+
+### 3.2 单个命名空间
+
+```bash
+USER=guest
+NAMESPACE=kube-app
+kubectl -n ${NAMESPACE} create serviceaccount dashboard-${USER} 
+
+kubectl -n ${NAMESPACE} create role dashboard-${USER} \
+  --verb=* \
+  --resource=* 
+
+#- verbs: ["create", "delete", "get", "list", "patch", "update", "watch"]  
+#  apiGroups: ["", "extensions", "apps"]  
+#  resources: ["*"]
+
+kubectl -n ${NAMESPACE} create rolebinding dashboard-${USER} \
+  --role=dashboard-${USER} \
+  --serviceaccount=kube-app:dashboard-${USER}
+
+kubectl describe secrets \
+  -n ${NAMESPACE} $(kubectl -n ${NAMESPACE} get secret | awk '/dashboard-${USER}/{print $1}')
 ```
 
 

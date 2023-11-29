@@ -55,6 +55,21 @@ yum install -y docker-compose
 
 
 
+### 1.4 docker-compose
+
+```bash
+# down binary
+# from https://docs.docker.com/compose/install/standalone/
+curl -SL https://github.com/docker/compose/releases/download/v2.23.3/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose
+
+# from epel
+yum install -y docker-compose
+```
+
+
+
+
+
 ## 二、CRI
 
 |                     | docker            | ctr（containerd）            | crictl（kubernetes） |
