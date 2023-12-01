@@ -69,7 +69,31 @@ kubectl config view --kubeconfig ${USER}.kubeconfig
 
 2. ClusterRole+ClusterRoleBinding
 
-> 下面实例使用第 2 种
+
+
+#### 2.2.1 role
+
+```bash
+NAMESPACE=kube-app
+
+kubectl -n ${NAMESPACE} create role user-op-for-${USER} \
+  --verb=* \
+  --resource=* 
+
+# 更多权限
+#- verbs: ["create", "delete", "get", "list", "patch", "update", "watch"]  
+#  apiGroups: ["", "extensions", "apps"]  
+#  resources: ["*"]
+
+kubectl -n ${NAMESPACE} create rolebinding user-op-for-${USER}-binding \
+  --role=user-op-for-${USER} \
+  --user=${USER}
+  
+```
+
+
+
+#### 2.2.2 clusterrole
 
 ```bash
 # 创建ClusterRole
@@ -188,7 +212,9 @@ kubectl -n kube-server get secret dashboard-${USER}-secret \
 
 ```
 
-### 3.2 单个命名空间
+### 3.2 单租户
+
+限定在单个命名空间的 dashboard 的 token
 
 ```bash
 USER=guest
