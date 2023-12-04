@@ -242,6 +242,9 @@ nav:
     - data/01-mysql.md
     - data/02-neo4j.md
     - data/03-redis.md
+    - 【NLP】:
+      - data/10-chatgpt.md
+      - data/11-huggingface.md
   - 生活随记: 
     - note/00-daily.md
     - note/01-effect.md
