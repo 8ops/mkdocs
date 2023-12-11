@@ -268,3 +268,35 @@ python -m http.server 8000
 
 
 
+## 五、常见问题
+
+### 5.1 configure: error
+
+```bash
+# # mac apple slice
+# checking for --with-universal-archs... no
+# checking MACHDEP... "darwin"
+# checking for xcrun... yes
+# checking macOS SDKROOT... /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
+# checking for gcc... clang
+# checking whether the C compiler works... no
+# configure: error: in `/var/folders/0s/qm_x16j50gvdlbkdf6lkm_g80000gn/T/python-build.20231211141839.54923/Python-3.12.1':
+# configure: error: C compiler cannot create executables
+# See `config.log' for more details
+# make: *** No targets specified and no makefile found.  Stop.
+
+# method 1
+softwareupdate --all --install --force
+
+# method 2
+sudo rm -rf /Library/Developer/CommandLineTools
+sudo xcode-select --install
+
+brew reinstall zlib bzip2
+
+# e.g.
+# CFLAGS="-I$(brew --prefix openssl)/include -I$(brew --prefix bzip2)/include -I$(brew --prefix readline)/include -I$(xcrun --show-sdk-path)/usr/include" LDFLAGS="-L$(brew --prefix openssl)/lib -L$(brew --prefix readline)/lib -L$(brew --prefix zlib)/lib -L$(brew --prefix bzip2)/lib" pyenv install --patch 3.8.0 < <(curl -sSL https://github.com/python/cpython/commit/8ea6353.patch\?full_index\=1)
+
+
+```
+

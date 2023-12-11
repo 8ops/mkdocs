@@ -134,7 +134,36 @@ bert/
 
 ```bash
 # pipeline task list
-['audio-classification', 'automatic-speech-recognition', 'conversational', 'depth-estimation', 'document-question-answering', 'feature-extraction', 'fill-mask', 'image-classification', 'image-segmentation', 'image-to-image', 'image-to-text', 'mask-generation', 'ner', 'object-detection', 'question-answering', 'sentiment-analysis', 'summarization', 'table-question-answering', 'text-classification', 'text-generation', 'text-to-audio', 'text-to-speech', 'text2text-generation', 'token-classification', 'translation', 'video-classification', 'visual-question-answering', 'vqa', 'zero-shot-audio-classification', 'zero-shot-classification', 'zero-shot-image-classification', 'zero-shot-object-detection', 'translation_XX_to_YY']
+
+- `"audio-classification"`: will return a [`AudioClassificationPipeline`].
+- `"automatic-speech-recognition"`: will return a [`AutomaticSpeechRecognitionPipeline`].
+- `"conversational"`: will return a [`ConversationalPipeline`].
+- `"depth-estimation"`: will return a [`DepthEstimationPipeline`].
+- `"document-question-answering"`: will return a [`DocumentQuestionAnsweringPipeline`].
+- `"feature-extraction"`: will return a [`FeatureExtractionPipeline`].
+- `"fill-mask"`: will return a [`FillMaskPipeline`]:.
+- `"image-classification"`: will return a [`ImageClassificationPipeline`].
+- `"image-segmentation"`: will return a [`ImageSegmentationPipeline`].
+- `"image-to-image"`: will return a [`ImageToImagePipeline`].
+- `"image-to-text"`: will return a [`ImageToTextPipeline`].
+- `"mask-generation"`: will return a [`MaskGenerationPipeline`].
+- `"object-detection"`: will return a [`ObjectDetectionPipeline`].
+- `"question-answering"`: will return a [`QuestionAnsweringPipeline`].
+- `"summarization"`: will return a [`SummarizationPipeline`].
+- `"table-question-answering"`: will return a [`TableQuestionAnsweringPipeline`].
+- `"text2text-generation"`: will return a [`Text2TextGenerationPipeline`].
+- `"text-classification"` (alias `"sentiment-analysis"` available): will return a  [`TextClassificationPipeline`].
+- `"text-generation"`: will return a [`TextGenerationPipeline`]:.
+- `"text-to-audio"` (alias `"text-to-speech"` available): will return a [`TextToAudioPipeline`]:.
+- `"token-classification"` (alias `"ner"` available): will return a [`TokenClassificationPipeline`].
+- `"translation"`: will return a [`TranslationPipeline`].
+- `"translation_xx_to_yy"`: will return a [`TranslationPipeline`].
+- `"video-classification"`: will return a [`VideoClassificationPipeline`].
+- `"visual-question-answering"`: will return a [`VisualQuestionAnsweringPipeline`].
+- `"zero-shot-classification"`: will return a [`ZeroShotClassificationPipeline`].
+- `"zero-shot-image-classification"`: will return a [`ZeroShotImageClassificationPipeline`].
+- `"zero-shot-audio-classification"`: will return a [`ZeroShotAudioClassificationPipeline`].
+- `"zero-shot-object-detection"`: will return a [`ZeroShotObjectDetectionPipeline`].
 ```
 
 
