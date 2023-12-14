@@ -228,6 +228,7 @@ nav:
       - dev/13-smtp.md
     - 【Python】:
       - dev/20-python.md
+      - dev/21-conda.md
     - 【HTML】:
       - dev/70-admin.md
       - dev/80-html.md
