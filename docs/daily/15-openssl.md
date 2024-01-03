@@ -213,6 +213,24 @@ acme.sh --renew -d 8ops.top -f
 
 
 
+当签发/续签报错时
+
+```bash
+# 报错内容
+[Wed Jan  3 15:39:57 CST 2024] Error, can not get domain token "type":"dns-01","url":"https://acme.zerossl.com/v2/DV90/chall/eERxBZpE7gEEy08C301sfQ","status":"invalid","error":{
+
+# 尝试切换签发主体，猜测签发主体因某种原因未成功签发
+acme.sh --issue ....   --server  zerossl
+# 变更为
+acme.sh --issue ....   --server  letsencrypt
+
+https://github.com/acmesh-official/acme.sh/wiki/Server
+```
+
+
+
+
+
 ## 四、格式转换
 
 `TODO`
