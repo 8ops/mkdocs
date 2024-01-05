@@ -185,9 +185,14 @@ EOF
 
 . ~/.bashrc
 
-# usage
+# view pyenv version
 pyenv --version
+
+# view install python versions
 pyenv versions
+
+# view support python versions
+pyenv install --list
 
 ```
 
