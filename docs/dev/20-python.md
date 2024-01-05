@@ -81,7 +81,9 @@ pip install lxml
 
 ### 1.2 安装 openssl
 
-可选
+可选 install 1.1.1o
+
+另参考 [3.2.0](../daily/37-rabbitmq.md/?h=rabb#112-openssl)
 
 ```bash
 # openssl 版本过低
@@ -193,6 +195,13 @@ pyenv versions
 
 # view support python versions
 pyenv install --list
+
+# 若遇到 ModuleNotFoundError: No module named '_ssl'问题
+LD_RUN_PATH="/usr/local/openssl/lib64" \
+LDFLAGS="-L/usr/local/openssl/lib64" \
+CPPFLAGS="-I/usr/local/openssl/include" \
+CFLAGS="-I/usr/local/openssl/include" \
+CONFIGURE_OPTS="--with-openssl=/usr/local/openssl" pyenv install 3.12.0
 
 ```
 
