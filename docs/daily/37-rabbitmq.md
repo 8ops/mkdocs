@@ -55,6 +55,9 @@ o conf urllist pop http://mirrors.163.com/cpan/ ftp://mirrors.sohu.com/CPAN/ 移
 perl -MCPAN -e shell
 install IPC/Cmd.pm
 
+# OR
+yum install -y perl-IPC-Cmd
+
 ```
 
 
