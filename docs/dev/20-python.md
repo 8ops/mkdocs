@@ -69,6 +69,9 @@ make && make install  #（这样，python2.7.12编译完成，解决sqlite3导�
 yum install -y -q libxslt-devel
 pip install lxml
 
+yum install -y zlib zlib-dev openssl-devel sqlite-devel bzip2-devel libffi libffi-devel gcc gcc-c++
+
+yum install xz-devel mesa-libGL python-backports-lzma
 ```
 
 `2.x.x`注定被时代淘汰，`3.x.x`大势所趋
