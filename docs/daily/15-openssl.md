@@ -202,6 +202,7 @@ acme.sh --install-cert \
     -d 8ops.top \
     --key-file /etc/nginx/ssl.d/8ops.top.key \
     --fullchain-file /etc/nginx/ssl.d/8ops.top.crt \
+    
     --reloadcmd "service nginx reload"
 
 # renew

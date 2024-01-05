@@ -159,6 +159,7 @@ nav:
       - daily/50-denyhosts.md
       - daily/51-sentry.md
       - daily/52-mitmproxy.md
+      - daily/53-ntp.md
   - Kubernetes:
     - 【快速搭建】: 
       - kubernetes/01-cluster-init.md
