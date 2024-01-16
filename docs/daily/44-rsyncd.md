@@ -132,3 +132,20 @@ RSYNC_PASSWORD=jesse rsync -av --list-only share/ sync@10.101.11.236::share/
 rsync -av --list-only --password-file=sync.password share/ sync@10.101.11.236::share/
 ```
 
+
+
+## 三、问题
+
+### 3.1 报权限问题
+
+```bash
+# 现象
+[rsync报错：rsync: chgrp “.initial-setup-ks.cfg.jaXlVz” (in backup) failed: Operation not permitted (1)]
+
+# 解决
+# 将 rsync -av source/ sync@addr::target/ 变更
+# 为 rsync -rtlv source/ sync@addr::target/
+# 是因为 -a 拥有归档功能
+# 另需要修复target目录的权限，此前操作会将权限变更
+```
+
