@@ -250,17 +250,21 @@ nav:
       - data/10-chatgpt.md
       - data/11-huggingface.md
   - 生活随记: 
-    - note/00-daily.md
+    - note/00-class.md
     - note/01-effect.md
-    - note/02-qywx.md
-    - note/03-hls-repair.md
+    - note/02-start.md
     - 【私野别墅】: 
-      - note/04-villa-00-01.md
-      - note/04-villa-00-02.md
-      - note/04-villa-00-70.md
-      - note/04-villa-34-80.md
-      - note/04-villa-82-90.md
-    - note/05-bt.md
+      - 一层:
+        - note/84-villa-00-01.md
+        - note/84-villa-00-02.md
+      - 二层:
+        - note/84-villa-00-70.md
+        - note/84-villa-34-80.md
+        - note/84-villa-82-90.md
+    - 【工具集锦】:
+      - note/90-hls-repair.md
+      - note/91-qywx.md
+      - note/92-bt.md
   - 关于我: 
      - about.md
 
