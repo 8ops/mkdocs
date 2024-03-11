@@ -25,6 +25,16 @@
 
 ### 2.2 frp
 
+代理方式丰富，支持http、sockes等等。
+
+```bash
+# 使用效果一览
+curl --proxy "http://abc:abc@u.8ops.top:56001"   "https://ip.8ops.top"
+curl --proxy "socks5://abc:abc@u.8ops.top:56005" "https://ip.8ops.top"
+```
+
+
+
 [Reference](https://github.com/fatedier/frp)
 
 <u>Download</u>
