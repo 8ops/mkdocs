@@ -204,6 +204,33 @@ yum install fail2ban -y -q
 
 > config
 
+```bash
+cp fail2ban.conf fail2ban.local
+cp jail.conf jail.local
+
+# fail2ban.local
+[sshd]
+enable = ture
+port = 60022
+filter =sshd
+logpath = /var/log/secure
+maxretry = 5
+bantime = 1800
+
+# jail.local
+[ssh]
+enable  = true
+
+```
+
+
+
+> fail2ban.local
+
+
+
+> jail.local
+
 ```
 [DEFAULT]
 # 以空格分隔的列表，可以是 IP 地址、CIDR 前缀或者 DNS 主机名
