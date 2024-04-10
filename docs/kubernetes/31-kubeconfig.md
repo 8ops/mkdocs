@@ -110,7 +110,7 @@ kubectl -n ${NAMESPACE} edit role user-op-for-${USER}
   resources: ["cronjobs","jobs"]
   verbs: ["get", "list", "watch"]
 
-kubectl get all,cm,pv,pvc,ing,hpa,jobs,cronjobs
+kubectl get all,cm,pvc,ing,hpa,jobs,cronjobs
 
 kubectl -n ${NAMESPACE} create rolebinding user-op-for-${USER}-binding \
   --role=user-op-for-${USER} \
