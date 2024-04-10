@@ -161,7 +161,7 @@ nav:
       - daily/52-mitmproxy.md
       - daily/53-ntp.md
       - daily/54-cloudstack.md
-      - 55-highon-coffee.md
+      - daily/55-highon-coffee.md
   - Kubernetes:
     - 【快速搭建】: 
       - kubernetes/01-cluster-init.md
