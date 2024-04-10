@@ -80,10 +80,37 @@ kubectl -n ${NAMESPACE} create role user-op-for-${USER} \
   --verb=* \
   --resource=* 
 
+    namespace: kube-app
 # 更多权限
-#- verbs: ["create", "delete", "get", "list", "patch", "update", "watch"]  
-#  apiGroups: ["", "extensions", "apps"]  
+#- apiGroups: ["", "extensions", "apps"]
+#  verbs: ["create", "delete", "get", "list", "patch", "update", "watch"]
 #  resources: ["*"]
+
+# 全部权限
+# verbs: ["create", "delete", "get", "list", "patch", "update", "watch"]
+
+# 命名空间部分资源只读权限
+kubectl -n ${NAMESPACE} edit role user-op-for-${USER}
+- apiGroups: [""]
+  resources: ["pods", "services", "replicationcontrollers", "configmaps", "persistentvolumeclaims"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["apps"]
+  resources: ["replicasets", "deployments", "daemonsets", "statefulsets"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["pods/exec"]
+  verbs: ["create"]
+- apiGroups: ["networking.k8s.io"]
+  resources: ["ingresses"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["autoscaling"]
+  resources: ["horizontalpodautoscalers"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["batch"]
+  resources: ["cronjobs","jobs"]
+  verbs: ["get", "list", "watch"]
+
+kubectl get all,cm,pv,pvc,ing,hpa,jobs,cronjobs
 
 kubectl -n ${NAMESPACE} create rolebinding user-op-for-${USER}-binding \
   --role=user-op-for-${USER} \
