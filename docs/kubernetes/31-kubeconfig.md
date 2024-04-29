@@ -92,7 +92,7 @@ kubectl -n ${NAMESPACE} create role user-op-for-${USER} \
 # 命名空间部分资源只读权限
 kubectl -n ${NAMESPACE} edit role user-op-for-${USER}
 - apiGroups: [""]
-  resources: ["pods", "services", "replicationcontrollers", "configmaps", "persistentvolumeclaims"]
+  resources: ["pods", "pods/log", "services", "replicationcontrollers", "configmaps", "persistentvolumeclaims"]
   verbs: ["get", "list", "watch"]
 - apiGroups: ["apps"]
   resources: ["replicasets", "deployments", "daemonsets", "statefulsets"]
