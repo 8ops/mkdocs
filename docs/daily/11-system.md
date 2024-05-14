@@ -16,6 +16,40 @@ openssl rand -hex 20
 
 
 
+### 1.1 ulimit
+
+```bash
+# 系统缺省
+cat >> /etc/security/limits.conf << EOF
+
+* soft nofile 65536
+* hard nofile 65536
+* hard nproc 4096
+* soft nproc 4096
+EOF
+
+cat > /etc/security/limits.d/90-nproc.conf << EOF
+* soft    nproc     4096
+EOF
+
+ulimit -SHn 65535
+
+# systemd 缺省
+cat >> /etc/systemd/system.conf <<EOF
+DefaultLimitNOFILE=65535
+DefaultLimitNPROC=4096
+EOF
+
+cat >> /etc/systemd/user.conf <<EOF
+DefaultLimitNOFILE=65535
+DefaultLimitNPROC=4096
+EOF
+
+systemctl daemon-reexec
+```
+
+
+
 
 
 ## 二、用户
