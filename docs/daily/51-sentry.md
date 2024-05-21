@@ -51,7 +51,7 @@ mail.from: 'Sentry <sentry-noreplay@8ops.top>'
 
 ```bash
 cd /usr/local
-SENTRY_VERSION=23.5.1
+SENTRY_VERSION=24.4.2
 wget https://github.com/getsentry/self-hosted/archive/refs/tags/${SENTRY_VERSION}.tar.gz
 tar xzf ${SENTRY_VERSION}.tar.gz -C .
 ln -s self-hosted-${SENTRY_VERSION} sentry
@@ -59,6 +59,24 @@ cd sentry
 ./install.sh
 
 # 先安装，再更新配置，避免替换 system.secret-key
+
+# 优化源
+vim jq/sources.list
+
+deb http://mirrors.aliyun.com/debian/ bookworm main contrib non-free
+deb-src https://mirrors.aliyun.com/debian/ bookworm main contrib non-free
+
+deb https://mirrors.aliyun.com/debian-security/ bookworm-security main contrib non-free
+deb-src https://mirrors.aliyun.com/debian-security/ bookworm-security main contrib non-free
+
+deb https://mirrors.aliyun.com/debian/ bookworm-updates main contrib non-free
+deb-src https://mirrors.aliyun.com/debian/ bookworm-updates main contrib non-free
+
+
+cp jq/sources.list cron/ 
+cp jq/sources.list workstation/
+
+COPY sources.list /etc/apt/sources.list
 ```
 
 
