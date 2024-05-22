@@ -187,3 +187,16 @@ KAFKA_LOG_SEGMENT_DELETE_DELAY_MS=60000
 ### 4.6 占满100%处理
 
 如果已经占满100%，可以先去查找筛选出磁盘上其他占用很大的无用文件或者日志等，释放出一部分空间。
+
+
+
+### 4.7 初次安装对访问域名受信
+
+[Reference](https://develop.sentry.dev/self-hosted/troubleshooting/#csrf-verification-failed)
+
+```bash
+vim sentry/sentry.conf.py
+
+CSRF_TRUSTED_ORIGINS = ["https://sentry.8ops.top", "http://10.11.3.8:9000", "http://127.0.0.1:9000"]
+```
+
