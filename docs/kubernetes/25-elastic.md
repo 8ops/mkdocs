@@ -526,3 +526,547 @@ illegal_argument_exception: setting [index.lifecycle.rollover_alias] for index [
 <u>解决</u>
 
 - 先移除旧策略，再绑定新策略（直接替换不生效）。
+
+
+
+## 六、Docker实践
+
+### 6.1 ChatGPT
+
+在三台 Docker 机器上搭建一个 Kafka 集群需要配置 ZooKeeper 集群和 Kafka 集群。ZooKeeper 用于管理 Kafka 集群的元数据。以下是详细步骤。
+
+#### 6.1.1 环境准备
+
+假设你有三台 Docker 机器，分别是 `machine1`、`machine2` 和 `machine3`，并且你已经安装了 Docker 和 Docker Compose。
+
+1. ZooKeeper 集群配置
+
+首先，为每台机器创建 ZooKeeper 的 Docker Compose 文件 `docker-compose-zookeeper.yml`。
+
+machine1 (ZooKeeper1)
+
+```yaml
+version: '3'
+services:
+  zookeeper:
+    image: zookeeper:3.7.1
+    container_name: zookeeper1
+    ports:
+      - "2181:2181"
+    environment:
+      ZOO_MY_ID: 1
+      ZOO_SERVERS: server.1=machine1:2888:3888;2181 server.2=machine2:2888:3888;2181 server.3=machine3:2888:3888;2181
+```
+
+machine2 (ZooKeeper2)
+
+```yaml
+version: '3'
+services:
+  zookeeper:
+    image: zookeeper:3.7.1
+    container_name: zookeeper2
+    ports:
+      - "2181:2181"
+    environment:
+      ZOO_MY_ID: 2
+      ZOO_SERVERS: server.1=machine1:2888:3888;2181 server.2=machine2:2888:3888;2181 server.3=machine3:2888:3888;2181
+```
+
+machine3 (ZooKeeper3)
+
+```yaml
+version: '3'
+services:
+  zookeeper:
+    image: zookeeper:3.7.1
+    container_name: zookeeper3
+    ports:
+      - "2181:2181"
+    environment:
+      ZOO_MY_ID: 3
+      ZOO_SERVERS: server.1=machine1:2888:3888;2181 server.2=machine2:2888:3888;2181 server.3=machine3:2888:3888;2181
+```
+
+启动每台机器上的 ZooKeeper 容器：
+
+```yaml
+docker-compose -f docker-compose-zookeeper.yml up -d
+```
+
+2. Kafka 集群配置
+
+为每台机器创建 Kafka 的 Docker Compose 文件 `docker-compose-kafka.yml`。
+
+machine1 (Kafka1)
+
+```yaml
+version: '3'
+services:
+  kafka:
+    image: wurstmeister/kafka:latest
+    container_name: kafka1
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: machine1:2181,machine2:2181,machine3:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://machine1:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_LOG_DIRS: /kafka/kafka-logs
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+```
+
+machine2 (Kafka2)
+
+```yaml
+version: '3'
+services:
+  kafka:
+    image: wurstmeister/kafka:latest
+    container_name: kafka2
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: machine1:2181,machine2:2181,machine3:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://machine2:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_LOG_DIRS: /kafka/kafka-logs
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+```
+
+machine3 (Kafka3)
+
+```yaml
+version: '3'
+services:
+  kafka:
+    image: wurstmeister/kafka:latest
+    container_name: kafka3
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 3
+      KAFKA_ZOOKEEPER_CONNECT: machine1:2181,machine2:2181,machine3:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://machine3:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_LOG_DIRS: /kafka/kafka-logs
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+```
+
+启动每台机器上的 Kafka 容器：
+
+```sh
+docker-compose -f docker-compose-kafka.yml up -d
+```
+
+3. 验证集群
+
+使用 `kafka-topics.sh` 工具验证 Kafka 集群是否正常工作。
+
+创建测试主题
+
+在任意一台机器上运行：
+
+```sh
+docker exec -it kafka1 kafka-topics.sh --create --topic test-topic --bootstrap-server machine1:9092,machine2:9092,machine3:9092 --replication-factor 3 --partitions 1
+```
+
+查看主题列表
+
+在任意一台机器上运行：
+
+```sh
+docker exec -it kafka1 kafka-topics.sh --list --bootstrap-server machine1:9092,machine2:9092,machine3:9092
+```
+
+总结
+
+通过以上步骤，你已经成功在三台 Docker 机器上搭建了一个 Kafka 集群。此集群包含三台 ZooKeeper 服务器和三台 Kafka 代理，能够提供高可用性和扩展性。根据需要，你可以进一步调整和优化配置，以满足具体的生产需求。
+
+
+
+#### 6.1.2 查看 topic & cosumer
+
+要查看 Kafka topic 的详细信息，可以使用 Kafka 提供的命令行工具 `kafka-topics.sh` 和 `kafka-consumer-groups.sh`。这些工具可以显示 topic 的配置、分区信息、副本状态等详细信息。以下是具体的命令和步骤：
+
+使用 `kafka-topics.sh` 查看 topic 详情
+
+首先，确保你已经连接到 Kafka 集群，并且 Kafka bin 目录在你的环境变量中。如果没有，可以使用绝对路径访问 `kafka-topics.sh`。
+
+查看 topic 列表
+
+查看集群中所有的 topic：
+
+```sh
+kafka-topics.sh --list --bootstrap-server <broker_address>
+```
+
+例如：
+
+```
+sh
+复制代码
+kafka-topics.sh --list --bootstrap-server localhost:9092
+```
+
+查看单个 topic 的详细信息
+
+查看某个特定 topic 的详细信息：
+
+```sh
+kafka-topics.sh --describe --topic <topic_name> --bootstrap-server <broker_address>
+```
+
+例如，查看 `test-topic` 的详细信息：
+
+```sh
+kafka-topics.sh --describe --topic test-topic --bootstrap-server localhost:9092
+```
+
+输出示例：
+
+```plaintext
+Topic: test-topic  PartitionCount: 1  ReplicationFactor: 3  Configs: segment.bytes=1073741824
+  Topic: test-topic  Partition: 0  Leader: 1  Replicas: 1,2,3  Isr: 1,2,3
+```
+
+解释输出信息
+
+- **Topic**: topic 的名称。
+- **PartitionCount**: topic 的分区数。
+- **ReplicationFactor**: topic 的副本因子。
+- **Configs**: topic 的配置。
+- **Partition**: 分区编号。
+- **Leader**: 该分区的 Leader broker ID。
+- **Replicas**: 该分区的副本 broker ID 列表。
+- **Isr**: 同步副本（in-sync replicas）的 broker ID 列表。
+
+使用 `kafka-consumer-groups.sh` 查看消费者组信息
+
+除了查看 topic 的信息，你还可以查看消费者组的详细信息。
+
+列出消费者组
+
+列出所有消费者组：
+
+```sh
+kafka-consumer-groups.sh --list --bootstrap-server <broker_address>
+```
+
+例如：
+
+```sh
+kafka-consumer-groups.sh --list --bootstrap-server localhost:9092
+```
+
+查看消费者组详细信息
+
+查看某个消费者组的详细信息，包括每个分区的偏移量等：
+
+```sh
+kafka-consumer-groups.sh --describe --group <group_name> --bootstrap-server <broker_address>
+```
+
+例如，查看 `test-group` 的详细信息：
+
+```sh
+kafka-consumer-groups.sh --describe --group test-group --bootstrap-server localhost:9092
+```
+
+输出示例：
+
+```plaintext
+GROUP           TOPIC           PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             CONSUMER-ID        HOST            CLIENT-ID
+test-group      test-topic      0          5               10              5               consumer-1         /127.0.0.1      consumer-1
+```
+
+解释输出信息
+
+- **GROUP**: 消费者组名称。
+- **TOPIC**: 消费的 topic 名称。
+- **PARTITION**: topic 的分区编号。
+- **CURRENT-OFFSET**: 当前消费者消费到的偏移量。
+- **LOG-END-OFFSET**: 分区的最新偏移量。
+- **LAG**: 当前消费者的滞后量（未消费的消息数量）。
+- **CONSUMER-ID**: 消费者 ID。
+- **HOST**: 消费者所在的主机。
+- **CLIENT-ID**: 消费者的客户端 ID。
+
+示例
+
+假设你的 Kafka broker 在 `localhost:9092`，并且你想查看 `my-topic` 的详细信息：
+
+```sh
+kafka-topics.sh --describe --topic my-topic --bootstrap-server localhost:9092
+```
+
+如果你有一个消费者组 `my-group`，想查看其详细信息：
+
+```sh
+kafka-consumer-groups.sh --describe --group my-group --bootstrap-server localhost:9092
+```
+
+通过这些命令，你可以全面了解 Kafka topic 和消费者组的详细信息，以便更好地管理和调试 Kafka 集群。
+
+
+
+
+
+#### 6.1.3 变更topic partition replication
+
+
+
+在 Kafka 中，调整 topic 的分区数和副本因子可以帮助你根据需要进行扩展和提高数据的容错性。以下是详细的步骤和命令，用于变更 Kafka topic 的分区数和副本因子。
+
+增加分区数
+
+注意：你只能增加分区数，不能减少。增加分区数会改变消息的分布，可能会影响消息的顺序。
+
+使用 `kafka-topics.sh` 增加分区数
+
+假设你要将 `my-topic` 的分区数增加到 5：
+
+```sh
+kafka-topics.sh --alter --topic my-topic --partitions 5 --bootstrap-server localhost:9092
+```
+
+调整副本因子
+
+调整副本因子稍微复杂一些，因为你需要手动指定分区的副本分布。你可以使用 `kafka-reassign-partitions.sh` 工具来完成此任务。
+
+1. 生成分区重新分配计划
+
+创建一个文件 `increase-replication-factor.json`，其中包含新的分区分配计划。假设你有一个 3 节点的 Kafka 集群（broker1、broker2、broker3），并且你想将 `my-topic` 的副本因子从 1 增加到 3。
+
+首先，生成当前分区分配计划：
+
+```sh
+kafka-reassign-partitions.sh --zookeeper localhost:2181 --topics-to-move-json-file topics-to-move.json --broker-list "1,2,3" --generate
+```
+
+`topics-to-move.json` 内容示例：
+
+```json
+{
+  "version":1,
+  "topics":[
+    {
+      "topic":"my-topic"
+    }
+  ]
+}
+```
+
+这将生成一个 JSON 输出文件，包含当前和建议的分区分配计划。
+
+2. 修改分区重新分配计划
+
+根据生成的建议，编辑 `increase-replication-factor.json` 文件，使其符合你的需求。假设生成的文件如下所示：
+
+```json
+{
+  "version": 1,
+  "partitions": [
+    {
+      "topic": "my-topic",
+      "partition": 0,
+      "replicas": [1, 2, 3]
+    },
+    {
+      "topic": "my-topic",
+      "partition": 1,
+      "replicas": [2, 3, 1]
+    },
+    {
+      "topic": "my-topic",
+      "partition": 2,
+      "replicas": [3, 1, 2]
+    }
+  ]
+}
+```
+
+确保每个分区的 `replicas` 列表中包含新的副本分布。
+
+3. 执行分区重新分配计划
+
+使用 `kafka-reassign-partitions.sh` 工具执行新的分区分配计划：
+
+```sh
+kafka-reassign-partitions.sh --zookeeper localhost:2181 --reassignment-json-file increase-replication-factor.json --execute
+```
+
+4. 验证分区重新分配状态
+
+你可以验证重新分配过程是否完成：
+
+```sh
+kafka-reassign-partitions.sh --zookeeper localhost:2181 --reassignment-json-file increase-replication-factor.json --verify
+```
+
+示例完整流程
+
+1. **生成分区重新分配计划**
+
+   生成 `topics-to-move.json`：
+
+   ```json
+   {
+     "version":1,
+     "topics":[
+       {
+         "topic":"my-topic"
+       }
+     ]
+   }
+   ```
+
+   生成当前分区分配计划：
+
+   ```sh
+   kafka-reassign-partitions.sh --zookeeper localhost:2181 --topics-to-move-json-file topics-to-move.json --broker-list "1,2,3" --generate
+   ```
+
+   这将输出建议的分配计划。将其复制到 `increase-replication-factor.json`。
+
+2. **修改分区重新分配计划**
+
+   编辑 `increase-replication-factor.json` 使其符合你的需求：
+
+   ```json
+   {
+     "version": 1,
+     "partitions": [
+       {
+         "topic": "my-topic",
+         "partition": 0,
+         "replicas": [1, 2, 3]
+       },
+       {
+         "topic": "my-topic",
+         "partition": 1,
+         "replicas": [2, 3, 1]
+       },
+       {
+         "topic": "my-topic",
+         "partition": 2,
+         "replicas": [3, 1, 2]
+       }
+     ]
+   }
+   ```
+
+3. **执行分区重新分配计划**
+
+   ```sh
+   kafka-reassign-partitions.sh --zookeeper localhost:2181 --reassignment-json-file increase-replication-factor.json --execute
+   ```
+
+4. **验证分区重新分配状态**
+
+   ```sh
+   kafka-reassign-partitions.sh --zookeeper localhost:2181 --reassignment-json-file increase-replication-factor.json --verify
+   ```
+
+通过这些步骤，你可以成功调整 Kafka topic 的分区数和副本因子。注意，在生产环境中进行这些操作前，务必做好备份和测试。
+
+#### 6.1.4 删除topic
+
+
+
+### 6.2 实践
+
+```bash
+ELK-DOCKER-01    10.131.1.237
+ELK-DOCKER-02    10.131.1.224
+ELK-DOCKER-03    10.131.1.209
+
+
+mkdir -p /data1/lib/docker
+ln -s /data1/lib/docker /var/lib/docker
+systemctl enable docker
+systemctl is-enabled docker
+systemctl start docker
+systemctl status docker
+
+cat > /etc/docker/daemon.json <<EOF
+{
+  "insecure-registries": [
+    "hub.8ops.top"
+  ]
+}
+EOF
+
+
+docker pull hub.8ops.top/middleware/zookeeper:3.9.2
+docker pull hub.8ops.top/bitnami/kafka:3.6.2
+
+
+cat > docker-compose.yaml <<EOF
+version: '3.1'
+
+services:
+  zookeeper-01:
+    image: 'hub.8ops.top/middleware/zookeeper:3.9.2'
+    restart: always
+    container_name: zookeeper-01
+    network_mode: host
+    ports:
+      - 2181:2181
+      - 2888:2888
+      - 3888:3888
+    environment:
+      ZOO_MY_ID: 1
+      ZOO_SERVERS: server.1=10.131.1.237:2888:3888;2181 server.2=10.131.1.224:2888:3888;2181 server.3=10.131.1.209:2888:3888;2181
+
+  kafka-01:
+    image: 'hub.8ops.top/bitnami/kafka:3.6.2'
+    restart: always
+    container_name: kafka-01
+    network_mode: host
+    ports:
+      - 9092:9092
+    environment:
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=10.131.1.237:2181,10.131.1.224:2181,10.131.1.209:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_BROKER_ID=1
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://10.131.1.237:9092
+      - KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092
+      - KAFKA_CFG_NUM_PARTITIONS=3
+      - KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR=3
+      - KAFKA_LOG_DIRS=/kafka/kafka-logs
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+EOF
+
+docker compose up -d
+
+# detect zookeeper
+docker exec -ti zookeeper-01 bin/zkServer.sh status
+docker exec -ti zookeeper-02 bin/zkServer.sh status
+docker exec -ti zookeeper-03 bin/zkServer.sh status
+
+# detect kafka
+docker exec -it kafka-03 kafka-topics.sh --list --bootstrap-server 10.131.1.237:9092,10.131.1.224:9092,10.131.1.209:9092 
+
+docker exec -it kafka-03 /opt/bitnami/kafka/bin/kafka-topics.sh --create --topic test-topic --bootstrap-server 10.131.1.237:9092,10.131.1.224:9092,10.131.1.209:9092 --replication-factor 3 --partitions 2
+
+docker exec -it kafka-03 /opt/bitnami/kafka/bin/kafka-topics.sh --describe --topic test-topic --bootstrap-server 10.131.1.237:9092,10.131.1.224:9092,10.131.1.209:9092 
+
+docker exec -it kafka-03 /opt/bitnami/kafka/bin/kafka-topics.sh --alter --topic test-topic --partitions 2 --bootstrap-server 10.131.1.237:9092,10.131.1.224:9092,10.131.1.209:9092 
+
+docker exec -it kafka-03 /opt/bitnami/kafka/bin/kafka-topics.sh --delete --topic test-topic-02 --bootstrap-server 10.131.1.237:9092,10.131.1.224:9092,10.131.1.209:9092 
+
+docker exec -it kafka-03 /opt/bitnami/kafka/bin/kafka-consumer-groups.sh --list --bootstrap-server 10.131.1.237:9092,10.131.1.224:9092,10.131.1.209:9092 
+
+kafka-consumer-groups.sh --describe --group <group_name> --bootstrap-server <broker_address>
+```
+
+
+
