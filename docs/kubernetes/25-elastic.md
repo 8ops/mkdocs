@@ -977,15 +977,22 @@ kafka-reassign-partitions.sh --zookeeper localhost:2181 --reassignment-json-file
 
 #### 6.1.4 删除topic
 
+```sh
+kafka-topics.sh --delete --topic <topic_name> --bootstrap-server <broker_address>
+```
+
 
 
 ### 6.2 实践
+
+
+
+#### 6.2.1 环境准备
 
 ```bash
 ELK-DOCKER-01    10.131.1.237
 ELK-DOCKER-02    10.131.1.224
 ELK-DOCKER-03    10.131.1.209
-
 
 mkdir -p /data1/lib/docker
 ln -s /data1/lib/docker /var/lib/docker
@@ -1005,8 +1012,13 @@ EOF
 
 docker pull hub.8ops.top/middleware/zookeeper:3.9.2
 docker pull hub.8ops.top/bitnami/kafka:3.6.2
+```
 
 
+
+#### 6.2.2 安装kafka
+
+```bash
 cat > docker-compose.yaml <<EOF
 version: '3.1'
 
@@ -1043,30 +1055,53 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
 
+kafka_manager:
+    image: hub.8ops.top/middleware/kafka-manager:3.0.0.5
+    ports:
+      - "9000:9000"
+    environment:
+      ZK_HOSTS: "10.131.1.237:2181,10.131.1.224:2181,10.131.1.209:2181"
+      KAFKA_BROKERS: "10.131.1.237:9092,10.131.1.224:9092,10.131.1.209:9092"
+      APPLICATION_SECRET: "random-secret"
+      KAFKA_MANAGER_AUTH_ENABLED: "true"
+      KAFKA_MANAGER_USERNAME: jesse
+      KAFKA_MANAGER_PASSWORD: xqp4AtsTEBjj4rKJvhyY5XBN340
 EOF
 
 docker compose up -d
 
+```
+
+
+
+#### 6.2.3 测试kafka
+
+```bash
 # detect zookeeper
 docker exec -ti zookeeper-01 bin/zkServer.sh status
 docker exec -ti zookeeper-02 bin/zkServer.sh status
 docker exec -ti zookeeper-03 bin/zkServer.sh status
 
-# detect kafka
+# detect kafka topic
 docker exec -it kafka-03 kafka-topics.sh --list --bootstrap-server 10.131.1.237:9092,10.131.1.224:9092,10.131.1.209:9092 
 
 docker exec -it kafka-03 /opt/bitnami/kafka/bin/kafka-topics.sh --create --topic test-topic --bootstrap-server 10.131.1.237:9092,10.131.1.224:9092,10.131.1.209:9092 --replication-factor 3 --partitions 2
 
 docker exec -it kafka-03 /opt/bitnami/kafka/bin/kafka-topics.sh --describe --topic test-topic --bootstrap-server 10.131.1.237:9092,10.131.1.224:9092,10.131.1.209:9092 
 
-docker exec -it kafka-03 /opt/bitnami/kafka/bin/kafka-topics.sh --alter --topic test-topic --partitions 2 --bootstrap-server 10.131.1.237:9092,10.131.1.224:9092,10.131.1.209:9092 
+docker exec -it kafka-03 /opt/bitnami/kafka/bin/kafka-topics.sh --alter --topic test-topic --partitions 3 --bootstrap-server 10.131.1.237:9092,10.131.1.224:9092,10.131.1.209:9092 
+
+docker exec -it kafka-03 /opt/bitnami/kafka/bin/kafka-topics.sh --create --topic test-topic-02 --bootstrap-server 10.131.1.237:9092,10.131.1.224:9092,10.131.1.209:9092 --replication-factor 1 --partitions 1
 
 docker exec -it kafka-03 /opt/bitnami/kafka/bin/kafka-topics.sh --delete --topic test-topic-02 --bootstrap-server 10.131.1.237:9092,10.131.1.224:9092,10.131.1.209:9092 
 
+# detect kafka consumer
 docker exec -it kafka-03 /opt/bitnami/kafka/bin/kafka-consumer-groups.sh --list --bootstrap-server 10.131.1.237:9092,10.131.1.224:9092,10.131.1.209:9092 
 
 kafka-consumer-groups.sh --describe --group <group_name> --bootstrap-server <broker_address>
 ```
 
 
+
+#### 6.2.4 安装elastic
 
