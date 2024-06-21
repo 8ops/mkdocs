@@ -1129,8 +1129,8 @@ services:
     environment:
       - node.name=es-01
       - cluster.name=es-docker-cluster
-      - discovery.seed_hosts=es-01, es-02, es-03
-      - cluster.initial_master_nodes=es-01, es-02, es-03
+      - discovery.seed_hosts=ip-01:9300,ip-02:9300,ip-03:9200
+      - cluster.initial_master_nodes=ip-01:9300,ip-02:9300,ip-03:9200
       - bootstrap.memory_lock=true
       - xpack.security.enabled=false
       - xpack.security.http.ssl.enabled=false
