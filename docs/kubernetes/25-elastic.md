@@ -996,6 +996,7 @@ ELK-DOCKER-03    10.131.1.209
 
 mkdir -p /data1/lib/docker
 ln -s /data1/lib/docker /var/lib/docker
+
 systemctl enable docker
 systemctl is-enabled docker
 systemctl start docker
@@ -1009,7 +1010,6 @@ cat > /etc/docker/daemon.json <<EOF
 }
 EOF
 
-
 docker pull hub.8ops.top/middleware/zookeeper:3.9.2
 docker pull hub.8ops.top/bitnami/kafka:3.6.2
 ```
@@ -1018,15 +1018,17 @@ docker pull hub.8ops.top/bitnami/kafka:3.6.2
 
 #### 6.2.2 安装kafka
 
+[Reference](https://hub.docker.com/r/bitnami/kafka)
+
 ```bash
 cat > docker-compose.yaml <<EOF
 version: '3.1'
 
 services:
-  zookeeper-01:
+  zookeeper:
     image: 'hub.8ops.top/middleware/zookeeper:3.9.2'
     restart: always
-    container_name: zookeeper-01
+    container_name: zookeeper
     network_mode: host
     ports:
       - 2181:2181
@@ -1036,10 +1038,10 @@ services:
       ZOO_MY_ID: 1
       ZOO_SERVERS: server.1=10.131.1.237:2888:3888;2181 server.2=10.131.1.224:2888:3888;2181 server.3=10.131.1.209:2888:3888;2181
 
-  kafka-01:
+  kafka:
     image: 'hub.8ops.top/bitnami/kafka:3.6.2'
     restart: always
-    container_name: kafka-01
+    container_name: kafka
     network_mode: host
     ports:
       - 9092:9092
@@ -1050,13 +1052,18 @@ services:
       - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://10.131.1.237:9092
       - KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092
       - KAFKA_CFG_NUM_PARTITIONS=3
-      - KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR=3
+      - KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR=2
       - KAFKA_LOG_DIRS=/kafka/kafka-logs
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-
-kafka_manager:
+    depends_on:
+      - zookeeper
+      
+  kafka_manager:
     image: hub.8ops.top/middleware/kafka-manager:3.0.0.5
+    restart: always
+    container_name: kafka_manager
+    network_mode: host
     ports:
       - "9000:9000"
     environment:
@@ -1066,6 +1073,8 @@ kafka_manager:
       KAFKA_MANAGER_AUTH_ENABLED: "true"
       KAFKA_MANAGER_USERNAME: jesse
       KAFKA_MANAGER_PASSWORD: xqp4AtsTEBjj4rKJvhyY5XBN340
+    depends_on:
+      - kafka
 EOF
 
 docker compose up -d
@@ -1104,4 +1113,49 @@ kafka-consumer-groups.sh --describe --group <group_name> --bootstrap-server <bro
 
 
 #### 6.2.4 安装elastic
+
+[Reference](https://hub.docker.com/_/elasticsearch)
+
+```bash
+cat > docker-compose.yaml <<EOF
+version: '3.1'
+
+services:
+  elasticsearch:
+    image: hub.8ops.top/elastic/elasticsearch:7.17.22
+    restart: always
+    container_name: es-docker-cluster-data
+    network_mode: host
+    environment:
+      - node.name=es-01
+      - cluster.name=es-docker-cluster
+      - discovery.seed_hosts=es-01, es-02, es-03
+      - cluster.initial_master_nodes=es-01, es-02, es-03
+      - bootstrap.memory_lock=true
+      - xpack.security.enabled=false
+      - xpack.security.http.ssl.enabled=false
+      - "ES_JAVA_OPTS=-Xms32g -Xmx32g"
+      - network.host=0.0.0.0
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 655360
+        hard: 655360
+    volumes:
+      - /data1/lib/elastic:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+      - 9300:9300
+
+EOF
+
+docker compose up -d
+
+```
+
+
+
+
 
