@@ -190,7 +190,7 @@ SMTP_FROM = DenyHosts <xx>
 
 
 
-## 八、同类工具
+## 八、fail2ban
 
 [fail2ban](https://www.linuxprobe.com/fail2ban-ssh-crack.html)
 
@@ -202,13 +202,13 @@ yum install fail2ban -y -q
 
 
 
-> config
+### 8.1 config
 
 ```bash
 cp fail2ban.conf fail2ban.local
 cp jail.conf jail.local
 
-# fail2ban.local
+# jail.local
 [sshd]
 enable = ture
 port = 60022
@@ -217,17 +217,7 @@ logpath = /var/log/secure
 maxretry = 5
 bantime = 1800
 
-# jail.local
-[ssh]
-enable  = true
-
 ```
-
-
-
-> fail2ban.local
-
-
 
 > jail.local
 
@@ -260,3 +250,11 @@ logpath = /var/log/secure
 # ssh 服务的最大尝试次数 
 maxretry = 3
 ```
+
+### 8.2 status
+
+```bash
+fail2ban-client status
+fail2ban-client status sshd
+```
+

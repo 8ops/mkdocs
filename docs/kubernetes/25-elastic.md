@@ -993,6 +993,7 @@ kafka-topics.sh --delete --topic <topic_name> --bootstrap-server <broker_address
 ELK-DOCKER-01    10.131.1.237
 ELK-DOCKER-02    10.131.1.224
 ELK-DOCKER-03    10.131.1.209
+ELK-DOCKER-04    10.131.1.227
 
 mkdir -p /data1/lib/docker
 ln -s /data1/lib/docker /var/lib/docker
@@ -1058,24 +1059,10 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
       - zookeeper
-      
-  kafka_manager:
-    image: hub.8ops.top/middleware/kafka-manager:3.0.0.5
-    restart: always
-    container_name: kafka_manager
-    network_mode: host
-    ports:
-      - "9000:9000"
-    environment:
-      ZK_HOSTS: "10.131.1.237:2181,10.131.1.224:2181,10.131.1.209:2181"
-      KAFKA_BROKERS: "10.131.1.237:9092,10.131.1.224:9092,10.131.1.209:9092"
-      APPLICATION_SECRET: "random-secret"
-      KAFKA_MANAGER_AUTH_ENABLED: "true"
-      KAFKA_MANAGER_USERNAME: jesse
-      KAFKA_MANAGER_PASSWORD: xqp4AtsTEBjj4rKJvhyY5XBN340
-    depends_on:
-      - kafka
+
 EOF
+
+docker compose down
 
 docker compose up -d
 
@@ -1085,30 +1072,60 @@ docker compose up -d
 
 #### 6.2.3 测试kafka
 
+> 功能测试
+
 ```bash
 # detect zookeeper
-docker exec -ti zookeeper-01 bin/zkServer.sh status
-docker exec -ti zookeeper-02 bin/zkServer.sh status
-docker exec -ti zookeeper-03 bin/zkServer.sh status
+docker logs zookeeper
+docker exec -it zookeeper bin/zkServer.sh status
 
 # detect kafka topic
-docker exec -it kafka-03 kafka-topics.sh --list --bootstrap-server 10.131.1.237:9092,10.131.1.224:9092,10.131.1.209:9092 
+docker logs kafka
 
-docker exec -it kafka-03 /opt/bitnami/kafka/bin/kafka-topics.sh --create --topic test-topic --bootstrap-server 10.131.1.237:9092,10.131.1.224:9092,10.131.1.209:9092 --replication-factor 3 --partitions 2
+docker exec -it kafka kafka-topics.sh --list --bootstrap-server 10.131.1.237:9092,10.131.1.224:9092,10.131.1.209:9092 
 
-docker exec -it kafka-03 /opt/bitnami/kafka/bin/kafka-topics.sh --describe --topic test-topic --bootstrap-server 10.131.1.237:9092,10.131.1.224:9092,10.131.1.209:9092 
+docker exec -it kafka /opt/bitnami/kafka/bin/kafka-topics.sh --create --topic test-topic --bootstrap-server 10.131.1.237:9092,10.131.1.224:9092,10.131.1.209:9092 --replication-factor 2 --partitions 2
 
-docker exec -it kafka-03 /opt/bitnami/kafka/bin/kafka-topics.sh --alter --topic test-topic --partitions 3 --bootstrap-server 10.131.1.237:9092,10.131.1.224:9092,10.131.1.209:9092 
+docker exec -it kafka /opt/bitnami/kafka/bin/kafka-topics.sh --describe --topic test-topic --bootstrap-server 10.131.1.237:9092,10.131.1.224:9092,10.131.1.209:9092 
 
-docker exec -it kafka-03 /opt/bitnami/kafka/bin/kafka-topics.sh --create --topic test-topic-02 --bootstrap-server 10.131.1.237:9092,10.131.1.224:9092,10.131.1.209:9092 --replication-factor 1 --partitions 1
+docker exec -it kafka /opt/bitnami/kafka/bin/kafka-topics.sh --alter --topic test-topic --partitions 3 --bootstrap-server 10.131.1.237:9092,10.131.1.224:9092,10.131.1.209:9092 
 
-docker exec -it kafka-03 /opt/bitnami/kafka/bin/kafka-topics.sh --delete --topic test-topic-02 --bootstrap-server 10.131.1.237:9092,10.131.1.224:9092,10.131.1.209:9092 
+docker exec -it kafka /opt/bitnami/kafka/bin/kafka-topics.sh --create --topic test-topic-02 --bootstrap-server 10.131.1.237:9092,10.131.1.224:9092,10.131.1.209:9092 --replication-factor 1 --partitions 1
+
+docker exec -it kafka /opt/bitnami/kafka/bin/kafka-topics.sh --delete --topic test-topic-02 --bootstrap-server 10.131.1.237:9092,10.131.1.224:9092,10.131.1.209:9092 
 
 # detect kafka consumer
-docker exec -it kafka-03 /opt/bitnami/kafka/bin/kafka-consumer-groups.sh --list --bootstrap-server 10.131.1.237:9092,10.131.1.224:9092,10.131.1.209:9092 
+docker exec -it kafka /opt/bitnami/kafka/bin/kafka-consumer-groups.sh --list --bootstrap-server 10.131.1.237:9092,10.131.1.224:9092,10.131.1.209:9092 
 
 kafka-consumer-groups.sh --describe --group <group_name> --bootstrap-server <broker_address>
 ```
+
+> 性能测试
+
+```bash
+docker exec -it kafka-client /opt/bitnami/kafka/bin/kafka-producer-perf-test.sh \
+    --topic test-topic \
+    --num-records 10000000 \
+    --record-size 100 \
+    --throughput 1000000 \
+    --producer-props \
+    acks=1 \
+    bootstrap.servers=10.131.1.237:9092,10.131.1.224:9092,10.131.1.209:9092 
+
+10000000 records sent, 269578.110257 records/sec (25.71 MB/sec), 2.11 ms avg latency, 378.00 ms max latency, 1 ms 50th, 2 ms 95th, 30 ms 99th, 116 ms 99.9th.
+
+docker exec -it kafka-client /opt/bitnami/kafka/bin/kafka-consumer-perf-test.sh \
+    --bootstrap-server 10.131.1.237:9092,10.131.1.224:9092,10.131.1.209:9092  \
+    --topic test-topic \
+    --fetch-size 1048576 \
+    --messages 10000000 \
+    --consumer.config /opt/bitnami/kafka/config/consumer.properties
+
+start.time, end.time, data.consumed.in.MB, MB.sec, data.consumed.in.nMsg, nMsg.sec, rebalance.time.ms, fetch.time.ms, fetch.MB.sec, fetch.nMsg.sec
+2024-06-27 09:44:58:834, 2024-06-27 09:45:07:905, 953.6911, 105.1363, 10000176, 1102433.6898, 3411, 5660, 168.4967, 1766815.5477
+```
+
+
 
 
 
@@ -1117,6 +1134,10 @@ kafka-consumer-groups.sh --describe --group <group_name> --bootstrap-server <bro
 [Reference](https://hub.docker.com/_/elasticsearch)
 
 ```bash
+# sysctl
+vm.max_map_count = 262144
+fs.file-max = 65536
+
 cat > docker-compose.yaml <<EOF
 version: '3.1'
 
@@ -1148,6 +1169,65 @@ services:
     ports:
       - 9200:9200
       - 9300:9300
+
+EOF
+
+docker compose up -d
+
+```
+
+
+
+
+
+#### 6.2.5 测试elastic
+
+```bash
+docker logs -f es-docker-cluster-data
+
+
+```
+
+
+
+
+
+#### 6.2.6 辅助工具
+
+```bash
+# kafka_manager、kibana、elastic ui
+cat > docker-compose.yaml <<EOF
+version: '3.1'
+
+services:
+  kafka-client:
+    image: 'hub.8ops.top/bitnami/kafka:3.6.2'
+    container_name: kafka-client
+    network_mode: host
+    command: ["sleep","infinity"]
+    
+  kafka-manager:
+    image: hub.8ops.top/middleware/kafka-manager:3.0.0.5
+    container_name: kafka-manager
+    network_mode: host
+    ports:
+      - "9000:9000"
+    environment:
+      ZK_HOSTS: "10.131.1.237:2181,10.131.1.224:2181,10.131.1.209:2181"
+      KAFKA_BROKERS: "10.131.1.237:9092,10.131.1.224:9092,10.131.1.209:9092"
+      APPLICATION_SECRET: "random-secret"
+      KAFKA_MANAGER_AUTH_ENABLED: "true"
+      KAFKA_MANAGER_USERNAME: jesse
+      KAFKA_MANAGER_PASSWORD: xqp4AtsTEBjj4rKJvhyY5XBN340
+
+  kibana:
+    image: hub.8ops.top/elastic/kibana:7.17.22
+    container_name: kibana
+    network_mode: host
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=["http://10.131.0.13:9200","http://10.131.0.14:9200","http://10.131.0.3:9200"]
 
 EOF
 
