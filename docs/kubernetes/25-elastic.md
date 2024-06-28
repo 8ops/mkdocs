@@ -1082,40 +1082,46 @@ docker exec -it zookeeper bin/zkServer.sh status
 # detect kafka topic
 docker logs kafka
 
-docker exec -it kafka kafka-topics.sh --list --bootstrap-server 10.131.1.237:9092,10.131.1.224:9092,10.131.1.209:9092 
+# producter & consumer
+# /opt/bitnami/kafka/bin/kafka-topics.sh
+export BOOTSTRAP_SERVER=10.131.1.237:9092,10.131.1.224:9092,10.131.1.209:9092 
 
-docker exec -it kafka /opt/bitnami/kafka/bin/kafka-topics.sh --create --topic test-topic --bootstrap-server 10.131.1.237:9092,10.131.1.224:9092,10.131.1.209:9092 --replication-factor 2 --partitions 2
+docker exec -it kafka-client kafka-topics.sh --list --bootstrap-server ${BOOTSTRAP_SERVER}
 
-docker exec -it kafka /opt/bitnami/kafka/bin/kafka-topics.sh --describe --topic test-topic --bootstrap-server 10.131.1.237:9092,10.131.1.224:9092,10.131.1.209:9092 
+docker exec -it kafka-client kafka-topics.sh --create --topic test-topic --bootstrap-server ${BOOTSTRAP_SERVER} --replication-factor 2 --partitions 2
 
-docker exec -it kafka /opt/bitnami/kafka/bin/kafka-topics.sh --alter --topic test-topic --partitions 3 --bootstrap-server 10.131.1.237:9092,10.131.1.224:9092,10.131.1.209:9092 
+docker exec -it kafka-client kafka-topics.sh --describe --topic test-topic --bootstrap-server ${BOOTSTRAP_SERVER}
 
-docker exec -it kafka /opt/bitnami/kafka/bin/kafka-topics.sh --create --topic test-topic-02 --bootstrap-server 10.131.1.237:9092,10.131.1.224:9092,10.131.1.209:9092 --replication-factor 1 --partitions 1
+docker exec -it kafka-client kafka-topics.sh --alter --topic test-topic --partitions 3 --bootstrap-server ${BOOTSTRAP_SERVER}
 
-docker exec -it kafka /opt/bitnami/kafka/bin/kafka-topics.sh --delete --topic test-topic-02 --bootstrap-server 10.131.1.237:9092,10.131.1.224:9092,10.131.1.209:9092 
+docker exec -it kafka-client kafka-topics.sh --create --topic test-topic-02 --bootstrap-server ${BOOTSTRAP_SERVER} --replication-factor 1 --partitions 1
+
+docker exec -it kafka-client kafka-topics.sh --delete --topic test-topic-02 --bootstrap-server ${BOOTSTRAP_SERVER}
 
 # detect kafka consumer
-docker exec -it kafka /opt/bitnami/kafka/bin/kafka-consumer-groups.sh --list --bootstrap-server 10.131.1.237:9092,10.131.1.224:9092,10.131.1.209:9092 
+docker exec -it kafka-client kafka-consumer-groups.sh --list --bootstrap-server ${BOOTSTRAP_SERVER}
 
-kafka-consumer-groups.sh --describe --group <group_name> --bootstrap-server <broker_address>
+docker exec -it kafka-client kafka-consumer-groups.sh --describe --all-groups --bootstrap-server ${BOOTSTRAP_SERVER}
 ```
 
 > 性能测试
 
 ```bash
-docker exec -it kafka-client /opt/bitnami/kafka/bin/kafka-producer-perf-test.sh \
+# producer
+docker exec -it kafka-client kafka-producer-perf-test.sh \
     --topic test-topic \
     --num-records 10000000 \
     --record-size 100 \
     --throughput 1000000 \
     --producer-props \
     acks=1 \
-    bootstrap.servers=10.131.1.237:9092,10.131.1.224:9092,10.131.1.209:9092 
+    bootstrap.servers=${BOOTSTRAP_SERVER}
 
 10000000 records sent, 269578.110257 records/sec (25.71 MB/sec), 2.11 ms avg latency, 378.00 ms max latency, 1 ms 50th, 2 ms 95th, 30 ms 99th, 116 ms 99.9th.
 
-docker exec -it kafka-client /opt/bitnami/kafka/bin/kafka-consumer-perf-test.sh \
-    --bootstrap-server 10.131.1.237:9092,10.131.1.224:9092,10.131.1.209:9092  \
+# consumer
+docker exec -it kafka-client kafka-consumer-perf-test.sh \
+    --bootstrap-server ${BOOTSTRAP_SERVER}  \
     --topic test-topic \
     --fetch-size 1048576 \
     --messages 10000000 \
@@ -1124,8 +1130,6 @@ docker exec -it kafka-client /opt/bitnami/kafka/bin/kafka-consumer-perf-test.sh 
 start.time, end.time, data.consumed.in.MB, MB.sec, data.consumed.in.nMsg, nMsg.sec, rebalance.time.ms, fetch.time.ms, fetch.MB.sec, fetch.nMsg.sec
 2024-06-27 09:44:58:834, 2024-06-27 09:45:07:905, 953.6911, 105.1363, 10000176, 1102433.6898, 3411, 5660, 168.4967, 1766815.5477
 ```
-
-
 
 
 
@@ -1185,6 +1189,21 @@ docker compose up -d
 ```bash
 docker logs -f es-docker-cluster-data
 
+pip install esrally
+
+esrally --track=geonames --target-hosts=10.131.0.3:9200 --pipeline=benchmark-only --client-options="timeout:60"
+
+esrally race --track=geonames --target-hosts=10.131.0.3:9200 --pipeline=benchmark-only --client-options="use_ssl:false" --on-error=abort --test-mode
+
+esrally race --track=geonames --target-hosts=10.131.0.3:9200 --pipeline=benchmark-only --client-options="timeout:60"
+
+# challenge
+esrally race --distribution-version=7.10.0 --track=geonames --challenge=append-no-conflicts
+
+esrally race --track=geonames --target-hosts=127.0.0.1:9200 --pipeline=benchmark-only --report-file=report.json --report-format=json
+
+
+esrally race --track=geonames --target-hosts=${BOOTSTRAP_SERVER} --pipeline=benchmark-only
 
 ```
 
@@ -1236,6 +1255,20 @@ docker compose up -d
 ```
 
 
+
+#### 6.2.7 优化配置
+
+```bash
+# kafka
+
+# vector
+
+# elasticsearch
+# 1，索引自动分片
+# 2，ILM
+
+
+```
 
 
 

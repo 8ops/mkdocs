@@ -199,12 +199,13 @@ pyenv versions
 # view support python versions
 pyenv install --list
 
+PYTHON_VERSION=3.12.4
 # 若遇到 ModuleNotFoundError: No module named '_ssl'问题
 LD_RUN_PATH="/usr/local/openssl/lib64" \
 LDFLAGS="-L/usr/local/openssl/lib64" \
 CPPFLAGS="-I/usr/local/openssl/include" \
 CFLAGS="-I/usr/local/openssl/include" \
-CONFIGURE_OPTS="--with-openssl=/usr/local/openssl" pyenv install 3.12.0
+CONFIGURE_OPTS="--with-openssl=/usr/local/openssl " pyenv install ${PYTHON_VERSION}
 
 ```
 
@@ -216,8 +217,9 @@ CONFIGURE_OPTS="--with-openssl=/usr/local/openssl" pyenv install 3.12.0
 
 ```bash
 
+PYTHON_VERSION=3.12.4
 mkdir -p ~/.pyenv/cache
-curl -s -o ~/.pyenv/cache/Python-3.10.2.tar.xz https://m.8ops.top/python/Python-3.10.2.tar.xz
+curl -s -o ~/.pyenv/cache/Python-${PYTHON_VERSION}.tar.xz https://m.8ops.top/python/Python-${PYTHON_VERSION}.tar.xz
 
 # ubuntu's install require package
 apt install -y gcc make binutils build-essential zlib1g-dev \
@@ -228,18 +230,18 @@ apt install -y gcc make binutils build-essential zlib1g-dev \
 yum install gcc gcc-c++ autoconf automake binutils \
     make cmake wget openssl-devel libsqlite3x libffi-devel \
     httpd-devel libsqlite3x-devel ncurses-devel \
-    bzip2-devel bzip2-libs bzip2 readline-devel readline mod-wsgi
+    bzip2-devel bzip2-libs bzip2 readline-devel readline mod-wsgi xz xz-devel
 
 pyenv install 3.10.2
 
 # 提示建议优化，重新安装即可
 MAKE_OPTS="-j8" \
-  CONFIGURE_OPTS="--enable-shared --enable-optimizations --with-computed-gotos" \
-  CFLAGS="-march=native -O2 -pipe" \
-  pyenv install -v 3.10.2
+CONFIGURE_OPTS="--enable-shared --enable-optimizations --with-computed-gotos" \
+CFLAGS="-march=native -O2 -pipe" \
+pyenv install -v ${PYTHON_VERSION}
   
 # 可以安装多个版本在一个系统中，选择指定版本为使用状态
-pyenv global 3.10.2
+pyenv global ${PYTHON_VERSION}
 
 mkdir -p ~/.pip
 cat > ~/.pip/pip.conf <<EOF
