@@ -145,6 +145,31 @@ github的提交方式
 
 ```
 
+
+
+### 1.4 git 升级
+
+```bash
+GIT_VERSION=2.45.2
+cd /opt
+wget https://mirrors.edge.kernel.org/pub/software/scm/git/git-${GIT_VERSION}.tar.gz
+tar xzf git-${GIT_VERSION}.tar.gz
+cd git-${GIT_VERSION}
+
+yum install -y libcurl-devel
+make prefix=/usr/local/ all
+make prefix=/usr/local install
+
+git config --global user.name "your_name"
+git config --global user.email "email@address.com"
+git config --list
+
+```
+
+
+
+
+
 ## 二、安装gitlab
 
 [Reference](https://gitlab.cn/install/)

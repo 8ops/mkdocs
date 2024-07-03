@@ -52,6 +52,27 @@ curl -s -o /dev/null -w "\n
 
 
 
+### 1.5 curl 升级
+
+```bash
+CURL_VERSION=8.8.0
+cd /opt
+wget https://curl.se/download/curl-${CURL_VERSION}.tar.gz
+tar xzf curl-${CURL_VERSION}.tar.gz
+
+# 有提前升级过openssl
+LD_RUN_PATH="/usr/local/openssl/lib64" \
+LDFLAGS="-L/usr/local/openssl/lib64" \
+CPPFLAGS="-I/usr/local/openssl/include" \
+CFLAGS="-I/usr/local/openssl/include" \
+./configure --prefix=/usr/local --with-openssl=/usr/local/openssl
+make && make install
+```
+
+
+
+
+
 ## 二、命令详解
 
 ```

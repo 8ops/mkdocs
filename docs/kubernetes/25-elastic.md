@@ -990,10 +990,11 @@ kafka-topics.sh --delete --topic <topic_name> --bootstrap-server <broker_address
 #### 6.2.1 环境准备
 
 ```bash
-ELK-DOCKER-01    10.131.1.237
-ELK-DOCKER-02    10.131.1.224
-ELK-DOCKER-03    10.131.1.209
-ELK-DOCKER-04    10.131.1.227
+# ELK-DOCKER-01    10.131.1.237
+# ELK-DOCKER-02    10.131.1.224
+# ELK-DOCKER-03    10.131.1.209
+# 
+# ELK-DOCKER-04    10.131.1.227
 
 mkdir -p /data1/lib/docker
 ln -s /data1/lib/docker /var/lib/docker
@@ -1023,8 +1024,6 @@ docker pull hub.8ops.top/bitnami/kafka:3.6.2
 
 ```bash
 cat > docker-compose.yaml <<EOF
-version: '3.1'
-
 services:
   zookeeper:
     image: 'hub.8ops.top/middleware/zookeeper:3.9.2'
@@ -1139,23 +1138,70 @@ start.time, end.time, data.consumed.in.MB, MB.sec, data.consumed.in.nMsg, nMsg.s
 
 ```bash
 # sysctl
+cat >> /etc/sysctl.d/99-sysctl.conf <<EOF
 vm.max_map_count = 262144
-fs.file-max = 65536
+fs.file-max = 655360
+EOF
 
+sysctl -p
+sysctl vm.max_map_count fs.file-max
+
+mkdir -p /data1/lib/elastic
+chown 1000 /data1/lib/elastic
+
+export SEED_HOSTS=10.131.1.237:9300,10.131.1.224:9300,10.131.1.209:9300
+export MASTER_NODES=10.131.1.237,10.131.1.224,10.131.1.209
+
+# master/client - 机器复用
+cat >> docker-compose.yaml <<EOF
+
+  elasticsearch:
+    image: hub.8ops.top/elastic/elasticsearch:7.17.22
+    restart: always
+    container_name: es-master
+    network_mode: host
+    environment:
+      - node.name=es-master-01
+      - node.roles=master,ingest
+      - cluster.name=es-docker-cluster
+      - discovery.seed_hosts=${SEED_HOSTS}
+      - cluster.initial_master_nodes=${MASTER_NODES}
+      - bootstrap.memory_lock=true
+      - xpack.security.enabled=false
+      - xpack.security.http.ssl.enabled=false
+      - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
+      - network.host=0.0.0.0
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 655360
+        hard: 655360
+    volumes:
+      - /data1/lib/elastic:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+      - 9300:9300
+
+EOF
+
+docker compose up -d
+
+# data
 cat > docker-compose.yaml <<EOF
-version: '3.1'
-
 services:
   elasticsearch:
     image: hub.8ops.top/elastic/elasticsearch:7.17.22
     restart: always
-    container_name: es-docker-cluster-data
+    container_name: es-data
     network_mode: host
     environment:
-      - node.name=es-01
+      - node.name=es-data-01
+      - node.roles=data
       - cluster.name=es-docker-cluster
-      - discovery.seed_hosts=ip-01:9300,ip-02:9300,ip-03:9200
-      - cluster.initial_master_nodes=ip-01:9300,ip-02:9300,ip-03:9200
+      - discovery.seed_hosts=${SEED_HOSTS}
+      - cluster.initial_master_nodes=${MASTER_NODES}
       - bootstrap.memory_lock=true
       - xpack.security.enabled=false
       - xpack.security.http.ssl.enabled=false
@@ -1178,6 +1224,15 @@ EOF
 
 docker compose up -d
 
+#      # 两种角色方式都可以
+#      - node.roles=master,ingest,data,ml
+#      
+#      OR
+#
+#      - node.master=false
+#      - node.data=true
+#      - node.ingest=false
+#      - node.ml=false
 ```
 
 
@@ -1191,19 +1246,26 @@ docker logs -f es-docker-cluster-data
 
 pip install esrally
 
-esrally --track=geonames --target-hosts=10.131.0.3:9200 --pipeline=benchmark-only --client-options="timeout:60"
+export ELASTIC_SERVER=10.131.1.237:9200,10.131.1.224:9200,10.131.1.209:9200
 
-esrally race --track=geonames --target-hosts=10.131.0.3:9200 --pipeline=benchmark-only --client-options="use_ssl:false" --on-error=abort --test-mode
+# list tracks
+esrally list tracks
 
-esrally race --track=geonames --target-hosts=10.131.0.3:9200 --pipeline=benchmark-only --client-options="timeout:60"
+esrally race --track=geonames --target-hosts=${ELASTIC_SERVER} --pipeline=benchmark-only --client-options="use_ssl:false" --on-error=abort --test-mode
+
+esrally race --track=geonames --target-hosts=${ELASTIC_SERVER} --pipeline=benchmark-only --client-options="timeout:60"
+
+esrally race --track=geonames --target-hosts=${ELASTIC_SERVER} --pipeline=benchmark-only --report-file=report.md --report-format=markdown --quiet
 
 # challenge
-esrally race --distribution-version=7.10.0 --track=geonames --challenge=append-no-conflicts
-
-esrally race --track=geonames --target-hosts=127.0.0.1:9200 --pipeline=benchmark-only --report-file=report.json --report-format=json
-
+esrally race --distribution-version=7.17.22 --track=geonames --target-hosts=${ELASTIC_SERVER} --challenge=append-no-conflicts
 
 esrally race --track=geonames --target-hosts=${BOOTSTRAP_SERVER} --pipeline=benchmark-only
+
+esrally race --track=geonames --kill-running-processes
+
+# Deprecated
+docker run --name esrally --rm -it -e ENDPOINT="${ELASTIC_SERVER}" hub.8ops.top/elastic/esrally:053
 
 ```
 
@@ -1216,8 +1278,6 @@ esrally race --track=geonames --target-hosts=${BOOTSTRAP_SERVER} --pipeline=benc
 ```bash
 # kafka_manager、kibana、elastic ui
 cat > docker-compose.yaml <<EOF
-version: '3.1'
-
 services:
   kafka-client:
     image: 'hub.8ops.top/bitnami/kafka:3.6.2'
@@ -1246,7 +1306,7 @@ services:
     ports:
       - "5601:5601"
     environment:
-      - ELASTICSEARCH_HOSTS=["http://10.131.0.13:9200","http://10.131.0.14:9200","http://10.131.0.3:9200"]
+      - ELASTICSEARCH_HOSTS=["http://10.131.1.237:9200","http://10.131.1.224:9200","http://10.131.1.209:9200"]
 
 EOF
 
