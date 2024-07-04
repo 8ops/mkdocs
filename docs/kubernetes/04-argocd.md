@@ -1059,7 +1059,7 @@ argocd app create cert-manager-extention \
 
 ### 3.10 prometheus
 
-[Reference](20-prometheus.md#prometheus)
+[Reference](20-prometheus.md#11-prometheus)
 
 #### 3.10.1 prometheus
 
@@ -1137,7 +1137,7 @@ argocd app create prometheus-blackbox-exporter \
 
 #### 3.10.4 grafana
 
-[mysql](#mysql)
+[mysql](#36-mysql)
 
 [auth.gitlab](https://grafana.com/docs/grafana/latest/setup-grafana/configure-security/configure-authentication/gitlab/)
 

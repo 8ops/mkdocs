@@ -376,3 +376,25 @@ yum install -y docker-compose
      ```
 
    - 查看 docker info
+
+
+
+## 四、常见问题
+
+### 4.1 下载
+
+```bash
+vim /usr/lib/systemd/system/docker.service
+
+[Service]
+
+Environment="HTTP_PROXY=http://127.0.0.1:50081/"
+Environment="HTTPS_PROXY=http://127.0.0.1:50081/"
+Environment="NO_PROXY=localhost,127.0.0.1,.example.com"
+
+systemctl restart docker
+
+docker pull mongo:7.0.12
+
+```
+
