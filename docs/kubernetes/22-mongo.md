@@ -48,7 +48,15 @@ helm install mongo-standalone bitnami/mongodb \
 
 ```bash
 # https://www.mongodb.com/try/download/community
+# server
+https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-rhel70-7.0.12.tgz
+https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-rhel70-5.0.27.tgz
+https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-rhel70-4.4.29.tgz
 
+# client
+https://fastdl.mongodb.org/linux/mongodb-shell-linux-x86_64-rhel70-7.0.12.tgz
+https://fastdl.mongodb.org/linux/mongodb-shell-linux-x86_64-rhel70-5.0.27.tgz
+https://fastdl.mongodb.org/linux/mongodb-shell-linux-x86_64-rhel70-4.4.29.tgz
 
 # https://www.mongodb.com/try/download/shell
 https://fastdl.mongodb.org/tools/db/mongodb-database-tools-rhel70-x86_64-100.9.5.tgz
@@ -93,7 +101,7 @@ services:
 #      ME_CONFIG_MONGODB_ADMINUSERNAME: root
 #      ME_CONFIG_MONGODB_ADMINPASSWORD: example
 #      ME_CONFIG_MONGODB_URL: mongodb://root:example@mongo:27017/
-      ME_CONFIG_MONGODB_URL: mongodb://mongo:27017/
+      ME_CONFIG_MONGODB_URL: mongodb://127.0.0.1:27017/
       ME_CONFIG_BASICAUTH: false
 
 EOF
