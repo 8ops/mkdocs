@@ -529,6 +529,21 @@ illegal_argument_exception: setting [index.lifecycle.rollover_alias] for index [
 
 
 
+### 5.2 docker部署问题
+
+```bash
+1，挂载数据的时候出现访问受限以至于无法启动时，可将挂载数据的目录所有者和用户组改为 elastic 前提条件得先创建用户和用户组,省事一点就直接 chown -R 1000:1000 /home/elasticsearch/data
+2，在运行elasticsearch时出现 max virtual memory areas vm.max_map_count [65530], 请在宿主机中执行: sudo sysctl -w vm.max_map_count=262144 或者运行sudo vi /etc/sysctl.conf在文件中追加vm.max_map_count=262144 保存后执行sudo sysctl -p
+3，cluster.initial_master_nodes 为集群创建初期具有master选举权的节点。
+4，discovery.seed_hosts 发送信息给具有master选举权的节点，如果当前节点具有master节点的选举权，则需要向其他同样具有master节点选举权的发送消息。如果无master 节点选举权，则须把所有具有master选举权的节点host 加入。
+5，集群master节点须大于等于3个，因为如果当前主节点挂了之后es须从具有master 选举权的节点中重新选举出新的主节点，如果具有master 选举权的节点存活少于一半时，节点是无法完成选举的，所以必须有大于一半以上且具有master选举权的节点存在时es才能重新选举出新的主节点。不然节点无法工作。
+6，elasticsearch.yml里的配置都可在docker-compose.yml中environment里覆盖。
+```
+
+
+
+
+
 ## 六、Docker实践
 
 ### 6.1 ChatGPT
