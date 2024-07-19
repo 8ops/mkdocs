@@ -37,11 +37,11 @@ curl --proxy "socks5://abc:abc@u.8ops.top:56005" "https://ip.8ops.top"
 
 [Reference](https://github.com/fatedier/frp)
 
-<u>Download</u>
+#### 2.2.1 Download
 
 ```bash
 cd /usr/local
-FRP_VERSION=0.51.1
+FRP_VERSION=0.58.1
 wget  https://github.com/fatedier/frp/releases/download/v${FRP_VERSION}/frp_${FRP_VERSION}_linux_amd64.tar.gz
 tar xzf frp_${FRP_VERSION}_linux_amd64.tar.gz 
 ln -s frp_${FRP_VERSION}_linux_amd64 frp
@@ -49,7 +49,11 @@ ln -s frp_${FRP_VERSION}_linux_amd64 frp
 
 
 
-<u>Server</u>
+#### 2.2.2 Server
+
+> frps.ini
+
+Deprecated
 
 ```bash
 # config frps.ini
@@ -72,6 +76,44 @@ subdomain_host = 8ops.top
 #path = /handler
 #ops = NewProxy
 
+```
+
+> frps.toml
+
+[Reference](https://github.com/fatedier/frp/blob/dev/conf/frps_full_example.toml)
+
+```bash
+# frps.toml
+bindPort = 7000
+
+webServer.addr = "127.0.0.1"
+webServer.port = 7500
+webServer.user = "admin"
+webServer.password = "admin"
+
+log.to = "/var/log/frps.log"
+log.level = "info"
+log.maxDays = 3
+
+[[httpPlugins]]
+name = "user-manager"
+addr = "127.0.0.1:9000"
+path = "/handler"
+ops = ["Login"]
+
+[[httpPlugins]]
+name = "port-manager"
+addr = "127.0.0.1:9001"
+path = "/handler"
+ops = ["NewProxy"]
+```
+
+
+
+> service
+
+```bash
+
 # service
 cat > /usr/lib/systemd/system/frps.service <<EOF
 [Unit]
@@ -84,7 +126,7 @@ WorkingDirectory=/usr/local/frp
 User=nobody
 Restart=on-failure
 RestartSec=5s
-ExecStart=/usr/local/frp/frps -c /usr/local/frp/frps.ini
+ExecStart=/usr/local/frp/frps -c frps.ini
 
 [Install]
 WantedBy=multi-user.target
@@ -99,9 +141,79 @@ systemctl status frps
 
 
 
-<u>Client</u>
+#### 2.2.3 Client
+
+> frpc.ini
+
+Deprecated
 
 ```bash
+# config frpc.ini
+[common]
+server_addr = xx.8ops.top
+server_port = 7000
+token = 
+
+[proxy-ssh-xx]
+type = tcp
+local_ip = 127.0.0.1
+local_port = 22
+remote_port = xx
+
+[proxy-https-xx]
+type = tcp
+local_ip = 127.0.0.1
+local_port = 443
+remote_port = xx
+
+[proxy-http-xx]
+type = tcp
+local_ip = 127.0.0.1
+local_port = 80
+remote_port = xx
+
+[proxy-http-xx]
+type = tcp
+remote_port = xx
+plugin = http_proxy
+plugin_http_user = xx
+plugin_http_passwd = xx
+
+[proxy-socks5-xx]
+type = tcp
+remote_port = xx
+plugin = socks5
+plugin_user = xx
+plugin_passwd = xx
+```
+
+> frpc.toml
+
+[Reference](https://github.com/fatedier/frp/blob/dev/conf/frpc_full_example.toml)
+
+```bash
+# frpc.toml
+serverAddr = "127.0.0.1"
+serverPort = 7000
+
+[[proxies]]
+name = "http_proxy"
+type = "tcp"
+remotePort = 6000
+
+[proxies.plugin]
+type = "http_proxy"
+httpUser = "abc"
+httpPassword = "abc"
+```
+
+
+
+> service
+
+```bash
+# /usr/local/frp/frpc tcp -n demo -t token -p tcp -s frps.8ops.top:7000 -r 56666 -i 127.0.0.1 -l 12622
+
 # service
 cat > /usr/lib/systemd/system/frpc.service <<EOF
 [Unit]
@@ -114,7 +226,7 @@ WorkingDirectory=/usr/local/frp
 User=nobody
 Restart=on-failure
 RestartSec=5s
-ExecStart=/usr/local/frp/frpc tcp -n demo -t token -p tcp -s frps.8ops.top:7000 -r 56666 -i 127.0.0.1 -l 12622
+ExecStart=/usr/local/frp/frpc -c frpc.ini
 
 [Install]
 WantedBy=multi-user.target
