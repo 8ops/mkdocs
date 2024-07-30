@@ -1,0 +1,13 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: tls-xyz.8ops.top
+  namespace: default
+spec:
+  secretName: tls-xyz.8ops.top
+  issuerRef:
+    name: cert-manager-webhook-dnspod-qqshfox-cluster-issuer
+    kind: ClusterIssuer
+    group: cert-manager.io
+  dnsNames:
+  - "*.xyz.8ops.top"

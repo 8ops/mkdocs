@@ -1,0 +1,195 @@
+alertmanager:
+  enabled: true
+
+  image:
+    repository: hub.8ops.top/prometheus/alertmanager
+    tag: v0.23.0
+
+  extraConfigmapMounts: 
+    - name: template-files
+      mountPath: /opt/metadata/templates.d
+      configMap: alertmanager-template-files
+      readOnly: true
+
+  ingress:
+    enabled: true
+    ingressClassName: external
+    hosts: 
+      - alertmanager.8ops.top
+    path: /
+    pathType: Prefix
+    tls: 
+      - secretName: tls-8ops.top
+        hosts:
+          - alertmanager.8ops.top
+
+  resources: 
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 30m
+      memory: 32Mi
+
+  persistentVolume:
+    enabled: true
+    storageClass: "prometheus-alertmanager"
+    size: 1Gi
+
+  service:
+    servicePort: 9093
+    type: ClusterIP
+
+configmapReload:
+  prometheus:
+    enabled: true
+
+    name: configmap-reload
+    image:
+      repository: hub.8ops.top/prometheus/configmap-reload
+      tag: v0.5.0
+
+    resources: 
+      limits:
+        cpu: 30m
+        memory: 32Mi
+      requests:
+        cpu: 30m
+        memory: 32Mi
+
+  alertmanager:
+    enabled: true
+
+    name: configmap-reload
+    image:
+      repository: hub.8ops.top/prometheus/configmap-reload
+      tag: v0.5.0
+
+    resources: 
+      limits:
+        cpu: 30m
+        memory: 32Mi
+      requests:
+        cpu: 30m
+        memory: 32Mi
+
+kubeStateMetrics:
+  enabled: true
+
+kube-state-metrics:
+  image:
+    repository: hub.8ops.top/prometheus/kube-state-metrics
+    tag: v2.4.1
+
+  resources:
+    limits:
+     cpu: 100m
+     memory: 128Mi
+    requests:
+     cpu: 30m
+     memory: 32Mi
+
+nodeExporter:
+  enabled: true
+
+  image:
+    repository: hub.8ops.top/prometheus/node-exporter
+    tag: v1.3.0
+
+  tolerations:
+    - operator: "Exists"
+
+  resources: 
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 30m
+      memory: 32Mi
+
+server:
+  image:
+    repository: hub.8ops.top/prometheus/prometheus
+    tag: v2.34.0
+
+  extraConfigmapMounts: 
+    - name: metadata-rules
+      mountPath: /opt/metadata/rules.d
+      configMap: prometheus-metadata-rules
+      readOnly: true
+    - name: metadata-hosts
+      mountPath: /opt/metadata/hosts.d
+      configMap: prometheus-metadata-hosts
+      readOnly: true
+
+  extraSecretMounts:
+    - name: etcd-certs
+      mountPath: /var/run/secrets/kubernetes.io/etcd
+      secretName: etcd-certs
+      readOnly: true
+
+  ingress:
+    enabled: true
+    ingressClassName: external
+    hosts:
+      - prometheus.8ops.top
+    path: /
+    pathType: Prefix
+    tls: 
+      - secretName: tls-8ops.top
+        hosts:
+          - prometheus.8ops.top
+
+  resources: 
+    limits:
+      cpu: 2000m
+      memory: 2048Mi
+    requests:
+      cpu: 500m
+      memory: 512Mi
+
+  persistentVolume:
+    enabled: true
+    storageClass: "prometheus-server"
+    size: 50Gi
+
+  service:
+    enabled: true
+    servicePort: 9090
+    type: ClusterIP
+
+pushgateway:
+  image:
+    repository: hub.8ops.top/prometheus/pushgateway
+    tag: v1.4.2
+
+  ingress:
+    enabled: true
+    ingressClassName: external
+    hosts: 
+      - pushgateway.8ops.top
+    path: /
+    pathType: Prefix
+    tls: 
+      - secretName: tls-8ops.top
+        hosts:
+          - pushgateway.8ops.top
+
+  resources: 
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 30m
+      memory: 32Mi
+
+  persistentVolume:
+    enabled: true
+    storageClass: "prometheus-pushgateway"
+    size: 1Gi
+
+serverFiles:
+  prometheus.yml:
+    rule_files:
+      - /opt/metadata/rules.d/*.yml
+
