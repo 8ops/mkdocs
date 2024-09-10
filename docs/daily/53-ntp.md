@@ -70,25 +70,75 @@ systemctl status ntpd
 配置 `/etc/chrony.conf` 文件的内容为：
 
 ```bash
-server ntp.aliyun.com iburst
-stratumweight 0
+# Use public servers from the pool.ntp.org project.
+# Please consider joining the pool (http://www.pool.ntp.org/join.html).
+server ntp.aliyun.com iburst minpoll 10 maxpoll 17
+server ntp.tencent.com iburst
+server ntp.ntsc.ac.cn iburst
+
+## OR
+# iburst：如果无法与NTP服务器建立连接，启用加速尝试，缩短初始同步时间。(1分钟一次)
+# maxpoll：指定时间同步请求之间的最大间隔，默认值为10（表示2^10秒，约1024秒）（可选4-17）。
+# minpoll：最小时间间隔，默认值是 6，表示 2^6 秒（64秒）。
+# maxpoll：最大时间间隔，默认值是 10，表示 2^10 秒（1024秒）。
+
+# Record the rate at which the system clock gains/losses time.
 driftfile /var/lib/chrony/drift
+
+# Allow the system clock to be stepped in the first three updates
+# if its offset is larger than 1 second.
+makestep 1.0 3
+
+# Enable kernel synchronization of the real-time clock (RTC).
 rtcsync
-makestep 10 3
-bindcmdaddress 127.0.0.1
-bindcmdaddress ::1
-keyfile /etc/chrony.keys
-commandkey 1
-generatecommandkey
-logchange 0.5
+
+# Enable hardware timestamping on all interfaces that support it.
+#hwtimestamp *
+
+# Increase the minimum number of selectable sources required to adjust
+# the system clock.
+#minsources 2
+
+# Allow NTP client access from local network.
+allow all
+
+# Serve time even if not synchronized to a time source.
+#local stratum 10
+
+# Specify file containing keys for NTP authentication.
+#keyfile /etc/chrony.keys
+
+# Specify directory for log files.
 logdir /var/log/chrony
+
+# Select which information is logged.
+#log measurements statistics tracking
 ```
 
 
 
 ```bash
-# op
-systemctl start chronyd
+# restart
+systemctl restart chronyd
 systemctl status chronyd
+
+# detect server
+chronyc sources -v
+chronyc sourcestats -v
+chronyc tracking
+chronyc -a makestep # 手动触发同步
+chronyc activity
+
+chronyc serverstats
+chronyc accheck 10.101.9.179
+chronyc -n clients
+
+# detect client
+chronyc sources -v
+chronyc sourcestats -v
+chronyc tracking
+chronyc -a makestep # 手动触发同步
+chronyc activity
+
 ```
 
