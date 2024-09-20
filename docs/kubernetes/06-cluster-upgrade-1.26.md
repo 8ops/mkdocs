@@ -68,6 +68,7 @@ apt update && apt info kubeadm
 
 ```bash
 cp -r /etc/kubernetes{,-$(date +%Y%m%d-01)}
+# cp -r /etc/kubernetes{,-v1.28}
 
 apt update
 apt-mark showhold
@@ -77,15 +78,15 @@ export CONTAINERD_VERSION=1.7.12-0ubuntu2~20.04.1
 apt install -y --allow-change-held-packages containerd=${CONTAINERD_VERSION}
 
 # kubernetes
-export KUBERNETES_VERSION=1.26.15-1.1
-export KUBERNETES_VERSION=1.27.16-1.1
-export KUBERNETES_VERSION=1.28.14-2.1
-export KUBERNETES_VERSION=1.29.9-1.1
-export KUBERNETES_VERSION=1.30.5-1.1
-export KUBERNETES_VERSION=1.31.1-1.1
-apt install -y --allow-change-held-packages kubeadm=${KUBERNETES_VERSION} kubectl=${KUBERNETES_VERSION} kubelet=${KUBERNETES_VERSION}
+export KUBE_VERSION_FOR_BINARY=1.26.15-1.1
+export KUBE_VERSION_FOR_BINARY=1.27.16-1.1
+export KUBE_VERSION_FOR_BINARY=1.28.14-2.1
+export KUBE_VERSION_FOR_BINARY=1.29.9-1.1
+export KUBE_VERSION_FOR_BINARY=1.30.5-1.1
+export KUBE_VERSION_FOR_BINARY=1.31.1-1.1
+apt install -y --allow-change-held-packages kubeadm=${KUBE_VERSION_FOR_BINARY} kubectl=${KUBE_VERSION_FOR_BINARY} kubelet=${KUBE_VERSION_FOR_BINARY}
 
-# validate
+# detect
 dpkg -l | grep -E "kube|containerd"
 containerd --version
 kubeadm version -o short
@@ -96,7 +97,6 @@ apt-mark hold containerd kubeadm kubectl kubelet && apt-mark showhold
 # lib
 df -lh / /data1
 ls -l /var/lib/{containerd,etcd,kubelet}
-
 
 ```
 
@@ -116,7 +116,7 @@ export KUBE_VERSION=v1.31.1
 cd /opt/kubernetes
 
 # 查看升级计划 <FW>
-kubeadm config print init-defaults | tee kubeadm-init.yaml-${KUBE_VERSION}-defaulta
+kubeadm config print init-defaults | tee kubeadm-init.yaml-${KUBE_VERSION}-default
 kubeadm upgrade plan 
 
 cp kubeadm-init.yaml-${KUBE_VERSION}-default kubeadm-init.yaml-${KUBE_VERSION}
@@ -137,6 +137,7 @@ kubeadm upgrade apply ${KUBE_VERSION} --config kubeadm-init.yaml-${KUBE_VERSION}
 # <以上操作仅需要在一台master节点执行一次> #
 
 # 重启kubelet <当版本有变化配置未随kubernetes升级>
+# 重启后可以通过 kubectl get no 查看节点版本发生了变化
 sed -i 's/pause:3.8/pause:3.9/' /var/lib/kubelet/kubeadm-flags.env
 systemctl restart kubelet
 systemctl status kubelet
@@ -148,6 +149,9 @@ systemctl status containerd
 
 # 依次升级剩下control-plane/node节点
 kubeadm upgrade node
+
+systemctl restart kubelet
+systemctl restart containerd
 
 # 查看集群版本
 kubectl version --short
@@ -467,6 +471,82 @@ W0920 14:47:47.420789 2044537 common.go:93] WARNING: Usage of the --config flag 
 ### 3.3 v1.28
 
 ```bash
+root@K-KUBE-LAB-01:/opt/kubernetes# kubeadm config images list
+I0920 16:52:09.054877 2142217 version.go:256] remote version is much newer: v1.31.0; falling back to: stable-1.28
+W0920 16:52:19.059045 2142217 version.go:104] could not fetch a Kubernetes version from the internet: unable to get URL "https://dl.k8s.io/release/stable-1.28.txt": Get "https://cdn.dl.k8s.io/release/stable-1.28.txt": context deadline exceeded (Client.Timeout exceeded while awaiting headers)
+W0920 16:52:19.059128 2142217 version.go:105] falling back to the local client version: v1.28.14
+registry.k8s.io/kube-apiserver:v1.28.14
+registry.k8s.io/kube-controller-manager:v1.28.14
+registry.k8s.io/kube-scheduler:v1.28.14
+registry.k8s.io/kube-proxy:v1.28.14
+registry.k8s.io/pause:3.9
+registry.k8s.io/etcd:3.5.15-0
+registry.k8s.io/coredns/coredns:v1.10.1
+
+root@K-KUBE-LAB-01:/opt/kubernetes# kubeadm config images list --config kubeadm-init.yaml-${KUBE_VERSION}
+hub.8ops.top/google_containers/kube-apiserver:v1.27.16
+hub.8ops.top/google_containers/kube-controller-manager:v1.27.16
+hub.8ops.top/google_containers/kube-scheduler:v1.27.16
+hub.8ops.top/google_containers/kube-proxy:v1.27.16
+hub.8ops.top/google_containers/pause:3.9
+hub.8ops.top/google_containers/etcd:3.5.15-0
+hub.8ops.top/google_containers/coredns:v1.10.1
+
+root@K-KUBE-LAB-01:/opt/kubernetes# kubeadm upgrade apply ${KUBE_VERSION} --config kubeadm-init.yaml-${KUBE_VERSION}
+[upgrade/config] Making sure the configuration is correct:
+W0920 17:03:46.551837 2153542 common.go:94] WARNING: Usage of the --config flag with kubeadm config types for reconfiguring the cluster during upgrade is not recommended!
+[preflight] Running pre-flight checks.
+[upgrade] Running cluster health checks
+[upgrade/version] You have chosen to change the cluster version to "v1.28.14"
+[upgrade/versions] Cluster version: v1.27.16
+[upgrade/versions] kubeadm version: v1.28.14
+[upgrade] Are you sure you want to proceed? [y/N]: y
+[upgrade/prepull] Pulling images required for setting up a Kubernetes cluster
+[upgrade/prepull] This might take a minute or two, depending on the speed of your internet connection
+[upgrade/prepull] You can also perform this action in beforehand using 'kubeadm config images pull'
+[upgrade/apply] Upgrading your Static Pod-hosted control plane to version "v1.28.14" (timeout: 5m0s)...
+[upgrade/etcd] Upgrading to TLS for etcd
+[upgrade/staticpods] Preparing for "etcd" upgrade
+[upgrade/staticpods] Current and new manifests of etcd are equal, skipping upgrade
+[upgrade/etcd] Waiting for etcd to become available
+[upgrade/staticpods] Writing new Static Pod manifests to "/etc/kubernetes/tmp/kubeadm-upgraded-manifests946810205"
+[upgrade/staticpods] Preparing for "kube-apiserver" upgrade
+[upgrade/staticpods] Renewing apiserver certificate
+[upgrade/staticpods] Renewing apiserver-kubelet-client certificate
+[upgrade/staticpods] Renewing front-proxy-client certificate
+[upgrade/staticpods] Renewing apiserver-etcd-client certificate
+[upgrade/staticpods] Moved new manifest to "/etc/kubernetes/manifests/kube-apiserver.yaml" and backed up old manifest to "/etc/kubernetes/tmp/kubeadm-backup-manifests-2024-09-20-17-04-37/kube-apiserver.yaml"
+[upgrade/staticpods] Waiting for the kubelet to restart the component
+[upgrade/staticpods] This might take a minute or longer depending on the component/version gap (timeout 5m0s)
+[apiclient] Found 3 Pods for label selector component=kube-apiserver
+[upgrade/staticpods] Component "kube-apiserver" upgraded successfully!
+[upgrade/staticpods] Preparing for "kube-controller-manager" upgrade
+[upgrade/staticpods] Renewing controller-manager.conf certificate
+[upgrade/staticpods] Moved new manifest to "/etc/kubernetes/manifests/kube-controller-manager.yaml" and backed up old manifest to "/etc/kubernetes/tmp/kubeadm-backup-manifests-2024-09-20-17-04-37/kube-controller-manager.yaml"
+[upgrade/staticpods] Waiting for the kubelet to restart the component
+[upgrade/staticpods] This might take a minute or longer depending on the component/version gap (timeout 5m0s)
+[apiclient] Found 3 Pods for label selector component=kube-controller-manager
+[upgrade/staticpods] Component "kube-controller-manager" upgraded successfully!
+[upgrade/staticpods] Preparing for "kube-scheduler" upgrade
+[upgrade/staticpods] Renewing scheduler.conf certificate
+[upgrade/staticpods] Moved new manifest to "/etc/kubernetes/manifests/kube-scheduler.yaml" and backed up old manifest to "/etc/kubernetes/tmp/kubeadm-backup-manifests-2024-09-20-17-04-37/kube-scheduler.yaml"
+[upgrade/staticpods] Waiting for the kubelet to restart the component
+[upgrade/staticpods] This might take a minute or longer depending on the component/version gap (timeout 5m0s)
+[apiclient] Found 3 Pods for label selector component=kube-scheduler
+[upgrade/staticpods] Component "kube-scheduler" upgraded successfully!
+[upload-config] Storing the configuration used in ConfigMap "kubeadm-config" in the "kube-system" Namespace
+[kubelet] Creating a ConfigMap "kubelet-config" in namespace kube-system with the configuration for the kubelets in the cluster
+[upgrade] Backing up kubelet config file to /etc/kubernetes/tmp/kubeadm-kubelet-config3476418119/config.yaml
+[kubelet-start] Writing kubelet configuration to file "/var/lib/kubelet/config.yaml"
+[bootstrap-token] Configured RBAC rules to allow Node Bootstrap tokens to get nodes
+[bootstrap-token] Configured RBAC rules to allow Node Bootstrap tokens to post CSRs in order for nodes to get long term certificate credentials
+[bootstrap-token] Configured RBAC rules to allow the csrapprover controller automatically approve CSRs from a Node Bootstrap Token
+[bootstrap-token] Configured RBAC rules to allow certificate rotation for all node client certificates in the cluster
+[upgrade/addons] skip upgrade addons because control plane instances [k-kube-lab-02 k-kube-lab-03] have not been upgraded
+
+[upgrade/successful] SUCCESS! Your cluster was upgraded to "v1.28.14". Enjoy!
+
+[upgrade/kubelet] Now that your control plane is upgraded, please proceed with upgrading your kubelets if you haven't already done so.
 
 ```
 
@@ -475,7 +555,91 @@ W0920 14:47:47.420789 2044537 common.go:93] WARNING: Usage of the --config flag 
 ### 3.4 v1.29
 
 ```bash
+root@K-KUBE-LAB-01:/opt/kubernetes# kubeadm config images list
+W0920 17:36:05.493241 2182958 version.go:104] could not fetch a Kubernetes version from the internet: unable to get URL "https://dl.k8s.io/release/stable-1.txt": Get "https://dl.k8s.io/release/stable-1.txt": context deadline exceeded (Client.Timeout exceeded while awaiting headers)
+W0920 17:36:05.493409 2182958 version.go:105] falling back to the local client version: v1.29.9
+registry.k8s.io/kube-apiserver:v1.29.9
+registry.k8s.io/kube-controller-manager:v1.29.9
+registry.k8s.io/kube-scheduler:v1.29.9
+registry.k8s.io/kube-proxy:v1.29.9
+registry.k8s.io/coredns/coredns:v1.11.1
+registry.k8s.io/pause:3.9
+registry.k8s.io/etcd:3.5.15-0
 
+root@K-KUBE-LAB-01:/opt/kubernetes# kubeadm config images list --config kubeadm-init.yaml-${KUBE_VERSION}
+hub.8ops.top/google_containers/kube-apiserver:v1.29.9
+hub.8ops.top/google_containers/kube-controller-manager:v1.29.9
+hub.8ops.top/google_containers/kube-scheduler:v1.29.9
+hub.8ops.top/google_containers/kube-proxy:v1.29.9
+hub.8ops.top/google_containers/coredns:v1.11.1
+hub.8ops.top/google_containers/pause:3.9
+hub.8ops.top/google_containers/etcd:3.5.15-0
+
+root@K-KUBE-LAB-01:/opt/kubernetes# kubeadm config images pull --config kubeadm-init.yaml-${KUBE_VERSION}
+[config/images] Pulled hub.8ops.top/google_containers/kube-apiserver:v1.29.9
+[config/images] Pulled hub.8ops.top/google_containers/kube-controller-manager:v1.29.9
+[config/images] Pulled hub.8ops.top/google_containers/kube-scheduler:v1.29.9
+[config/images] Pulled hub.8ops.top/google_containers/kube-proxy:v1.29.9
+[config/images] Pulled hub.8ops.top/google_containers/coredns:v1.11.1
+[config/images] Pulled hub.8ops.top/google_containers/pause:3.9
+[config/images] Pulled hub.8ops.top/google_containers/etcd:3.5.15-0
+root@K-KUBE-LAB-01:/opt/kubernetes# kubeadm upgrade apply ${KUBE_VERSION} --config kubeadm-init.yaml-${KUBE_VERSION}
+[upgrade/config] Making sure the configuration is correct:
+W0920 17:41:12.008711 2187038 common.go:94] WARNING: Usage of the --config flag with kubeadm config types for reconfiguring the cluster during upgrade is not recommended!
+[preflight] Running pre-flight checks.
+[upgrade] Running cluster health checks
+[upgrade/version] You have chosen to change the cluster version to "v1.29.9"
+[upgrade/versions] Cluster version: v1.28.14
+[upgrade/versions] kubeadm version: v1.29.9
+[upgrade] Are you sure you want to proceed? [y/N]: y
+[upgrade/prepull] Pulling images required for setting up a Kubernetes cluster
+[upgrade/prepull] This might take a minute or two, depending on the speed of your internet connection
+[upgrade/prepull] You can also perform this action in beforehand using 'kubeadm config images pull'
+[upgrade/apply] Upgrading your Static Pod-hosted control plane to version "v1.29.9" (timeout: 5m0s)...
+[upgrade/etcd] Upgrading to TLS for etcd
+[upgrade/staticpods] Preparing for "etcd" upgrade
+[upgrade/staticpods] Current and new manifests of etcd are equal, skipping upgrade
+[upgrade/etcd] Waiting for etcd to become available
+[upgrade/staticpods] Writing new Static Pod manifests to "/etc/kubernetes/tmp/kubeadm-upgraded-manifests1373743205"
+[upgrade/staticpods] Preparing for "kube-apiserver" upgrade
+[upgrade/staticpods] Renewing apiserver certificate
+[upgrade/staticpods] Renewing apiserver-kubelet-client certificate
+[upgrade/staticpods] Renewing front-proxy-client certificate
+[upgrade/staticpods] Renewing apiserver-etcd-client certificate
+[upgrade/staticpods] Moved new manifest to "/etc/kubernetes/manifests/kube-apiserver.yaml" and backed up old manifest to "/etc/kubernetes/tmp/kubeadm-backup-manifests-2024-09-20-17-42-44/kube-apiserver.yaml"
+[upgrade/staticpods] Waiting for the kubelet to restart the component
+[upgrade/staticpods] This might take a minute or longer depending on the component/version gap (timeout 5m0s)
+[apiclient] Found 3 Pods for label selector component=kube-apiserver
+[upgrade/staticpods] Component "kube-apiserver" upgraded successfully!
+[upgrade/staticpods] Preparing for "kube-controller-manager" upgrade
+[upgrade/staticpods] Renewing controller-manager.conf certificate
+[upgrade/staticpods] Moved new manifest to "/etc/kubernetes/manifests/kube-controller-manager.yaml" and backed up old manifest to "/etc/kubernetes/tmp/kubeadm-backup-manifests-2024-09-20-17-42-44/kube-controller-manager.yaml"
+[upgrade/staticpods] Waiting for the kubelet to restart the component
+[upgrade/staticpods] This might take a minute or longer depending on the component/version gap (timeout 5m0s)
+[apiclient] Found 3 Pods for label selector component=kube-controller-manager
+[upgrade/staticpods] Component "kube-controller-manager" upgraded successfully!
+[upgrade/staticpods] Preparing for "kube-scheduler" upgrade
+[upgrade/staticpods] Renewing scheduler.conf certificate
+[upgrade/staticpods] Moved new manifest to "/etc/kubernetes/manifests/kube-scheduler.yaml" and backed up old manifest to "/etc/kubernetes/tmp/kubeadm-backup-manifests-2024-09-20-17-42-44/kube-scheduler.yaml"
+[upgrade/staticpods] Waiting for the kubelet to restart the component
+[upgrade/staticpods] This might take a minute or longer depending on the component/version gap (timeout 5m0s)
+[apiclient] Found 3 Pods for label selector component=kube-scheduler
+[upgrade/staticpods] Component "kube-scheduler" upgraded successfully!
+[upload-config] Storing the configuration used in ConfigMap "kubeadm-config" in the "kube-system" Namespace
+[kubelet] Creating a ConfigMap "kubelet-config" in namespace kube-system with the configuration for the kubelets in the cluster
+[upgrade] Backing up kubelet config file to /etc/kubernetes/tmp/kubeadm-kubelet-config1436888073/config.yaml
+[kubelet-start] Writing kubelet configuration to file "/var/lib/kubelet/config.yaml"
+[kubeconfig] Writing "admin.conf" kubeconfig file
+[kubeconfig] Writing "super-admin.conf" kubeconfig file
+[bootstrap-token] Configured RBAC rules to allow Node Bootstrap tokens to get nodes
+[bootstrap-token] Configured RBAC rules to allow Node Bootstrap tokens to post CSRs in order for nodes to get long term certificate credentials
+[bootstrap-token] Configured RBAC rules to allow the csrapprover controller automatically approve CSRs from a Node Bootstrap Token
+[bootstrap-token] Configured RBAC rules to allow certificate rotation for all node client certificates in the cluster
+[upgrade/addons] skip upgrade addons because control plane instances [k-kube-lab-02 k-kube-lab-03] have not been upgraded
+
+[upgrade/successful] SUCCESS! Your cluster was upgraded to "v1.29.9". Enjoy!
+
+[upgrade/kubelet] Now that your control plane is upgraded, please proceed with upgrading your kubelets if you haven't already done so.
 ```
 
 
