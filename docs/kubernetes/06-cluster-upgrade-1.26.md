@@ -68,7 +68,7 @@ apt update && apt info kubeadm
 
 ```bash
 cp -r /etc/kubernetes{,-$(date +%Y%m%d-01)}
-# cp -r /etc/kubernetes{,-v1.28}
+# cp -r /etc/kubernetes{,-v1.30}
 
 apt update
 apt-mark showhold
@@ -122,6 +122,9 @@ kubeadm upgrade plan
 cp kubeadm-init.yaml-${KUBE_VERSION}-default kubeadm-init.yaml-${KUBE_VERSION}
 vim kubeadm-init.yaml-${KUBE_VERSION}
 
+# 组件版本设置
+kubectl api-versions
+
 # 打印原始image
 kubeadm config images list
 
@@ -138,12 +141,14 @@ kubeadm upgrade apply ${KUBE_VERSION} --config kubeadm-init.yaml-${KUBE_VERSION}
 
 # 重启kubelet <当版本有变化配置未随kubernetes升级>
 # 重启后可以通过 kubectl get no 查看节点版本发生了变化
-sed -i 's/pause:3.8/pause:3.9/' /var/lib/kubelet/kubeadm-flags.env
+sed -i 's/pause:3.8/pause:3.9/' /var/lib/kubelet/kubeadm-flags.env  # v1.25 ~ v1.30
+sed -i 's/pause:3.9/pause:3.10/' /var/lib/kubelet/kubeadm-flags.env # v1.31
 systemctl restart kubelet
 systemctl status kubelet
 
 # 重启containerd <当版本有变化>
-sed -i 's/pause:3.8/pause:3.9/' /etc/containerd/config.toml
+sed -i 's/pause:3.8/pause:3.9/' /etc/containerd/config.toml  # v1.25 ~ v1.30
+sed -i 's/pause:3.9/pause:3.10/' /etc/containerd/config.toml # v1.10
 systemctl restart containerd
 systemctl status containerd
 
@@ -154,7 +159,8 @@ systemctl restart kubelet
 systemctl restart containerd
 
 # 查看集群版本
-kubectl version --short
+kubectl version --short # v1.25 ~ v1.29
+kubectl version 
 
 # 查看节点组件证书签名
 kubeadm certs check-expiration
@@ -583,6 +589,7 @@ root@K-KUBE-LAB-01:/opt/kubernetes# kubeadm config images pull --config kubeadm-
 [config/images] Pulled hub.8ops.top/google_containers/coredns:v1.11.1
 [config/images] Pulled hub.8ops.top/google_containers/pause:3.9
 [config/images] Pulled hub.8ops.top/google_containers/etcd:3.5.15-0
+
 root@K-KUBE-LAB-01:/opt/kubernetes# kubeadm upgrade apply ${KUBE_VERSION} --config kubeadm-init.yaml-${KUBE_VERSION}
 [upgrade/config] Making sure the configuration is correct:
 W0920 17:41:12.008711 2187038 common.go:94] WARNING: Usage of the --config flag with kubeadm config types for reconfiguring the cluster during upgrade is not recommended!
@@ -648,6 +655,143 @@ W0920 17:41:12.008711 2187038 common.go:94] WARNING: Usage of the --config flag 
 
 ```bash
 
+root@K-KUBE-LAB-01:/opt/kubernetes# kubeadm upgrade plan
+[preflight] Running pre-flight checks.
+[upgrade/config] Reading configuration from the cluster...
+[upgrade/config] FYI: You can look at this config file with 'kubectl -n kube-system get cm kubeadm-config -o yaml'
+[upgrade] Running cluster health checks
+[upgrade] Fetching available versions to upgrade to
+[upgrade/versions] Cluster version: 1.29.9
+[upgrade/versions] kubeadm version: v1.30.5
+I0923 10:28:56.609571  853576 version.go:256] remote version is much newer: v1.31.1; falling back to: stable-1.30
+[upgrade/versions] Target version: v1.30.5
+[upgrade/versions] Latest version in the v1.29 series: v1.29.9
+
+Components that must be upgraded manually after you have upgraded the control plane with 'kubeadm upgrade apply':
+COMPONENT   NODE            CURRENT   TARGET
+kubelet     k-kube-lab-01   v1.29.9   v1.30.5
+kubelet     k-kube-lab-02   v1.29.9   v1.30.5
+kubelet     k-kube-lab-03   v1.29.9   v1.30.5
+kubelet     k-kube-lab-11   v1.29.9   v1.30.5
+kubelet     k-kube-lab-12   v1.29.9   v1.30.5
+
+Upgrade to the latest stable version:
+
+COMPONENT                 NODE            CURRENT    TARGET
+kube-apiserver            k-kube-lab-01   v1.29.9    v1.30.5
+kube-apiserver            k-kube-lab-02   v1.29.9    v1.30.5
+kube-apiserver            k-kube-lab-03   v1.29.9    v1.30.5
+kube-controller-manager   k-kube-lab-01   v1.29.9    v1.30.5
+kube-controller-manager   k-kube-lab-02   v1.29.9    v1.30.5
+kube-controller-manager   k-kube-lab-03   v1.29.9    v1.30.5
+kube-scheduler            k-kube-lab-01   v1.29.9    v1.30.5
+kube-scheduler            k-kube-lab-02   v1.29.9    v1.30.5
+kube-scheduler            k-kube-lab-03   v1.29.9    v1.30.5
+kube-proxy                                1.29.9     v1.30.5
+CoreDNS                                   v1.11.1    v1.11.3
+etcd                      k-kube-lab-01   3.5.15-0   3.5.15-0
+etcd                      k-kube-lab-02   3.5.15-0   3.5.15-0
+etcd                      k-kube-lab-03   3.5.15-0   3.5.15-0
+
+You can now apply the upgrade by executing the following command:
+
+	kubeadm upgrade apply v1.30.5
+
+_____________________________________________________________________
+
+
+The table below shows the current state of component configs as understood by this version of kubeadm.
+Configs that have a "yes" mark in the "MANUAL UPGRADE REQUIRED" column require manual config upgrade or
+resetting to kubeadm defaults before a successful upgrade can be performed. The version to manually
+upgrade to is denoted in the "PREFERRED VERSION" column.
+
+API GROUP                 CURRENT VERSION   PREFERRED VERSION   MANUAL UPGRADE REQUIRED
+kubeproxy.config.k8s.io   v1alpha1          v1alpha1            no
+kubelet.config.k8s.io     v1beta1           v1beta1             no
+_____________________________________________________________________
+
+root@K-KUBE-LAB-01:/opt/kubernetes# kubeadm config images list
+W0923 10:24:34.296784  850350 version.go:104] could not fetch a Kubernetes version from the internet: unable to get URL "https://dl.k8s.io/release/stable-1.txt": Get "https://cdn.dl.k8s.io/release/stable-1.txt": context deadline exceeded (Client.Timeout exceeded while awaiting headers)
+W0923 10:24:34.297080  850350 version.go:105] falling back to the local client version: v1.30.5
+registry.k8s.io/kube-apiserver:v1.30.5
+registry.k8s.io/kube-controller-manager:v1.30.5
+registry.k8s.io/kube-scheduler:v1.30.5
+registry.k8s.io/kube-proxy:v1.30.5
+registry.k8s.io/coredns/coredns:v1.11.3
+registry.k8s.io/pause:3.9
+registry.k8s.io/etcd:3.5.15-0
+
+root@K-KUBE-LAB-01:/opt/kubernetes# kubeadm config images list --config kubeadm-init.yaml-${KUBE_VERSION}
+hub.8ops.top/google_containers/kube-apiserver:v1.29.9
+hub.8ops.top/google_containers/kube-controller-manager:v1.29.9
+hub.8ops.top/google_containers/kube-scheduler:v1.29.9
+hub.8ops.top/google_containers/kube-proxy:v1.29.9
+hub.8ops.top/google_containers/coredns:v1.11.3
+hub.8ops.top/google_containers/pause:3.9
+hub.8ops.top/google_containers/etcd:3.5.15-0
+
+root@K-KUBE-LAB-01:/opt/kubernetes# kubeadm upgrade apply ${KUBE_VERSION} --config kubeadm-init.yaml-${KUBE_VERSION}
+W0923 10:31:34.298894  855740 upgradeconfiguration.go:58] [config] WARNING: YAML document with GroupVersionKind kubeadm.k8s.io/v1beta3, Kind=InitConfiguration is deprecated for upgrade, please use config file with kind of UpgradeConfiguration instead
+W0923 10:31:34.299781  855740 upgradeconfiguration.go:58] [config] WARNING: YAML document with GroupVersionKind kubeadm.k8s.io/v1beta3, Kind=ClusterConfiguration is deprecated for upgrade, please use config file with kind of UpgradeConfiguration instead
+W0923 10:31:34.300050  855740 upgradeconfiguration.go:54] unknown configuration schema.GroupVersionKind{Group:"kubelet.config.k8s.io", Version:"v1beta1", Kind:"KubeletConfiguration"}
+W0923 10:31:34.300175  855740 upgradeconfiguration.go:54] unknown configuration schema.GroupVersionKind{Group:"kubeproxy.config.k8s.io", Version:"v1alpha1", Kind:"KubeProxyConfiguration"}
+W0923 10:31:34.300301  855740 upgradeconfiguration.go:135] [config] WARNING: YAML document with Component Configs kubelet.config.k8s.io is deprecated for upgrade and will be ignored
+W0923 10:31:34.300321  855740 upgradeconfiguration.go:135] [config] WARNING: YAML document with Component Configs kubeproxy.config.k8s.io is deprecated for upgrade and will be ignored
+[preflight] Running pre-flight checks.
+[upgrade/config] Reading configuration from the cluster...
+[upgrade/config] FYI: You can look at this config file with 'kubectl -n kube-system get cm kubeadm-config -o yaml'
+[upgrade] Running cluster health checks
+[upgrade/version] You have chosen to change the cluster version to "v1.30.5"
+[upgrade/versions] Cluster version: v1.29.9
+[upgrade/versions] kubeadm version: v1.30.5
+[upgrade] Are you sure you want to proceed? [y/N]: y
+[upgrade/prepull] Pulling images required for setting up a Kubernetes cluster
+[upgrade/prepull] This might take a minute or two, depending on the speed of your internet connection
+[upgrade/prepull] You can also perform this action in beforehand using 'kubeadm config images pull'
+[upgrade/apply] Upgrading your Static Pod-hosted control plane to version "v1.30.5" (timeout: 5m0s)...
+[upgrade/etcd] Upgrading to TLS for etcd
+[upgrade/staticpods] Preparing for "etcd" upgrade
+[upgrade/staticpods] Current and new manifests of etcd are equal, skipping upgrade
+[upgrade/etcd] Waiting for etcd to become available
+[upgrade/staticpods] Writing new Static Pod manifests to "/etc/kubernetes/tmp/kubeadm-upgraded-manifests3412817232"
+[upgrade/staticpods] Preparing for "kube-apiserver" upgrade
+[upgrade/staticpods] Renewing apiserver certificate
+[upgrade/staticpods] Renewing apiserver-kubelet-client certificate
+[upgrade/staticpods] Renewing front-proxy-client certificate
+[upgrade/staticpods] Renewing apiserver-etcd-client certificate
+[upgrade/staticpods] Moved new manifest to "/etc/kubernetes/manifests/kube-apiserver.yaml" and backed up old manifest to "/etc/kubernetes/tmp/kubeadm-backup-manifests-2024-09-23-10-32-00/kube-apiserver.yaml"
+[upgrade/staticpods] Waiting for the kubelet to restart the component
+[upgrade/staticpods] This can take up to 5m0s
+[apiclient] Found 3 Pods for label selector component=kube-apiserver
+[upgrade/staticpods] Component "kube-apiserver" upgraded successfully!
+[upgrade/staticpods] Preparing for "kube-controller-manager" upgrade
+[upgrade/staticpods] Renewing controller-manager.conf certificate
+[upgrade/staticpods] Moved new manifest to "/etc/kubernetes/manifests/kube-controller-manager.yaml" and backed up old manifest to "/etc/kubernetes/tmp/kubeadm-backup-manifests-2024-09-23-10-32-00/kube-controller-manager.yaml"
+[upgrade/staticpods] Waiting for the kubelet to restart the component
+[upgrade/staticpods] This can take up to 5m0s
+[apiclient] Found 3 Pods for label selector component=kube-controller-manager
+[upgrade/staticpods] Component "kube-controller-manager" upgraded successfully!
+[upgrade/staticpods] Preparing for "kube-scheduler" upgrade
+[upgrade/staticpods] Renewing scheduler.conf certificate
+[upgrade/staticpods] Moved new manifest to "/etc/kubernetes/manifests/kube-scheduler.yaml" and backed up old manifest to "/etc/kubernetes/tmp/kubeadm-backup-manifests-2024-09-23-10-32-00/kube-scheduler.yaml"
+[upgrade/staticpods] Waiting for the kubelet to restart the component
+[upgrade/staticpods] This can take up to 5m0s
+[apiclient] Found 3 Pods for label selector component=kube-scheduler
+[upgrade/staticpods] Component "kube-scheduler" upgraded successfully!
+[upload-config] Storing the configuration used in ConfigMap "kubeadm-config" in the "kube-system" Namespace
+[kubelet] Creating a ConfigMap "kubelet-config" in namespace kube-system with the configuration for the kubelets in the cluster
+[upgrade] Backing up kubelet config file to /etc/kubernetes/tmp/kubeadm-kubelet-config867235545/config.yaml
+[kubelet-start] Writing kubelet configuration to file "/var/lib/kubelet/config.yaml"
+[bootstrap-token] Configured RBAC rules to allow Node Bootstrap tokens to get nodes
+[bootstrap-token] Configured RBAC rules to allow Node Bootstrap tokens to post CSRs in order for nodes to get long term certificate credentials
+[bootstrap-token] Configured RBAC rules to allow the csrapprover controller automatically approve CSRs from a Node Bootstrap Token
+[bootstrap-token] Configured RBAC rules to allow certificate rotation for all node client certificates in the cluster
+[upgrade/addons] skip upgrade addons because control plane instances [k-kube-lab-02 k-kube-lab-03] have not been upgraded
+
+[upgrade/successful] SUCCESS! Your cluster was upgraded to "v1.30.5". Enjoy!
+
+[upgrade/kubelet] Now that your control plane is upgraded, please proceed with upgrading your kubelets if you haven't already done so.
+
 ```
 
 
@@ -655,7 +799,220 @@ W0920 17:41:12.008711 2187038 common.go:94] WARNING: Usage of the --config flag 
 ### 3.6 v1.31
 
 ```bash
+root@K-KUBE-LAB-01:/opt/kubernetes# kubeadm upgrade plan
+[preflight] Running pre-flight checks.
+[upgrade/config] Reading configuration from the cluster...
+[upgrade/config] FYI: You can look at this config file with 'kubectl -n kube-system get cm kubeadm-config -o yaml'
+[upgrade] Running cluster health checks
+[upgrade] Fetching available versions to upgrade to
+[upgrade/versions] Cluster version: 1.30.5
+[upgrade/versions] kubeadm version: v1.31.1
+W0923 10:50:43.406796  874469 version.go:109] could not fetch a Kubernetes version from the internet: unable to get URL "https://dl.k8s.io/release/stable.txt": Get "https://cdn.dl.k8s.io/release/stable.txt": context deadline exceeded (Client.Timeout exceeded while awaiting headers)
+W0923 10:50:43.407129  874469 version.go:110] falling back to the local client version: v1.31.1
+[upgrade/versions] Target version: v1.31.1
+[upgrade/versions] Latest version in the v1.30 series: v1.30.5
 
+Components that must be upgraded manually after you have upgraded the control plane with 'kubeadm upgrade apply':
+COMPONENT   NODE            CURRENT   TARGET
+kubelet     k-kube-lab-01   v1.30.5   v1.31.1
+kubelet     k-kube-lab-02   v1.30.5   v1.31.1
+kubelet     k-kube-lab-03   v1.30.5   v1.31.1
+kubelet     k-kube-lab-11   v1.30.5   v1.31.1
+kubelet     k-kube-lab-12   v1.30.5   v1.31.1
+
+Upgrade to the latest stable version:
+
+COMPONENT                 NODE            CURRENT    TARGET
+kube-apiserver            k-kube-lab-01   v1.30.5    v1.31.1
+kube-apiserver            k-kube-lab-02   v1.30.5    v1.31.1
+kube-apiserver            k-kube-lab-03   v1.30.5    v1.31.1
+kube-controller-manager   k-kube-lab-01   v1.30.5    v1.31.1
+kube-controller-manager   k-kube-lab-02   v1.30.5    v1.31.1
+kube-controller-manager   k-kube-lab-03   v1.30.5    v1.31.1
+kube-scheduler            k-kube-lab-01   v1.30.5    v1.31.1
+kube-scheduler            k-kube-lab-02   v1.30.5    v1.31.1
+kube-scheduler            k-kube-lab-03   v1.30.5    v1.31.1
+kube-proxy                                1.30.5     v1.31.1
+CoreDNS                                   v1.11.1    v1.11.3
+etcd                      k-kube-lab-01   3.5.15-0   3.5.15-0
+etcd                      k-kube-lab-02   3.5.15-0   3.5.15-0
+etcd                      k-kube-lab-03   3.5.15-0   3.5.15-0
+
+You can now apply the upgrade by executing the following command:
+
+	kubeadm upgrade apply v1.31.1
+
+_____________________________________________________________________
+
+
+The table below shows the current state of component configs as understood by this version of kubeadm.
+Configs that have a "yes" mark in the "MANUAL UPGRADE REQUIRED" column require manual config upgrade or
+resetting to kubeadm defaults before a successful upgrade can be performed. The version to manually
+upgrade to is denoted in the "PREFERRED VERSION" column.
+
+API GROUP                 CURRENT VERSION   PREFERRED VERSION   MANUAL UPGRADE REQUIRED
+kubeproxy.config.k8s.io   v1alpha1          v1alpha1            no
+kubelet.config.k8s.io     v1beta1           v1beta1             no
+_____________________________________________________________________
+
+root@K-KUBE-LAB-01:/opt/kubernetes# kubeadm config images list
+registry.k8s.io/kube-apiserver:v1.31.0
+registry.k8s.io/kube-controller-manager:v1.31.0
+registry.k8s.io/kube-scheduler:v1.31.0
+registry.k8s.io/kube-proxy:v1.31.0
+registry.k8s.io/coredns/coredns:v1.11.3
+registry.k8s.io/pause:3.10
+registry.k8s.io/etcd:3.5.15-0
+
+root@K-KUBE-LAB-01:/opt/kubernetes# kubeadm config images list --config kubeadm-init.yaml-${KUBE_VERSION}
+W0923 11:04:12.068845  884729 validation.go:79] WARNING: certificateValidityPeriod: the value 17520h0m0s is more than the recommended default for certificate expiration: 8760h0m0s
+hub.8ops.top/google_containers/kube-apiserver:v1.31.1
+hub.8ops.top/google_containers/kube-controller-manager:v1.31.1
+hub.8ops.top/google_containers/kube-scheduler:v1.31.1
+hub.8ops.top/google_containers/kube-proxy:v1.31.1
+hub.8ops.top/google_containers/coredns:v1.11.3
+hub.8ops.top/google_containers/pause:3.10
+hub.8ops.top/google_containers/etcd:3.5.15-0
+
+root@K-KUBE-LAB-01:/opt/kubernetes# kubeadm upgrade apply ${KUBE_VERSION} --config kubeadm-init.yaml-${KUBE_VERSION}
+W0923 11:24:11.186140  899501 upgradeconfiguration.go:58] [config] WARNING: YAML document with GroupVersionKind kubeadm.k8s.io/v1beta4, Kind=InitConfiguration is deprecated for upgrade, please use config file with kind of UpgradeConfiguration instead
+W0923 11:24:11.186411  899501 upgradeconfiguration.go:54] unknown configuration schema.GroupVersionKind{Group:"kubeproxy.config.k8s.io", Version:"v1beta1", Kind:"KubeProxyConfiguration"}
+W0923 11:24:11.186477  899501 upgradeconfiguration.go:135] [config] WARNING: YAML document with Component Configs kubeproxy.config.k8s.io is deprecated for upgrade and will be ignored
+[preflight] Running pre-flight checks.
+[upgrade/config] Reading configuration from the cluster...
+[upgrade/config] FYI: You can look at this config file with 'kubectl -n kube-system get cm kubeadm-config -o yaml'
+[upgrade] Running cluster health checks
+[upgrade/version] You have chosen to change the cluster version to "v1.31.1"
+[upgrade/versions] Cluster version: v1.30.5
+[upgrade/versions] kubeadm version: v1.31.1
+[upgrade] Are you sure you want to proceed? [y/N]: y
+[upgrade/prepull] Pulling images required for setting up a Kubernetes cluster
+[upgrade/prepull] This might take a minute or two, depending on the speed of your internet connection
+[upgrade/prepull] You can also perform this action beforehand using 'kubeadm config images pull'
+W0923 11:24:26.430142  899501 checks.go:846] detected that the sandbox image "hub.8ops.top/google_containers/pause:3.9" of the container runtime is inconsistent with that used by kubeadm.It is recommended to use "hub.8ops.top/google_containers/pause:3.10" as the CRI sandbox image.
+[upgrade/apply] Upgrading your Static Pod-hosted control plane to version "v1.31.1" (timeout: 5m0s)...
+[upgrade/staticpods] Writing new Static Pod manifests to "/etc/kubernetes/tmp/kubeadm-upgraded-manifests880503637"
+[upgrade/staticpods] Preparing for "etcd" upgrade
+[upgrade/staticpods] Renewing etcd-server certificate
+[upgrade/staticpods] Renewing etcd-peer certificate
+[upgrade/staticpods] Renewing etcd-healthcheck-client certificate
+[upgrade/staticpods] Moving new manifest to "/etc/kubernetes/manifests/etcd.yaml" and backing up old manifest to "/etc/kubernetes/tmp/kubeadm-backup-manifests-2024-09-23-11-24-26/etcd.yaml"
+[upgrade/staticpods] Waiting for the kubelet to restart the component
+[upgrade/staticpods] This can take up to 5m0s
+[apiclient] Found 3 Pods for label selector component=etcd
+[upgrade/staticpods] Component "etcd" upgraded successfully!
+[upgrade/etcd] Waiting for etcd to become available
+[upgrade/staticpods] Preparing for "kube-apiserver" upgrade
+[upgrade/staticpods] Renewing apiserver certificate
+[upgrade/staticpods] Renewing apiserver-kubelet-client certificate
+[upgrade/staticpods] Renewing front-proxy-client certificate
+[upgrade/staticpods] Renewing apiserver-etcd-client certificate
+[upgrade/staticpods] Moving new manifest to "/etc/kubernetes/manifests/kube-apiserver.yaml" and backing up old manifest to "/etc/kubernetes/tmp/kubeadm-backup-manifests-2024-09-23-11-24-26/kube-apiserver.yaml"
+[upgrade/staticpods] Waiting for the kubelet to restart the component
+[upgrade/staticpods] This can take up to 5m0s
+[apiclient] Found 3 Pods for label selector component=kube-apiserver
+[upgrade/staticpods] Component "kube-apiserver" upgraded successfully!
+[upgrade/staticpods] Preparing for "kube-controller-manager" upgrade
+[upgrade/staticpods] Renewing controller-manager.conf certificate
+[upgrade/staticpods] Moving new manifest to "/etc/kubernetes/manifests/kube-controller-manager.yaml" and backing up old manifest to "/etc/kubernetes/tmp/kubeadm-backup-manifests-2024-09-23-11-24-26/kube-controller-manager.yaml"
+[upgrade/staticpods] Waiting for the kubelet to restart the component
+[upgrade/staticpods] This can take up to 5m0s
+[apiclient] Found 3 Pods for label selector component=kube-controller-manager
+[upgrade/staticpods] Component "kube-controller-manager" upgraded successfully!
+[upgrade/staticpods] Preparing for "kube-scheduler" upgrade
+[upgrade/staticpods] Renewing scheduler.conf certificate
+[upgrade/staticpods] Moving new manifest to "/etc/kubernetes/manifests/kube-scheduler.yaml" and backing up old manifest to "/etc/kubernetes/tmp/kubeadm-backup-manifests-2024-09-23-11-24-26/kube-scheduler.yaml"
+[upgrade/staticpods] Waiting for the kubelet to restart the component
+[upgrade/staticpods] This can take up to 5m0s
+[apiclient] Found 3 Pods for label selector component=kube-scheduler
+[upgrade/staticpods] Component "kube-scheduler" upgraded successfully!
+[upload-config] Storing the configuration used in ConfigMap "kubeadm-config" in the "kube-system" Namespace
+[kubelet] Creating a ConfigMap "kubelet-config" in namespace kube-system with the configuration for the kubelets in the cluster
+[upgrade] Backing up kubelet config file to /etc/kubernetes/tmp/kubeadm-kubelet-config3650563448/config.yaml
+[kubelet-start] Writing kubelet configuration to file "/var/lib/kubelet/config.yaml"
+[bootstrap-token] Configured RBAC rules to allow Node Bootstrap tokens to get nodes
+[bootstrap-token] Configured RBAC rules to allow Node Bootstrap tokens to post CSRs in order for nodes to get long term certificate credentials
+[bootstrap-token] Configured RBAC rules to allow the csrapprover controller automatically approve CSRs from a Node Bootstrap Token
+[bootstrap-token] Configured RBAC rules to allow certificate rotation for all node client certificates in the cluster
+[upgrade/addons] skip upgrade addons because control plane instances [k-kube-lab-02 k-kube-lab-03] have not been upgraded
+
+[upgrade/successful] SUCCESS! Your cluster was upgraded to "v1.31.1". Enjoy!
+
+[upgrade/kubelet] Now that your control plane is upgraded, please proceed with upgrading your kubelets if you haven't already done so.
+```
+
+
+
+>  vim kubeadm-init.yaml-v1.31.1
+
+[Reference](https://kubernetes.io/zh-cn/docs/reference/config-api/kubeadm-config.v1beta4/)
+
+kubeadm.yaml 有变更
+
+```yaml
+apiVersion: kubeadm.k8s.io/v1beta4
+bootstrapTokens:
+- groups:
+  - system:bootstrappers:kubeadm:default-node-token
+  token: abcdef.0123456789abcdef
+  ttl: 24h0m0s
+  usages:
+  - signing
+  - authentication
+kind: InitConfiguration
+localAPIEndpoint:
+  advertiseAddress: 10.101.11.240
+  bindPort: 6443
+nodeRegistration:
+  criSocket: unix:///var/run/containerd/containerd.sock
+  imagePullPolicy: IfNotPresent
+  imagePullSerial: true
+  name: K-KUBE-LAB-01
+  taints: null
+timeouts:
+  controlPlaneComponentHealthCheck: 4m0s
+  discovery: 5m0s
+  etcdAPICall: 2m0s
+  kubeletHealthCheck: 4m0s
+  kubernetesAPICall: 1m0s
+  tlsBootstrap: 5m0s
+  upgradeManifests: 5m0s
+---
+apiServer: {}
+apiVersion: kubeadm.k8s.io/v1beta4
+caCertificateValidityPeriod: 87600h0m0s
+certificateValidityPeriod: 8760h0m0s
+certificatesDir: /etc/kubernetes/pki
+clusterName: kubernetes
+controllerManager: {}
+dns:
+  imageRepository: hub.8ops.top/google_containers
+  imageTag: v1.11.3
+encryptionAlgorithm: RSA-2048
+etcd:
+  local:
+    dataDir: /var/lib/etcd
+imageRepository: hub.8ops.top/google_containers
+kind: ClusterConfiguration
+kubernetesVersion: 1.31.1
+controlPlaneEndpoint: 10.101.11.110:6443
+networking:
+  dnsDomain: cluster.local
+  podSubnet: 172.19.0.0/16
+  serviceSubnet: 192.168.0.0/16
+proxy: {}
+scheduler: {}
+---
+apiVersion: kubeproxy.config.k8s.io/v1beta1
+kind: KubeProxyConfiguration
+mode: "ipvs"
+ipvs:
+  minSyncPeriod: 5s
+  syncPeriod: 5s
+  scheduler: "rr"
+  strictARP: true
+featureGates:
+  SupportIPVSProxyMode: true
 ```
 
 
