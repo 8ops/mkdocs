@@ -208,9 +208,10 @@ docker exec -it gitlab grep 'Password:' /etc/gitlab/initial_root_password
 
 ```bash
 export GITLAB_HOME=/data1/gitlab
+
+export GITLAB_HOME=/data1/lib/gitlab
 mkdir -p $GITLAB_HOME
 cat > docker-compose.yml <<EOF
-version: '3.6'
 services:
   web:
     image: 'registry.gitlab.cn/omnibus/gitlab-jh:latest'
@@ -234,8 +235,8 @@ services:
     shm_size: '256m'
 EOF
 
-docker-compose up -d
-docker-compose down
+docker compose up -d
+docker compose down
 
 docker exec -it gitlab-web-1 grep 'Password:' /etc/gitlab/initial_root_password
 
@@ -267,6 +268,158 @@ grafana['http_port'] = 3000
 ```
 
 
+
+### 2.4 upgrade
+
+**递进式升级**
+
+[Reference](https://gitlab-com.gitlab.io/support/toolbox/upgrade-path)
+
+
+
+跨版本升级记录
+
+- 15.6.2-jh
+- 15.11.13
+- 16.3.8
+- 16.7.9
+- 16.11.10
+- 17.3.3
+- 17.4.0
+
+
+
+#### 步骤 1：备份现有数据
+
+在执行任何升级操作之前，务必备份 GitLab 数据，包括数据库、Git 仓库、配置文件和其他相关数据。
+
+备份命令：
+
+1. 如果你使用了外部存储卷挂载，请手动备份这些卷：
+
+   - Git 仓库数据 (`/var/opt/gitlab`)
+   - GitLab 配置文件 (`/etc/gitlab`)
+   - 日志文件 (`/var/log/gitlab`)
+
+2. 使用 `gitlab-backup` 命令创建备份（运行在 GitLab 容器内）：
+
+   ```
+   bash
+   
+   
+   复制代码
+   docker exec -t <gitlab-container-name> gitlab-backup create
+   ```
+
+   这会创建一个备份文件，通常存储在 `/var/opt/gitlab/backups` 目录下。
+
+3. 备份重要的配置文件：
+
+   ```
+   bash
+   
+   
+   复制代码
+   docker cp <gitlab-container-name>:/etc/gitlab /path/to/backup/etc-gitlab
+   docker cp <gitlab-container-name>:/var/opt/gitlab /path/to/backup/var-opt-gitlab
+   docker cp <gitlab-container-name>:/var/log/gitlab /path/to/backup/var-log-gitlab
+   ```
+
+#### 步骤 2：停止并移除现有 GitLab 容器
+
+在升级之前，需要停止并移除旧的 GitLab 容器。停止 GitLab 容器不会删除数据，因为数据通常保存在 Docker 卷中。
+
+```
+bash
+
+
+复制代码
+docker stop <gitlab-container-name>
+docker rm <gitlab-container-name>
+```
+
+#### 步骤 3：拉取新的 GitLab CE 镜像
+
+从 Docker Hub 下载最新版本的 GitLab CE 镜像：
+
+```
+bash
+
+
+复制代码
+docker pull gitlab/gitlab-ce:latest
+```
+
+你也可以指定某个版本：
+
+```
+bash
+
+
+复制代码
+docker pull gitlab/gitlab-ce:<version>
+```
+
+#### 步骤 4：启动新版本的 GitLab 容器
+
+使用与原来相同的配置重新启动容器。确保挂载相同的数据卷，以保证数据不会丢失。
+
+```
+bash
+
+
+复制代码
+docker run --detach \
+  --hostname gitlab.example.com \
+  --publish 443:443 --publish 80:80 --publish 22:22 \
+  --name gitlab \
+  --restart always \
+  --volume /path/to/gitlab/config:/etc/gitlab \
+  --volume /path/to/gitlab/logs:/var/log/gitlab \
+  --volume /path/to/gitlab/data:/var/opt/gitlab \
+  gitlab/gitlab-ce:latest
+```
+
+- 将 `/path/to/gitlab/config`、`/path/to/gitlab/logs`、`/path/to/gitlab/data` 替换为你实际的数据卷路径。
+- 更新 `--hostname` 参数以匹配你的 GitLab 实例的域名。
+
+#### 步骤 5：检查容器状态
+
+升级完成后，检查容器是否正常运行，并通过日志查看是否有错误：
+
+```
+bash
+
+
+复制代码
+docker logs -f gitlab
+```
+
+确保服务启动成功，并且 GitLab 能够正常访问。
+
+#### 步骤 6：验证升级
+
+通过浏览器访问 GitLab 界面，确保一切工作正常。你可以在 GitLab 管理界面中查看当前的 GitLab 版本，确认升级是否成功。
+
+```
+bash
+
+
+复制代码
+http://<gitlab-hostname>
+```
+
+#### 步骤 7：清理旧镜像（可选）
+
+确认升级成功后，你可以删除旧的 Docker 镜像以释放空间：
+
+```
+bash
+
+
+复制代码
+docker image prune
+```
 
 
 
