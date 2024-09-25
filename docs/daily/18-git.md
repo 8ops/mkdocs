@@ -207,16 +207,15 @@ docker exec -it gitlab grep 'Password:' /etc/gitlab/initial_root_password
 ### 2.2 docker-compose
 
 ```bash
-export GITLAB_HOME=/data1/gitlab
-
 export GITLAB_HOME=/data1/lib/gitlab
 mkdir -p $GITLAB_HOME
 cat > docker-compose.yml <<EOF
 services:
-  web:
-    image: 'registry.gitlab.cn/omnibus/gitlab-jh:latest'
+  gitlab:
+    image: 'gitlab/gitlab-ce:17.4.0-ce.0'
     restart: always
     hostname: 'git.8ops.top'
+    container_name: gitlab
     environment:
       GITLAB_OMNIBUS_CONFIG: |
         external_url 'https://git.8ops.top'
@@ -238,12 +237,14 @@ EOF
 docker compose up -d
 docker compose down
 
-docker exec -it gitlab-web-1 grep 'Password:' /etc/gitlab/initial_root_password
+docker exec -it gitlab grep 'Password:' /etc/gitlab/initial_root_password
 
-docker exec -t gitlab-web-1 gitlab-backup create
-docker exec -t gitlab-web-1 gitlab-backup create \
+docker exec -t gitlab gitlab-backup create
+docker exec -t gitlab gitlab-backup create \
     SKIP=artifacts,repositories,registry,uploads,builds,pages,lfs,packages,terraform_state
 
+TODAY=20240924
+docker exec gitlab gitlab-rake gitlab:backup:create BACKUP=${TODAY} CRON=1
 ```
 
 
@@ -269,7 +270,90 @@ grafana['http_port'] = 3000
 
 
 
-### 2.4 upgrade
+### 2.4 初始密码
+
+```bash
+# 初始安装
+cat /etc/gitlab/initial_root_password
+
+# 重置
+gitlab-rails runner "user = User.find_by_username('root'); user.password = 'your_new_password'; user.password_confirmation = 'your_new_password'; user.save!"
+
+# 界面重置
+
+# 配置文件重置
+gitlab_rails['initial_root_password'] = 'your_desired_password'
+
+gitlab-ctl reconfigure
+
+```
+
+
+
+### 2.5 邮箱设置
+
+```bash
+# 1. 编辑 GitLab 配置文件
+# 打开 /etc/gitlab/gitlab.rb 文件进行编辑：
+
+vim /etc/gitlab/gitlab.rb
+
+# 2. 配置邮件服务器
+# 在 gitlab.rb 文件中找到 gitlab_rails['smtp_enable'] 部分，按以下模板进行设置。
+
+# 示例：使用 Gmail 作为 SMTP 服务器
+# 注意： 如果使用 Gmail，建议为你的账户启用应用专用密码，而不是直接使用你的登录密码。你可以在 Gmail 设置中创建专用密码。
+gitlab_rails['smtp_enable'] = true
+gitlab_rails['smtp_address'] = "smtp.gmail.com"
+gitlab_rails['smtp_port'] = 587
+gitlab_rails['smtp_user_name'] = "your-email@gmail.com"
+gitlab_rails['smtp_password'] = "your-password"
+gitlab_rails['smtp_domain'] = "smtp.gmail.com"
+gitlab_rails['smtp_authentication'] = "login"
+gitlab_rails['smtp_enable_starttls_auto'] = true
+gitlab_rails['smtp_tls'] = false
+gitlab_rails['smtp_openssl_verify_mode'] = 'peer'
+
+
+# 示例：使用其他 SMTP 服务器（如企业邮箱）
+gitlab_rails['smtp_enable'] = true
+gitlab_rails['smtp_address'] = "smtp.your-domain.com"
+gitlab_rails['smtp_port'] = 465
+gitlab_rails['smtp_user_name'] = "your-email@your-domain.com"
+gitlab_rails['smtp_password'] = "your-password"
+gitlab_rails['smtp_domain'] = "your-domain.com"
+gitlab_rails['smtp_authentication'] = "login"
+gitlab_rails['smtp_enable_starttls_auto'] = true
+gitlab_rails['smtp_tls'] = true
+gitlab_rails['smtp_openssl_verify_mode'] = 'none'
+
+# 3. 设置发件人地址
+# 你还需要设置 GitLab 发送邮件时的发件人地址。可以在 gitlab.rb 中找到或添加以下配置：
+gitlab_rails['gitlab_email_enabled'] = true
+gitlab_rails['gitlab_email_from'] = 'your-email@your-domain.com'
+gitlab_rails['gitlab_email_display_name'] = 'GitLab'
+gitlab_rails['gitlab_email_reply_to'] = 'noreply@your-domain.com'
+
+# 4. 重新配置 GitLab
+# 在完成配置后，需要重新加载配置文件并应用更改：
+gitlab-ctl reconfigure
+
+# 5. 测试电子邮件配置
+# 完成配置后，测试电子邮件功能是否正常工作。你可以使用 gitlab-rails 命令发送测试邮件：
+gitlab-rails runner "Notify.test_email('your-email@domain.com', 'Test Email', 'This is a test email message').deliver_now"
+
+# 
+gitlab-ctl reconfigure
+gitlab-rails runner "Notify.test_email('your-email@domain.com', 'Test Email', 'This is a test email message').deliver_now"
+
+
+```
+
+
+
+
+
+### 2.5 upgrade
 
 **递进式升级**
 
@@ -303,23 +387,15 @@ grafana['http_port'] = 3000
 
 2. 使用 `gitlab-backup` 命令创建备份（运行在 GitLab 容器内）：
 
-   ```
-   bash
-   
-   
-   复制代码
+   ```bash
    docker exec -t <gitlab-container-name> gitlab-backup create
    ```
-
+   
    这会创建一个备份文件，通常存储在 `/var/opt/gitlab/backups` 目录下。
-
+   
 3. 备份重要的配置文件：
 
-   ```
-   bash
-   
-   
-   复制代码
+   ```bash
    docker cp <gitlab-container-name>:/etc/gitlab /path/to/backup/etc-gitlab
    docker cp <gitlab-container-name>:/var/opt/gitlab /path/to/backup/var-opt-gitlab
    docker cp <gitlab-container-name>:/var/log/gitlab /path/to/backup/var-log-gitlab
@@ -329,11 +405,7 @@ grafana['http_port'] = 3000
 
 在升级之前，需要停止并移除旧的 GitLab 容器。停止 GitLab 容器不会删除数据，因为数据通常保存在 Docker 卷中。
 
-```
-bash
-
-
-复制代码
+```bash
 docker stop <gitlab-container-name>
 docker rm <gitlab-container-name>
 ```
@@ -342,21 +414,13 @@ docker rm <gitlab-container-name>
 
 从 Docker Hub 下载最新版本的 GitLab CE 镜像：
 
-```
-bash
-
-
-复制代码
+```bash
 docker pull gitlab/gitlab-ce:latest
 ```
 
 你也可以指定某个版本：
 
-```
-bash
-
-
-复制代码
+```bash
 docker pull gitlab/gitlab-ce:<version>
 ```
 
@@ -364,11 +428,7 @@ docker pull gitlab/gitlab-ce:<version>
 
 使用与原来相同的配置重新启动容器。确保挂载相同的数据卷，以保证数据不会丢失。
 
-```
-bash
-
-
-复制代码
+```bash
 docker run --detach \
   --hostname gitlab.example.com \
   --publish 443:443 --publish 80:80 --publish 22:22 \
@@ -387,11 +447,7 @@ docker run --detach \
 
 升级完成后，检查容器是否正常运行，并通过日志查看是否有错误：
 
-```
-bash
-
-
-复制代码
+```bash
 docker logs -f gitlab
 ```
 
@@ -401,11 +457,7 @@ docker logs -f gitlab
 
 通过浏览器访问 GitLab 界面，确保一切工作正常。你可以在 GitLab 管理界面中查看当前的 GitLab 版本，确认升级是否成功。
 
-```
-bash
-
-
-复制代码
+```bash
 http://<gitlab-hostname>
 ```
 
@@ -413,13 +465,59 @@ http://<gitlab-hostname>
 
 确认升级成功后，你可以删除旧的 Docker 镜像以释放空间：
 
-```
-bash
-
-
-复制代码
+```bash
 docker image prune
 ```
+
+
+
+#### 补偿措施
+
+```bash
+# 查看启动服务
+docker exec gitlab gitlab-ctl status
+
+# 启动某服务/重启
+docker exec gitlab gitlab-ctl start <app>
+docker exec gitlab gitlab-ctl restart
+
+# 查看日志
+tail -f logs/
+
+# 查看数据迁移
+docker exec gitlab gitlab-rake db:migrate
+
+# 重置权限
+docker exec -it gitlab update-permissions
+
+# 检查Redis状态
+docker exec -it gitlab gitlab-ctl status redis
+
+# 检查SideKiq状态
+docker exec -it gitlab gitlab-ctl status sidekiq
+
+# 清理缓存
+docker exec -it gitlab gitlab-rake cache:clear
+docker exec -it gitlab gitlab-ctl restart
+
+# 修复文件权限
+docker exec -it gitlab gitlab-ctl reconfigure
+
+# 手动修复
+chown -R git:git /var/opt/gitlab
+chown -R gitlab-www:gitlab-www /var/log/gitlab
+
+# 强制升级
+gitlab-ctl upgrade
+
+# 回滚
+gitlab-ctl stop
+gitlab-rake gitlab:backup:restore BACKUP=<备份文件名>
+gitlab-ctl restart
+
+```
+
+
 
 
 
