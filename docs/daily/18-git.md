@@ -528,106 +528,58 @@ gitlab-ctl restart
 ### 3.1 docker engine
 
 ```bash
+# 第一步，启动 gitlab-runner 实例
 mkdir -p /ops/lib/gitlab-runner/config
-
 docker run -d --name gitlab-runner-01 --restart always \
   -v /ops/lib/gitlab-runner/config:/etc/gitlab-runner \
   -v /usr/bin/docker:/usr/bin/docker \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -v /ops/lib/gitlab-runner/cache:/cache \
   -v /ops/lib/gitlab-runner/npm:/root/.npm \
-  hub.8ops.top/gitlab/gitlab-runner:ubuntu-v15.11.0
+  -e 'CA_CERTIFICATES_PATH="/etc/gitlab-runner/certs/ca.crt"' \ # 受信私有CA
+  hub.8ops.top/build/gitlab-runner:ubuntu-v17.4.0
 
-docker exec -it gitlab-runner-01 bash
+# 第二步，进入gitlab console 注册实例并获取注册命令 （Admin Area -> Runners）
+gitlab-runner register  --url https://git.8ops.top  --token glrt-zvyQjQV7FDszMetH1Yxu
 
-root@2d1ad818473b:/# gitlab-runner register
-Runtime platform                                    arch=amd64 os=linux pid=43 revision=436955cb version=15.11.0
+# 第三步，进入gitlab-runner实例进行注册
+docker exec -it gitlab-runner bash
+
+root@gitlab-runner:/# gitlab-runner register  --url https://git-ops.wuxingdev.cn  --token glrt-Kdv9Ad4PHqJGyoyKQCp5
+Runtime platform                                    arch=amd64 os=linux pid=1431 revision=b92ee590 version=17.4.0
 Running in system-mode.
 
 Enter the GitLab instance URL (for example, https://gitlab.com/):
-https://git.8ops.top/
-Enter the registration token:
-1-EfKb5frVSZJyQivzHZ
-Enter a description for the runner:
-[2d1ad818473b]: 10.101.9.137
-Enter tags for the runner (comma-separated):
-normal
-Enter optional maintenance note for the runner:
-Jesse
-WARNING: Support for registration tokens and runner parameters in the 'register' command has been deprecated in GitLab Runner 15.6 and will be replaced with support for authentication tokens. For more information, see https://gitlab.com/gitlab-org/gitlab/-/issues/380872
-Registering runner... succeeded                     runner=1-EfKb5f
-Enter an executor: docker, docker-windows, parallels, ssh, virtualbox, docker-ssh+machine, instance, custom, docker-ssh, shell, docker-autoscaler, docker+machine, kubernetes:
+[https://git-ops.wuxingdev.cn]:
+Verifying runner... is valid                        runner=Kdv9Ad4PH
+Enter a name for the runner. This is stored only in the local config.toml file:
+[gitlab-runner]:
+Enter an executor: ssh, virtualbox, docker-windows, kubernetes, instance, custom, shell, parallels, docker, docker+machine, docker-autoscaler:
 docker
 Enter the default Docker image (for example, ruby:2.7):
-alpine:latest
+
+Enter the default Docker image (for example, ruby:2.7):
+hub.8ops.top/build/docker:24.0.7-dind
 Runner registered successfully. Feel free to start it, but if it's running already the config should be automatically reloaded!
 
 Configuration (with the authentication token) was saved in "/etc/gitlab-runner/config.toml"
-root@2d1ad818473b:/# cat /etc/gitlab-runner/config.toml
+
+# 查看自动生成配置文件
+root@gitlab-runner:/# cat /etc/gitlab-runner/config.toml
 concurrent = 1
 check_interval = 0
+connection_max_age = "15m0s"
 shutdown_timeout = 0
 
 [session_server]
   session_timeout = 1800
 
 [[runners]]
-  name = "10.101.9.137"
-  url = "https://git.8ops.top/"
-  id = 10
-  token = "CybARF7TCRmjmwCg59xz"
-  token_obtained_at = 2023-06-02T03:48:38Z
-  token_expires_at = 0001-01-01T00:00:00Z
-  executor = "docker"
-  [runners.cache]
-    MaxUploadedArchiveSize = 0
-  [runners.docker]
-    tls_verify = false
-    image = "alpine:latest"
-    privileged = false
-    disable_entrypoint_overwrite = false
-    oom_kill_disable = false
-    disable_cache = false
-    volumes = ["/cache"]
-    shm_size = 0
-```
-
-
-
-### 3.2 docker-compose
-
-```bash
-mkdir -p /opt/lib/gitlab-runner/{config,cache,npm}
-
-cd /opt/lib/gitlab-runner
-cat > docker-compose.yaml <<EOF
-version: '3.2'
-
-services:
-  gitlab:
-    image: hub.8ops.top/gitlab/gitlab-runner:ubuntu-v15.11.0
-    container_name: "gitlab-runner-01"
-    restart: always
-    volumes:
-      - "/opt/lib/gitlab-runner/config:/etc/gitlab-runner"
-      - "/var/run/docker.sock:/var/run/docker.sock"
-      - "/opt/lib/gitlab-runner/cache:/cache"
-      - "/opt/lib/gitlab-runner/npm:/root/.npm"
-EOF  
-
-cat > config/config.toml <<EOF
-concurrent = 10
-check_interval = 0
-shutdown_timeout = 0
-
-[session_server]
-  session_timeout = 1800
-
-[[runners]]
-  name = "docker-runner"
-  url = "https://git.8ops.top/"
-  id = 2
-  token = "WtJP7sS8m8DuphDkrYxJ"
+  name = "gitlab-runner"
+  url = "https://git-ops.wuxingdev.cn"
+  id = 18
+  token = "glrt-Kdv9Ad4PHqJGyoyKQCp5"
+  token_obtained_at = 2024-09-26T03:24:18Z
   token_expires_at = 0001-01-01T00:00:00Z
   executor = "docker"
   [runners.custom_build_dir]
@@ -638,15 +590,53 @@ shutdown_timeout = 0
     [runners.cache.azure]
   [runners.docker]
     tls_verify = false
-    image = "alpine:latest"
+    image = "hub.8ops.top/build/docker:24.0.7-dind"
     privileged = true
     disable_entrypoint_overwrite = false
     oom_kill_disable = false
     disable_cache = false
-    volumes = ["/var/run/docker.sock:/var/run/docker.sock", "/opt/lib/gitlab-runner/cache:/cache" ,"/opt/lib/gitlab-runner/npm:/root/.npm"]
+    volumes = ["/cache"]
     shm_size = 0
-EOF
+    network_mtu = 0
 ```
+
+
+
+### 3.2 docker-compose
+
+```bash
+# 第一步，启动 gitlab-runner 实例
+mkdir -p /opt/lib/gitlab-runner/{config,cache,npm}
+cd /opt/lib/gitlab-runner
+cat > docker-compose.yaml <<EOF
+services:
+  gitlab:
+    image: hub.8ops.top/gitlab/gitlab-runner:ubuntu-v15.11.0
+    container_name: "gitlab-runner-01"
+    restart: always
+    environment:
+      CA_CERTIFICATES_PATH: '/etc/gitlab-runner/certs/ca.crt' # 受信私有CA
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "/opt/lib/gitlab-runner/config:/etc/gitlab-runner"
+      - "/opt/lib/gitlab-runner/cache:/cache"
+      - "/opt/lib/gitlab-runner/npm:/root/.npm"
+EOF  
+
+# 第二步，进入gitlab console 注册实例并获取注册命令 （Admin Area -> Runners）
+gitlab-runner register  --url https://git.8ops.top  --token glrt-zvyQjQV7FDszMetH1Yxu
+
+# 第三步，进入gitlab-runner实例进行注册
+docker exec -it gitlab-runner bash
+
+root@gitlab-runner:/# gitlab-runner register  --url https://git-ops.wuxingdev.cn  --token glrt-Kdv9Ad4PHqJGyoyKQCp5
+```
+
+
+
+
+
+
 
 ## 四、github PR
 
