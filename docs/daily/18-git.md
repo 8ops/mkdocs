@@ -559,7 +559,7 @@ docker
 Enter the default Docker image (for example, ruby:2.7):
 
 Enter the default Docker image (for example, ruby:2.7):
-hub.8ops.top/build/docker:24.0.7-dind
+hub.8ops.top/build/alpine:3
 Runner registered successfully. Feel free to start it, but if it's running already the config should be automatically reloaded!
 
 Configuration (with the authentication token) was saved in "/etc/gitlab-runner/config.toml"
@@ -589,8 +589,9 @@ shutdown_timeout = 0
     [runners.cache.gcs]
     [runners.cache.azure]
   [runners.docker]
+    helper_image = "hub.8ops.top/build/gitlab-runner-helper:x86_64-v17.4.0"
     tls_verify = false
-    image = "hub.8ops.top/build/docker:24.0.7-dind"
+    image = "hub.8ops.top/build/alpine:3"
     privileged = true
     disable_entrypoint_overwrite = false
     oom_kill_disable = false
@@ -611,7 +612,7 @@ cd /opt/lib/gitlab-runner
 cat > docker-compose.yaml <<EOF
 services:
   gitlab:
-    image: hub.8ops.top/gitlab/gitlab-runner:ubuntu-v15.11.0
+    image: hub.8ops.top/build/gitlab-runner:ubuntu-v17.4.0
     container_name: "gitlab-runner-01"
     restart: always
     environment:
