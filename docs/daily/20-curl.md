@@ -5,16 +5,16 @@
 ### 1.1 打印详情
 
 ```bash
-curl -v "https://m.8ops.top/" 
-curl -vv "https://m.8ops.top/" 
-curl -vvv "https://m.8ops.top/" 
-curl -vvvv "https://m.8ops.top/" 
+curl -v "https://books.8ops.top/" 
+curl -vv "https://books.8ops.top/" 
+curl -vvv "https://books.8ops.top/" 
+curl -vvvv "https://books.8ops.top/" 
 ```
 
 ### 1.2 终端耗时
 
 ```bash
-time curl -i "https://m.8ops.top/" 
+time curl -i "https://books.8ops.top/" 
 ```
 
 ### 1.3 简单耗时
@@ -22,7 +22,7 @@ time curl -i "https://m.8ops.top/"
 ```bash
 curl -s -o /dev/null \
   -w "%{http_code}:%{time_connect}:%{time_starttransfer}:%{time_total}" \
-  "https://m.8ops.top"
+  "https://books.8ops.top"
 ```
 
 ### 1.4 丰富耗时
@@ -30,24 +30,24 @@ curl -s -o /dev/null \
 ```bash
 # 1
 curl -s -o /dev/null \
-  -w "\n\nhttp_code: %{http_code}s\nhttp_connect: %{http_connect}s\ncontent_type: %{content_type}s\ntime_namelookup: %{time_namelookup}s\ntime_redirect: %{time_redirect}s\ntime_pretransfer: %{time_pretransfer}s\ntime_connect: %{time_connect}s\ntime_starttransfer: %{time_starttransfer}s\ntime_total: %{time_total}s\nspeed_download: %{speed_download}KB/s\n" \
-  "https://m.8ops.top/" 
+  -w "\n\nhttp_code: %{http_code}\nhttp_connect: %{http_connect}s\ncontent_type: %{content_type}s\ntime_namelookup: %{time_namelookup}s\ntime_redirect: %{time_redirect}s\ntime_pretransfer: %{time_pretransfer}s\ntime_connect: %{time_connect}s\ntime_starttransfer: %{time_starttransfer}s\ntime_total: %{time_total}s\nspeed_download: %{speed_download}KB/s\n" \
+  "https://books.8ops.top/" 
   
 # 2
 curl -s -o /dev/null -w "\n
-  http_code: \t\t %{http_code}s
+  http_code: \t\t %{http_code}
   http_connect: \t %{http_connect}s
   content_type: \t %{content_type}
   time_namelookup: \t %{time_namelookup}s
   time_redirect: \t %{time_redirect}s
   time_pretransfer: \t %{time_pretransfer}s
-  time_appconnect: \t %{time_appconnect}%s
+  time_appconnect: \t %{time_appconnect}s
   time_connect: \t %{time_connect}s
   time_starttransfer: \t %{time_starttransfer}s
   time_total: \t\t %{time_total}s
   speed_download: \t %{speed_download}KB/s
   \n" \
-  https://m.8ops.top/
+  https://books.8ops.top/
 ```
 
 
