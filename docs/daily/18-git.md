@@ -545,12 +545,12 @@ gitlab-runner register  --url https://git.8ops.top  --token glrt-zvyQjQV7FDszMet
 # 第三步，进入gitlab-runner实例进行注册
 docker exec -it gitlab-runner bash
 
-root@gitlab-runner:/# gitlab-runner register  --url https://git-ops.wuxingdev.cn  --token glrt-Kdv9Ad4PHqJGyoyKQCp5
+root@gitlab-runner:/# gitlab-runner register  --url https://git.8ops.top  --token glrt-Kdv9Ad4PHqJGyoyKQCp5
 Runtime platform                                    arch=amd64 os=linux pid=1431 revision=b92ee590 version=17.4.0
 Running in system-mode.
 
 Enter the GitLab instance URL (for example, https://gitlab.com/):
-[https://git-ops.wuxingdev.cn]:
+[https://git.8ops.top]:
 Verifying runner... is valid                        runner=Kdv9Ad4PH
 Enter a name for the runner. This is stored only in the local config.toml file:
 [gitlab-runner]:
@@ -576,7 +576,7 @@ shutdown_timeout = 0
 
 [[runners]]
   name = "gitlab-runner"
-  url = "https://git-ops.wuxingdev.cn"
+  url = "https://git.8ops.top"
   id = 18
   token = "glrt-Kdv9Ad4PHqJGyoyKQCp5"
   token_obtained_at = 2024-09-26T03:24:18Z
@@ -630,7 +630,7 @@ gitlab-runner register  --url https://git.8ops.top  --token glrt-zvyQjQV7FDszMet
 # 第三步，进入gitlab-runner实例进行注册
 docker exec -it gitlab-runner bash
 
-root@gitlab-runner:/# gitlab-runner register  --url https://git-ops.wuxingdev.cn  --token glrt-Kdv9Ad4PHqJGyoyKQCp5
+root@gitlab-runner:/# gitlab-runner register  --url https://git.8ops.top  --token glrt-Kdv9Ad4PHqJGyoyKQCp5
 ```
 
 
