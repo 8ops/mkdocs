@@ -1,0 +1,43 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: PersistentVolume
+  metadata:
+    name: prometheuss-alertmanager-volume
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    capacity:
+      storage: 2Gi
+    claimRef:
+      apiVersion: v1
+      kind: PersistentVolumeClaim
+      name: prometheuss-alertmanager
+      namespace: kube-server
+    hostPath:
+      path: /opt/data/prometheus/alertmanager
+      type: ""
+    persistentVolumeReclaimPolicy: Retain
+    storageClassName: ""
+    volumeMode: Filesystem
+- apiVersion: v1
+  kind: PersistentVolume
+  metadata:
+    name: prometheuss-server-volume
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    capacity:
+      storage: 8Gi
+    claimRef:
+      apiVersion: v1
+      kind: PersistentVolumeClaim
+      name: prometheuss-server
+      namespace: kube-server
+    hostPath:
+      path: /opt/data/prometheus/server
+      type: ""
+    persistentVolumeReclaimPolicy: Retain
+    storageClassName: ""
+    volumeMode: Filesystem
+kind: List

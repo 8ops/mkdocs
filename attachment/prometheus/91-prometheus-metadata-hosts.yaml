@@ -1,0 +1,30 @@
+apiVersion: v1
+data:
+  node_general.yml: |
+    - targets:
+        - 10.101.11.209:19100
+        - 10.101.11.30:19100
+        - 10.101.11.123:19100
+        - 10.101.11.23:19100
+        - 10.101.11.8:19100
+      labels:
+        author: Jesse
+        env: lab
+        tier: dev
+  node_ci.yml: |
+    - targets:
+        - 10.101.9.143:19100
+        - 10.101.9.252:19100
+        - 10.101.9.196:19100
+        - 10.101.9.218:19100
+        - 10.101.9.217:19100
+      labels:
+        author: Jesse
+        env: lab
+        tier: ci
+kind: ConfigMap
+metadata:
+  labels:
+    app: prometheus-metadata-hosts
+  name: prometheus-metadata-hosts
+  namespace: kube-server

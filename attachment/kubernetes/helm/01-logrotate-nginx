@@ -1,0 +1,18 @@
+/data1/log/nginx/*/*.log
+ {
+    su systemd-resolve systemd-journal
+    hourly
+    rotate 30
+    dateext
+    missingok
+    notifempty
+    compress
+    delaycompress
+    nomail
+    sharedscripts
+    postrotate
+        for pid in `/bin/pidof nginx `;do
+            kill -USR1 ${pid}
+        done
+    endscript
+}
