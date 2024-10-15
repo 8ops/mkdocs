@@ -351,7 +351,7 @@ argocd repo add https://git.8ops.top/ops/argocd-example-apps.git \
     --name argo-example-repo \
     --project argo-example-proj \
     --username gitlab-read \
-    --password xxxx \
+    --password xx \
     --insecure-skip-server-verification
 argocd repo get https://git.8ops.top/ops/argocd-example-apps.git
 
@@ -361,7 +361,7 @@ argocd repo add https://git.8ops.top/ops/control-plane-ops.git \
     --name control-plane-repo \
     --project control-plane-proj \
     --username gitlab-read \
-    --password jesse2022 \
+    --password xx \
     --insecure-skip-server-verification    
 ```
 
@@ -414,7 +414,7 @@ argocd app create helm-repo-redis \
     --helm-set global.imageRegistry=hub.8ops.top \
     --helm-set image.tag=7.0.5 \
     --helm-set architecture=standalone \
-    --helm-set auth.password=jesse \
+    --helm-set auth.password=xx \
     --helm-set master.persistence.enabled=false \
     --helm-set metrics.enabled=true \
     --helm-set metrics.image.tag=1.37.0 
@@ -1186,7 +1186,7 @@ grafana.ini:
     host: mysql-standalone
     name: grafana
     user: grafana
-    password: grafana
+    password: xx
   auth.anonymous:
     enabled: true # 允许匿名访问
   auth.gitlab:

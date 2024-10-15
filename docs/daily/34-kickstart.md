@@ -158,9 +158,7 @@ groupadd sshuser
 useradd -G sshuser jesse
 useradd -G sshuser ericdu
 useradd -G sshuser balaamwe
-echo "qwert54321"|passwd jesse --stdin
-echo "qwert54321"|passwd ericdu --stdin
-echo "qwert54321"|passwd balaamwe  --stdin
+echo "xx"|passwd jesse --stdin
 sed -i '/--dport 22/a-A INPUT -m state --state NEW -m tcp -p tcp --dport 50022 -j ACCEPT' /etc/sysconfig/iptables
 sed -i '/^root/a\jesse    ALL=NOPASSWD:       ALL' /etc/sudoers
 sed -i '/^root/a\ericdu    ALL=(ALL)       ALL' /etc/sudoers

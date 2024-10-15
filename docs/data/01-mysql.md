@@ -43,7 +43,7 @@ mysql> USE mysql ; 
 Reading table information for completion of table and column names 
 You can turn off this feature to get a quicker startup with -A 
 Database changed 
-mysql> UPDATE user SET Password = password ( 'new-password' ) WHERE User = 'root' ; 
+mysql> UPDATE user SET Password = password ( 'xx' ) WHERE User = 'root' ; 
 Query OK, 0 rows affected (0.00 sec) 
 Rows matched: 2 Changed: 0 Warnings: 0 
 mysql> flush privileges ; 
@@ -66,7 +66,7 @@ Stopping MySQL: [ OK ] 
 Starting MySQL: [ OK ]
 
 ```
-echo "SET PASSWORD FOR root@localhost=PASSWORD('password');">/var/lib/mysql/rootpwd.sql
+echo "SET PASSWORD FOR root@localhost=PASSWORD('xx');">/var/lib/mysql/rootpwd.sql
 service mysql restart
 rm -f /var/lib/mysql/rootpwd.sql
 ```
@@ -77,6 +77,6 @@ rm -f /var/lib/mysql/rootpwd.sql
 skip-grant-tables
 
 #修改
-#ALTER USER 'root'@'localhost' IDENTIFIED BY 'Zb^R%94Cbtpr';
-update mysql.user set authentication_string=password('Zb^R%94Cbtpr') where user='root' and Host = 'localhost';
+#ALTER USER 'root'@'localhost' IDENTIFIED BY 'xx';
+update mysql.user set authentication_string=password('xx') where user='root' and Host = 'localhost';
 ```

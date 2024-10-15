@@ -193,7 +193,7 @@ kubectl -n elastic-system create secret generic elastic-certificate-pem \
 
 # 设置集群用户名密码，用户名不建议修改
 kubectl -n elastic-system create secret generic elastic-credentials \
-  --from-literal=username=elastic --from-literal=password=ops@2022
+  --from-literal=username=elastic --from-literal=password=xx
   
 kubectl -n elastic-system create secret generic kibana \
   --from-literal=encryptionkey=zGFTX0cy3ubYVmzuunACDZuRj0PALqOM
