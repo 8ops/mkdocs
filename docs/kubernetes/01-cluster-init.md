@@ -559,6 +559,16 @@ kubeadm token create um69xx.qg70e11b92fmsevs --print-join-command -v 5 \
 
 # 打印 join node
 kubeadm token create kvj7wh.buud7djga5j76xil --print-join-command -v 5
+
+# ---
+# 一步就位
+
+# join control-plane
+kubeadm token create --print-join-command --certificate-key xx
+
+# join node
+kubeadm token create --print-join-command 
+
 ```
 
 
