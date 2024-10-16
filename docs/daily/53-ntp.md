@@ -142,3 +142,26 @@ chronyc activity
 
 ```
 
+## systemd-timesyncd
+
+```bash
+# /etc/systemd/timesyncd.conf
+
+[Time]
+NTP=ntp.8ops.top
+#FallbackNTP=ntp.ubuntu.com
+#RootDistanceMaxSec=5
+#PollIntervalMinSec=32
+#PollIntervalMaxSec=2048
+```
+
+
+
+```bash
+# 操作集锦
+systemctl status systemd-timesyncd
+
+timedatectl status
+timedatectl timesync-status
+```
+
