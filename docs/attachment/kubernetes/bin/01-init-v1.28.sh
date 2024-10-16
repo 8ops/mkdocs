@@ -74,7 +74,7 @@ apt update
 }
 
 function op_package(){
-apt install -y -q apt-transport-https ca-certificates curl software-properties-common tree
+apt install -y -q apt-transport-https ca-certificates curl software-properties-common tree socat
 }
 
 function op_kubectl(){
