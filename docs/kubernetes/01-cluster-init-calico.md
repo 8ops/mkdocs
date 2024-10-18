@@ -317,6 +317,7 @@ calicoctl:
 ```bash
 # Example
 #   https://raw.githubusercontent.com/projectcalico/calico/v3.24.1/manifests/calico.yaml
+#   https://docs.projectcalico.org/manifests/calico.yaml # 未成功
 #   EDIT AFTER
 #   https://books.8ops.top/attachment/kubernetes/calico.yaml-v3.24.1
 # 
@@ -485,4 +486,35 @@ kubectl -n kube-server describe secrets dashboard-ops-secret
 ```
 
 
+
+## 五、常见问题
+
+```bash
+# 1, calico-node pod not ready
+# 需要开启 firewall port
+
+# 2, first-found 会找主机的第一块网卡，但预设是找"eth*"，所以vm的网卡为ens*会失败，需要如下操作
+>> search
+- name: IP
+  value: "autodetect"
+>> add
+- name: IP_AUTODETECTION_METHOD
+  value: "interface=ens192"  (多网卡用","分隔)
+
+# 3, wget https://github.com/projectcalico/calico/releases/download/v3.28.2/calicoctl-linux-amd64 -o calicoctl
+calicoctl -h
+calicoctl version
+calicoctl node status
+```
+
+### 5.1 Calico vs Flannel
+
+| 对比项     | Calico                   | Flannel     |
+| ---------- | ------------------------ | ----------- |
+| Underlay   | BGP                      | X           |
+| Overlay    | vxlan / ipip             | vxlan       |
+| Qos        | X                        | X           |
+| 效能耗损   | Overlay 20%, Underlay 3% | Overlay 20% |
+| 安全策略   | NetworkPolicy            | X           |
+| 固定IP/Mac | 支持固定IP               | X           |
 

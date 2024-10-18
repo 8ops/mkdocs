@@ -9,9 +9,10 @@
 ## 一、操作集锦
 
 ```bash
-# 初始优化
+# init
 curl -s https://books.8ops.top/attachment/kubernetes/bin/01-init-v1.28.sh | bash
 
+# containerd
 sed -i 's#sandbox_image.*$#sandbox_image = "hub.8ops.top/google_containers/pause:3.10"#' /etc/containerd/config.toml  
 sed -i 's#SystemdCgroup = false#SystemdCgroup = true#' /etc/containerd/config.toml 
 grep -P 'sandbox_image|SystemdCgroup' /etc/containerd/config.toml  
@@ -23,6 +24,7 @@ sed -i '/.registry.configs/a \         [plugins."io.containerd.grpc.v1.cri".regi
 systemctl restart containerd
 crictl pull hub.8ops.top/google_containers/pause:3.10
 
+# kubeadm
 kubeadm config images list 
 kubeadm config images list --config kubeadm-init.yaml-v1.31.1
 kubeadm config images pull --config kubeadm-init.yaml-v1.31.1
@@ -52,7 +54,9 @@ kubeadm join 10.101.11.110:6443 --token abcdef.0123456789abcdef \
 kubeadm join 10.101.11.110:6443 --token abcdef.0123456789abcdef \
     --discovery-token-ca-cert-hash sha256:076a3d987ee738f335cc987732e9306b87e044b3cce8138705ceeccb698acce7
 
+# cni's calico
 # The following namespaces cannot be used: [calico-system calico-apiserver tigera-system tigera-elasticsearch tigera-compliance tigera-intrusion-detection tigera-dpi tigera-eck-operator tigera-fluentd calico-system tigera-manager]
+# helm 安装未解决镜像私有化
 helm upgrade --install tigera-operator projectcalico/tigera-operator \
     -f tigera-operator.yaml-3.28.2 \
     -n kube-system \
@@ -62,6 +66,26 @@ helm upgrade --install tigera-operator projectcalico/tigera-operator \
     
 helm -n kube-system uninstall tigera-operator
 
+docker.io/calico/cni:v3.28.2
+docker.io/calico/csi:v3.28.2
+docker.io/calico/kube-controllers:v3.28.2
+docker.io/calico/node-driver-registrar:v3.28.2
+docker.io/calico/node:v3.28.2
+docker.io/calico/pod2daemon-flexvol:v3.28.2
+docker.io/calico/typha:v3.28.2
+
+hub.8ops.top/google_containers/calico-typha:v3.28.2
+hub.8ops.top/google_containers/calico-node:v3.28.2
+hub.8ops.top/google_containers/calico-cni:v3.28.2
+hub.8ops.top/google_containers/calico-pod2daemon-flexvol:v3.28.2
+hub.8ops.top/google_containers/calico-csi:v3.28.2
+hub.8ops.top/google_containers/calico-node-driver-registrar:v3.28.2
+hub.8ops.top/google_containers/calico-kube-controllers:v3.28.2
+
+# raw OK
+wget https://raw.githubusercontent.com/projectcalico/calico/v3.28.2/manifests/calico.yaml
+
+# me
 ```
 
 
@@ -69,15 +93,44 @@ helm -n kube-system uninstall tigera-operator
 ## 二、常见问题
 
 ```bash
-# kube-proxy 报错 failed complete: unrecognized feature gate: SupportIPVSProxyMode
+# 1, kube-proxy 报错 failed complete: unrecognized feature gate: SupportIPVSProxyMode
 
 kubectl -n kube-system edit cm kube-proxy
 # 移除配置 
 featureGates:
   SupportIPVSProxyMode: true
-  
-  
+
+# 2, 更多使用 
+# https://docs.projectcalico.org/manifests/calico.yaml
+# 网络策略
+# 固定 IP
+# IP 池
+
   
 ```
+
+
+
+### 2.1  flannel switch calico
+
+```bash
+# 1、查看已安装flannel信息
+cat /etc/cni/net.d/10-flannel.conflist
+
+# 2、删除flannel布署资源
+kubectl delete -f kube-flannel.yml
+
+# 3、清除flannel遗留信息，在集群各节点清理flannel网络的残留文件
+ifconfig cni0 down
+ip link delete cni0
+ifconfig flannel.1 down
+ip link delete flannel.1
+rm -rf /var/lib/cni
+rm -rf /etc/cni/net.d
+
+# 4、安装 calico
+
+```
+
 
 
