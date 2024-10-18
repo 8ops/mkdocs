@@ -257,7 +257,7 @@ install_zadig() {
   fi
   echo "installing zadig ..."
   helm repo add koderover-chart "${HELM_REPO}"
-  helm repo update
+  helm repo update koderover-chart
   helm upgrade --timeout 15m --install --create-namespace -n "${NAMESPACE:-zadig}"${INSTALL_PARAMETER} --version="${ZADIG_VERSION}" "zadig-${NAMESPACE:-zadig}" koderover-chart/zadig
   cleanup
 }

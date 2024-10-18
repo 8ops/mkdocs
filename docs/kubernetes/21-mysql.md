@@ -7,7 +7,7 @@
 ```bash
 # mysql
 helm repo add bitnami https://charts.bitnami.com/bitnami
-helm repo update
+helm repo update bitnami
 helm search repo mysql
 
 helm show values bitnami/mysql --version 8.9.2 > mysql.yaml-8.9.2-default

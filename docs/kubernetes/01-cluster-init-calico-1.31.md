@@ -57,14 +57,19 @@ kubeadm join 10.101.11.110:6443 --token abcdef.0123456789abcdef \
 # cni's calico
 # The following namespaces cannot be used: [calico-system calico-apiserver tigera-system tigera-elasticsearch tigera-compliance tigera-intrusion-detection tigera-dpi tigera-eck-operator tigera-fluentd calico-system tigera-manager]
 # helm 安装未解决镜像私有化
-helm upgrade --install tigera-operator projectcalico/tigera-operator \
-    -f tigera-operator.yaml-3.28.2 \
+helm repo add projectcalico https://projectcalico.docs.tigera.io/charts
+helm repo update projectcalico
+helm search repo tigera-operator
+helm show values projectcalico/tigera-operator --version 3.28.2 > calico.yaml-3.28.2-default
+
+helm upgrade --install calico projectcalico/tigera-operator \
+    -f calico.yaml-3.28.2 \
     -n kube-system \
     --create-namespace \
     --version v3.28.2 \
-    --debug 2>&1 | tee tigera-operator.yaml-3.28.2.out
+    --debug 2>&1 | tee calico.yaml-3.28.2.out
     
-helm -n kube-system uninstall tigera-operator
+helm -n kube-system uninstall calico
 
 docker.io/calico/cni:v3.28.2
 docker.io/calico/csi:v3.28.2
@@ -85,7 +90,30 @@ hub.8ops.top/google_containers/calico-kube-controllers:v3.28.2
 # raw OK
 wget https://raw.githubusercontent.com/projectcalico/calico/v3.28.2/manifests/calico.yaml
 
-# me
+# metallb
+helm repo add metallb https://metallb.github.io/metallb
+helm repo update metallb
+helm search repo metallb
+helm show values metallb/metallb --version 0.14.8 > metallb.yaml-0.14.8-default
+
+helm upgrade --install metallb metallb/metallb \
+    -f metallb.yaml-0.14.8 \
+    --namespace=kube-server \
+    --create-namespace \
+    --version 0.14.8 \
+    --debug 2>&1 | tee metallb.yaml-0.14.8.out
+
+helm -n kube-server uninstall metallb
+
+# ingress-nginx
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+helm repo update ingress-nginx
+helm search repo ingress-nginx
+helm show values ingress-nginx/ingress-nginx --version 4.11.3 > ingress-nginx.yaml-4.11.3-default
+
+
+
+
 ```
 
 

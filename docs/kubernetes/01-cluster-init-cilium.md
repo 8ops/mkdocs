@@ -380,7 +380,7 @@ replicaset.apps/hubble-ui-64d4995d57         1         1         1       136m
 
 ```bash
 helm repo add cilium https://helm.cilium.io/
-helm repo update
+helm repo update cilium
 helm search repo cilium
 helm show values cilium/cilium > cilium.yaml-v1.12.1-default
 
