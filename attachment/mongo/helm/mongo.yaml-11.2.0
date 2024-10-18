@@ -1,0 +1,50 @@
+
+image:
+  registry: hub.8ops.top
+  repository: bitnami/mongodb
+  tag: 4.4.13-debian-10-r52
+
+architecture: replicaset
+
+auth:
+  enabled: true
+  rootPassword: "jesse"
+  username: "graylog"
+  password: "graylog"
+  database: "graylog"
+
+resources:
+  limits:
+     cpu: 1
+     memory: 1Gi
+  requests:
+     cpu: 1
+     memory: 1Gi
+
+service:
+  type: NodePort
+
+persistence:
+  enabled: true
+  storageClass: "mongo-standalone"
+  size: 8Gi
+
+arbiter:
+  enabled: false
+
+metrics:
+  enabled: true
+
+  image:
+    registry: hub.8ops.top
+    repository: bitnami/mongodb-exporter
+    tag: 0.31.2-debian-10-r14
+
+  resources:
+    limits:
+       cpu: 100m
+       memory: 128Mi
+    requests:
+       cpu: 100m
+       memory: 128Mi
+

@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: pod-busybox-nfs
+  name: pod-busybox-nfs
+  namespace: default
+spec:
+  containers:
+  - args:
+    - /bin/sh
+    - -c
+    - while true;do sleep 60;date;done
+    image: hub.8ops.top/third/busybox:1.28.0
+    imagePullPolicy: IfNotPresent
+    name: pod-busybox-nfs
+    resources:
+      limits:
+        cpu: 50m
+        memory: 64Mi
+      requests:
+        cpu: 30m
+        memory: 32Mi
+    volumeMounts:
+    - name: nfs-client-root
+      mountPath: /data1/lib/nfs
+  volumes:
+  - name: nfs-client-root
+    nfs:
+      server: 10.101.11.236
+      path: /data1/lib/nfs

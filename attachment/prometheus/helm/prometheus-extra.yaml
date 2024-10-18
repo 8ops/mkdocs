@@ -1,0 +1,59 @@
+extraScrapeConfigs: | 
+  - job_name: 'blackbox'
+    metrics_path: /probe
+    scheme: http
+    params:
+      module: [http_2xx]
+    static_configs:
+      - targets:
+        - http://blackbox-exporter-prometheus-blackbox-exporter:9115
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter-prometheus-blackbox-exporter:9115
+  - job_name: node-file-sd
+    honor_timestamps: true
+    scrape_interval: 1m
+    scrape_timeout: 10s
+    metrics_path: /metrics
+    scheme: http
+    file_sd_configs:
+    - files:
+      - /opt/metadata/hosts.d/node_*.yml
+      refresh_interval: 1m
+  - job_name: kubernetes-etcd
+    honor_timestamps: true
+    scrape_interval: 1m
+    scrape_timeout: 10s
+    metrics_path: /metrics
+    scheme: https
+    tls_config:
+      ca_file: /var/run/secrets/kubernetes.io/etcd/ca.crt
+      cert_file: /var/run/secrets/kubernetes.io/etcd/healthcheck-client.crt
+      key_file: /var/run/secrets/kubernetes.io/etcd/healthcheck-client.key
+      insecure_skip_verify: false
+    follow_redirects: true
+    relabel_configs:
+    - source_labels: [__meta_kubernetes_service_label_app_kubernetes_io_name]
+      separator: ;
+      regex: etcd
+      replacement: $1
+      action: keep
+    kubernetes_sd_configs:
+    - role: endpoints
+      kubeconfig_file: ""
+      follow_redirects: true
+      namespaces:
+        own_namespace: false
+        names:
+        - kube-system
+#  - job_name: node-http-sd
+#    honor_timestamps: true
+#    scrape_interval: 1m
+#    scrape_timeout: 10s
+#    metrics_path: /metrics
+#    http_sd_configs:
+#    - url: http://10.101.11.236:8888/node.json
