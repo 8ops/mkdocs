@@ -111,6 +111,58 @@ helm repo update ingress-nginx
 helm search repo ingress-nginx
 helm show values ingress-nginx/ingress-nginx --version 4.11.3 > ingress-nginx.yaml-4.11.3-default
 
+helm upgrade --install ingress-nginx-external-controller ingress-nginx/ingress-nginx \
+    -f ingress-nginx.yaml-4.11.3 \
+    -n kube-server \
+    --version 4.11.3 \
+    --debug 2>&1 | tee ingress-nginx.yaml-4.11.3.out
+
+helm -n kube-server uninstall ingress-nginx-external-controller
+
+kubectl -n default create secret tls tls-8ops.top \
+  --cert=8ops.top.crt \
+   --key=8ops.top.key
+
+curl -k -vv --tlsv1.1 --tls-max 1.2  https://echoserver.8ops.top
+
+# dashboard
+helm repo add kubernetes-dashboard https://kubernetes.github.io/dashboard/
+helm repo update kubernetes-dashboard
+helm search repo kubernetes-dashboard
+helm show values kubernetes-dashboard/kubernetes-dashboard --version 7.8.0 > kubernetes-dashboard.yaml-7.8.0-default
+
+helm upgrade --install kubernetes-dashboard kubernetes-dashboard/kubernetes-dashboard \
+    -f kubernetes-dashboard.yaml-7.8.0 \
+    -n kube-server \
+    --create-namespace \
+    --version 7.8.0 \
+    --debug 2>&1 | tee kubernetes-dashboard.yaml-7.8.0.out
+
+kubectl -n kube-server create secret tls tls-8ops.top \
+  --cert=8ops.top.crt \
+   --key=8ops.top.key
+   
+kubectl create serviceaccount dashboard-ops -n kube-server
+
+kubectl create clusterrolebinding dashboard-ops \
+  --clusterrole=cluster-admin \
+  --serviceaccount=kube-server:dashboard-ops
+
+kubectl apply -f - <<EOF
+apiVersion: v1
+kind: Secret
+metadata:
+  name: dashboard-ops-secret
+  namespace: kube-server
+  annotations:
+    kubernetes.io/service-account.name: dashboard-ops
+type: kubernetes.io/service-account-token
+EOF
+
+kubectl describe secrets \
+  -n kube-server $(kubectl -n kube-server get secret | awk '/dashboard-ops/{print $1}')
+
+
 
 
 
