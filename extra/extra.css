@@ -1,0 +1,7 @@
+:root {
+    --md-default-fg-color--light:#FF9900
+}
+
+.md-tabs__link{
+    outline-color: #FF9900;
+}
