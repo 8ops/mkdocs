@@ -1,0 +1,13 @@
+select.+(from|limit)
+(?:(union(.*?)select))
+sleep\((\s*)(\d*)(\s*)\)
+benchmark\((.*)\,(.*)\)
+base64_decode\(
+(?:from\W+information_schema\W)
+(?:etc\/\W*passwd)
+into(\s+)+(?:dump|out)file\s*
+group\s+by.+\(
+xwork.MethodAccessor
+xwork\.MethodAccessor
+java\.lang
+(onmouseover|onerror|onload)\=
