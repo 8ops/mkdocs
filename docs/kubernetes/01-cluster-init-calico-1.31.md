@@ -8,6 +8,8 @@
 
 ## 一、操作集锦
 
+### 1.1 cluster
+
 ```bash
 # init
 curl -s https://books.8ops.top/attachment/kubernetes/bin/01-init-v1.28.sh | bash
@@ -89,7 +91,13 @@ hub.8ops.top/google_containers/calico-kube-controllers:v3.28.2
 
 # raw OK
 wget https://raw.githubusercontent.com/projectcalico/calico/v3.28.2/manifests/calico.yaml
+```
 
+
+
+### 1.2 metallb
+
+```bash
 # metallb
 helm repo add metallb https://metallb.github.io/metallb
 helm repo update metallb
@@ -104,7 +112,13 @@ helm upgrade --install metallb metallb/metallb \
     --debug 2>&1 | tee metallb.yaml-0.14.8.out
 
 helm -n kube-server uninstall metallb
+```
 
+
+
+### 1.3 ingress-nginx
+
+```bash
 # ingress-nginx
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 helm repo update ingress-nginx
@@ -124,7 +138,13 @@ kubectl -n default create secret tls tls-8ops.top \
    --key=8ops.top.key
 
 curl -k -vv --tlsv1.1 --tls-max 1.2  https://echoserver.8ops.top
+```
 
+
+
+### 1.4 dashboard
+
+```bash
 # dashboard
 helm repo add kubernetes-dashboard https://kubernetes.github.io/dashboard/
 helm repo update kubernetes-dashboard
@@ -162,11 +182,34 @@ EOF
 kubectl describe secrets \
   -n kube-server $(kubectl -n kube-server get secret | awk '/dashboard-ops/{print $1}')
 
-
-
-
-
 ```
+
+
+
+### 1.5 argo
+
+```bash
+helm repo add argoproj https://argoproj.github.io/argo-helm
+helm repo update argoproj
+helm search repo argo-cd
+helm show values argoproj/argo-cd --version 7.6.8 > argo-cd.yaml-7.6.8-default
+
+helm upgrade --install argo-cd argoproj/argo-cd \
+    -n kube-server \
+    -f argo-cd.yaml-7.6.8 \
+    --version 7.6.8 \
+    --debug 2>&1 | tee argo-cd.yaml-7.6.8.out
+
+helm -n kube-server uninstall argo-cd
+
+kubectl -n kube-server get secret argocd-initial-admin-secret \
+    -o jsonpath="{.data.password}" | base64 -D; echo 
+    
+```
+
+
+
+
 
 
 
