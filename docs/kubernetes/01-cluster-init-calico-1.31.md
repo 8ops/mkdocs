@@ -205,6 +205,45 @@ helm -n kube-server uninstall argo-cd
 kubectl -n kube-server get secret argocd-initial-admin-secret \
     -o jsonpath="{.data.password}" | base64 -D; echo 
     
+# account    
+argocd login argo-cd.8ops.top --username=admin --password=xx --grpc-web
+argocd account update-password --account jesse --current-password xx --new-password xx --grpc-web
+
+# proj
+argocd proj create control-plane-ops --description "control-plane for ops" 
+argocd proj add-source control-plane-ops \
+    https://git.8ops.top/ops/control-plane-ops.git
+argocd proj add-destination control-plane-ops \
+    https://kubernetes.default.svc default
+argocd proj add-destination control-plane-ops \
+    https://kubernetes.default.svc kube-server
+argocd proj allow-cluster-resource control-plane-ops '*' '*' -l allow
+argocd proj allow-namespace-resource control-plane-ops '*' '*' -l allow
+argocd proj get control-plane-ops
+argocd proj list
+
+# repo
+argocd repo add https://git.8ops.top/ops/control-plane-ops.git \
+    --name control-plane-ops \
+    --project control-plane-ops \
+    --username gitlab-read \
+    --password xx \
+    --insecure-skip-server-verification
+argocd repo get https://git.8ops.top/ops/control-plane-ops.git
+argocd repo list
+
+# app
+argocd app create toolkit \
+    --repo https://git.8ops.top/ops/control-plane-ops.git \
+    --path toolkit \
+    --project control-plane-ops \
+    --directory-recurse \
+    --dest-namespace default \
+    --dest-server https://kubernetes.default.svc \
+    --revision master \
+    --sync-policy automated \
+    --label author=jesse \
+    --label tier=helm 
 ```
 
 
@@ -229,7 +268,6 @@ featureGates:
 # 固定 IP
 # IP 池
 
-  
 ```
 
 

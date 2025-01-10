@@ -200,13 +200,30 @@ virsh detach-disk UAT-BIGDATA-000 /data/lib/kvm/UAT-BIGDATA-000-SDB.img
 # 扩容原磁盘（需要停机）
 qemu-img resize /data/lib/kvm/UAT-BIGDATA-000-SDB.img +20G
 # virt-resize --expand /dev/sda1 
+lsblk
 vgdisplay
 lvdisplay
 lvextend -L +20G /dev/centos/root
+lvextend -L +100%FREE /dev/mapper/vg-lv_data1
+
 # ext 系统格式使用：
 resize2fs /dev/centos/root
 # xfs 系统格式使用下面命令
 xfs_growfs /dev/centos/root
+
+# LVM操作集锦
+## 追加一个主分区
+fdisk /dev/vda
+ p
+ m
+ n #+分区 选择主分区 p
+ w
+partprobe # 内核重新加载
+
+# vg 追加 pv，lv 扩展
+pvcreate /dev/vda4
+vgextend vg /dev/vda4
+lvextend --extents +100%FREE --resizefs /dev/mapper/vg-lv_data1
 ```
 
 
