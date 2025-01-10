@@ -204,7 +204,6 @@ lsblk
 vgdisplay
 lvdisplay
 lvextend -L +20G /dev/centos/root
-lvextend -L +100%FREE /dev/mapper/vg-lv_data1
 
 # ext 系统格式使用：
 resize2fs /dev/centos/root
@@ -223,7 +222,9 @@ partprobe # 内核重新加载
 # vg 追加 pv，lv 扩展
 pvcreate /dev/vda4
 vgextend vg /dev/vda4
-lvextend --extents +100%FREE --resizefs /dev/mapper/vg-lv_data1
+lvextend --extents +100%FREE /dev/mapper/vg-lv_data1
+mount -a
+xfs_growfs /dev/mapper/vg-lv_data1
 ```
 
 
