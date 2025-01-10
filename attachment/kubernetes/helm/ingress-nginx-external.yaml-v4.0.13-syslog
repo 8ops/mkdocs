@@ -1,0 +1,60 @@
+controller:
+  name: external
+  image:
+    registry: hub.8ops.top
+    image: google_containers/nginx-ingress-controller
+    tag: "v1.1.0"
+    digest:
+
+  hostNetwork: true
+  hostPort:
+    enabled: true
+    ports:
+      http: 80
+      https: 443
+
+  config:
+    use-http2: true
+    server_names_hash_bucket_size: 128
+    enable-syslog: true
+    syslog-host: "10.101.11.91"
+    syslog-port: 514
+    client-body-timeout: "60"
+    client-header-timeout: "60"
+    log-format-upstream: '{"timestamp":"$time_iso8601","msec":"$msec","remote_port":"$remote_port","method":"$request_method","host":"$host","uri":"$uri","args":"$args","server_protocol":"$server_protocol","http_user_agent":"$http_user_agent","http_referer":"$http_referer","http_cookie":"$http_cookie","app_name":"$upstream_http_x_app_name","app_instance":"$upstream_http_x_app_instance","trace_id":"$upstream_http_x_trace_id","span_id":"$upstream_http_x_span_id","parent_id":"$upstream_http_x_parent_id","x_request_id":"$http_x_request_id","request_time":"$request_time","response_time":"$upstream_response_time","remote_addr":"$remote_addr","upstream_http_location":"$upstream_http_location","x_real_ip":"$http_x_real_ip","x_forwarded_for":"$http_x_forwarded_for","upstream_addr":"$upstream_addr","response_code":"$status","upstream_response_code":"$upstream_status","request_length":"$request_length","content_length":"$content_length","bytes_sent":"$bytes_sent","body_bytes_sent":"$body_bytes_sent","custom_headers":{"x_client_version":"$http_x_client_version","x_api_version":"$http_x_api_version","x_os_name":"$http_x_os_name","x_os_version":"$http_x_os_version","x_carrier":"$http_x_carrier","x_network_type":"$http_x_network_type","x_request_id":"$http_x_request_id","x_manufacture":"$http_x_manufacture","x_latitude":"$http_x_latitude","x_longitude":"$http_x_longitude","x_token":"$http_x_token","x_ts":"$http_x_ts","x_sign":"$http_x_sign","x_device_id":"$http_x_device_id","x_req_app_name":"$http_x_req_app_name","x_req_app_instance":"$http_x_req_app_instance"},"scheme":"$scheme"}'
+    proxy-connect-timeout: "15"
+    proxy-read-timeout: "300"
+    proxy-send-timeout: "300"
+    ssl-ciphers: ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:DHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA:ECDHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES256-SHA256:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:DES-CBC3-SHA
+    ssl-protocols: TLSv1 TLSv1.1 TLSv1.2 TLSv1.3
+    variables-hash-bucket-size: "1024"
+    worker-processes: "2"
+
+  ingressClassResource:
+    name: external
+    enabled: true
+    default: false
+    controllerValue: "k8s.io/ingress-external"
+
+  resources:
+    limits:
+      cpu: 1
+      memory: 1Gi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+
+  extraArgs:
+    default-ssl-certificate: "kube-server/tls-8ops.top"
+
+  kind: DaemonSet
+  nodeSelector:
+    kubernetes.io/os: linux
+    edge: external
+
+  service:
+    enabled: false
+
+  lifecycle:
+  admissionWebhooks:
+    enabled: false

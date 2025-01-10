@@ -1,0 +1,285 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  data:
+    alertmanager.yml: |
+      global:
+        resolve_timeout: 5m
+        smtp_from: 'AlertManager<m@8ops.top>'
+        smtp_smarthost: 'smtp.exmail.qq.com:465'
+        smtp_auth_username: 'm@8ops.top'
+        smtp_auth_password: 'password'
+        smtp_auth_identity: 'm@8ops.top'
+        smtp_require_tls: false
+      route:
+        group_by:
+        - 'instance'
+        - 'severity'
+        group_wait: 10m
+        group_interval: 10s
+        repeat_interval: 1d
+        receiver: 'prometheusalert'
+        routes:
+        - receiver: 'email'
+          match_re:
+            severity: 'critical|warning'
+          continue: true
+        - receiver: 'wechat'
+          match_re:
+            severity: 'critical|warning'
+          continue: true
+        - receiver: 'prometheusalert'
+          match_re:
+            severity: 'critical|warning'
+          continue: true
+      receivers:
+      - name: 'email'
+        email_configs:
+        - send_resolved: true
+          to: 'm@8ops.top'
+      - name: 'wechat'
+        wechat_configs:
+        - send_resolved: true
+          api_url: 'https://qyapi.weixin.qq.com/cgi-bin/'
+          corp_id: 'ww8249717441913c51'
+          agent_id: '1000002'
+          api_secret: 'KVZZuC1CvWKssY8qZSW3eSxXR4EgGuNx02l1buQmbnQ'
+          to_user: '@all'
+          to_party: '1'
+          message: '{{ template "wechat.default.message" . }}'
+      - name: 'prometheusalert'
+        webhook_configs:
+        - send_resolved: true
+          url: 'http://10.101.11.236:8090/prometheus/alert?type=wx&tpl=prometheus-wx&wxurl=https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=d38f3a90-2b86-4d48-a9c7-228e1e89d416&at=@all'
+      templates:
+      - '/etc/config/templates.tmpl'
+    templates.tmpl: |
+      {{ define "wechat.default.message" }}
+      {{- if gt (len .Alerts.Firing) 0 -}}
+      {{- range $index, $alert := .Alerts -}}
+      {{- if eq $index 0 -}}
+      告警类型: {{ $alert.Labels.alertname }}
+      告警级别: {{ $alert.Labels.severity }}
+      =====================
+      {{- end }}
+      ===告警详情===
+      告警详情: {{ $alert.Annotations.summary }}
+      告警描述: {{ $alert.Annotations.description }}
+      故障时间: {{ $alert.StartsAt.Format "2006-01-02 15:04:05" }}
+      ===参考信息===
+      {{ if gt (len $alert.Labels.instance) 0 -}}故障实例ip: {{ $alert.Labels.instance }};{{- end -}}
+      {{- if gt (len $alert.Labels.namespace) 0 -}}故障实例所在namespace: {{ $alert.Labels.namespace }};{{- end -}}
+      {{- if gt (len $alert.Labels.node) 0 -}}故障物理机ip: {{ $alert.Labels.node }};{{- end -}}
+      {{- if gt (len $alert.Labels.pod_name) 0 -}}故障pod名称: {{ $alert.Labels.pod_name }}{{- end }}
+      =====================
+      {{- end }}
+      {{- end }}
+
+      {{- if gt (len .Alerts.Resolved) 0 -}}
+      {{- range $index, $alert := .Alerts -}}
+      {{- if eq $index 0 -}}
+      告警类型: {{ $alert.Labels.alertname }}
+      告警级别: {{ $alert.Labels.severity }}
+      =====================
+      {{- end }}
+      ===告警详情===
+      告警详情: {{ $alert.Annotations.summary }}
+      故障时间: {{ $alert.StartsAt.Format "2006-01-02 15:04:05" }}
+      恢复时间: {{ $alert.EndsAt.Format "2006-01-02 15:04:05" }}
+      ===参考信息===
+      {{ if gt (len $alert.Labels.instance) 0 -}}故障实例ip: {{ $alert.Labels.instance }};{{- end -}}
+      {{- if gt (len $alert.Labels.namespace) 0 -}}故障实例所在namespace: {{ $alert.Labels.namespace }};{{- end -}}
+      {{- if gt (len $alert.Labels.node) 0 -}}故障物理机ip: {{ $alert.Labels.node }};{{- end -}}
+      {{- if gt (len $alert.Labels.pod_name) 0 -}}故障pod名称: {{ $alert.Labels.pod_name }};{{- end }}
+      =====================
+      {{- end }}
+      {{- end }}
+      {{- end }}
+  kind: ConfigMap
+  metadata:
+    annotations:
+      meta.helm.sh/release-name: prometheuss
+      meta.helm.sh/release-namespace: kube-server
+    labels:
+      app: prometheus
+      app.kubernetes.io/managed-by: Helm
+      chart: prometheus-15.8.0
+      component: alertmanager
+      heritage: Helm
+      release: prometheuss
+    name: prometheuss-alertmanager
+    namespace: kube-server
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      deployment.kubernetes.io/revision: "1"
+      meta.helm.sh/release-name: prometheuss
+      meta.helm.sh/release-namespace: kube-server
+    labels:
+      app: prometheus
+      app.kubernetes.io/managed-by: Helm
+      chart: prometheus-15.8.0
+      component: alertmanager
+      heritage: Helm
+      release: prometheuss
+    name: prometheuss-alertmanager
+    namespace: kube-server
+  spec:
+    replicas: 1
+    revisionHistoryLimit: 5
+    selector:
+      matchLabels:
+        app: prometheus
+        component: alertmanager
+        release: prometheuss
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
+      metadata:
+        labels:
+          app: prometheus
+          chart: prometheus-15.8.0
+          component: alertmanager
+          heritage: Helm
+          release: prometheuss
+      spec:
+        containers:
+        - args:
+          - --config.file=/etc/config/alertmanager.yml
+          - --storage.path=/data
+          - --cluster.listen-address=
+          - --web.external-url=http://localhost:9093
+          env:
+          - name: POD_IP
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: status.podIP
+          image: hub.8ops.top/prometheus/alertmanager:v0.23.0
+          imagePullPolicy: IfNotPresent
+          name: prometheus-alertmanager
+          ports:
+          - containerPort: 9093
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /-/ready
+              port: 9093
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 30
+          resources:
+            limits:
+              cpu: 200m
+              memory: 256Mi
+            requests:
+              cpu: 10m
+              memory: 32Mi
+          volumeMounts:
+          - mountPath: /etc/config
+            name: config-volume
+          - mountPath: /data
+            name: storage-volume
+        - args:
+          - --volume-dir=/etc/config
+          - --webhook-url=http://127.0.0.1:9093/-/reload
+          image: hub.8ops.top/prometheus/configmap-reload:v0.5.0
+          imagePullPolicy: IfNotPresent
+          name: prometheus-alertmanager-configmap-reload
+          resources:
+            limits:
+              cpu: 100m
+              memory: 64Mi
+            requests:
+              cpu: 10m
+              memory: 32Mi
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /etc/config
+            name: config-volume
+            readOnly: true
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext:
+          fsGroup: 65534
+          runAsGroup: 65534
+          runAsNonRoot: true
+          runAsUser: 65534
+        serviceAccount: prometheuss-alertmanager
+        serviceAccountName: prometheuss-alertmanager
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - configMap:
+            defaultMode: 420
+            name: prometheuss-alertmanager
+          name: config-volume
+        - emptyDir: {}
+          name: storage-volume
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      meta.helm.sh/release-name: prometheuss
+      meta.helm.sh/release-namespace: kube-server
+    labels:
+      app: prometheus
+      app.kubernetes.io/managed-by: Helm
+      chart: prometheus-15.8.0
+      component: alertmanager
+      heritage: Helm
+      release: prometheuss
+    name: prometheuss-alertmanager
+    namespace: kube-server
+  spec:
+    ports:
+    - name: http
+      port: 9093
+      protocol: TCP
+      targetPort: 9093
+    selector:
+      app: prometheus
+      component: alertmanager
+      release: prometheuss
+    type: ClusterIP
+- apiVersion: networking.k8s.io/v1
+  kind: Ingress
+  metadata:
+    annotations:
+      meta.helm.sh/release-name: prometheuss
+      meta.helm.sh/release-namespace: kube-server
+    labels:
+      app: prometheus
+      app.kubernetes.io/managed-by: Helm
+      chart: prometheus-15.8.0
+      component: alertmanager
+      heritage: Helm
+      release: prometheuss
+    name: prometheuss-alertmanager
+    namespace: kube-server
+  spec:
+    ingressClassName: external
+    rules:
+    - host: alertmanager.8ops.top
+      http:
+        paths:
+        - backend:
+            service:
+              name: prometheuss-alertmanager
+              port:
+                number: 9093
+          path: /
+          pathType: Prefix
+    tls:
+    - hosts:
+      - alertmanager.8ops.top
+      secretName: tls-8ops.top
+kind: List
