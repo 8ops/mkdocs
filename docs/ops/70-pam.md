@@ -44,8 +44,8 @@ SIGNUPS_ALLOWED=false
 # invitations disable 
 INVITATIONS_ALLOWED=false
 
-# admin enable
-ADMIN_TOKEN="Dxn0bNfpSbTF2BVR7rwsn92rfV5lxtocnfiesVAQICHRWLR1tXE0rzU0Q28Xe626"
+# admin enable（TOKEN不能加引号，否则界面输入后识别不出来）
+ADMIN_TOKEN=Dxn0bNfpSbTF2BVR7rwsn92rfV5lxtocnfiesVAQICHRWLR1tXE0rzU0Q28Xe626
 
 EOF
 
@@ -76,7 +76,25 @@ docker rm vaultwarden
 
 
 
-### 2.2 
+### 2.2 SMTP
+
+```bash
+# Reverse Proxy, enable ssl <required>
+https://valutwanden.8ops.top/admin
+
+# settings
+SMTP_HOST=smtp.exmail.qq.com
+SMTP_FROM=vaultwarden@8ops.top
+SMTP_FROM_NAME=Vaultwarden
+SMTP_USERNAME=vaultwarden@8ops.top
+SMTP_PASSWORD=xx
+SMTP_TIMEOUT=15
+SMTP_SECURITY=force_tls
+SMTP_PORT=465
+
+```
+
+
 
 
 
