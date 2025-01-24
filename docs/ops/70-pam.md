@@ -47,6 +47,8 @@ INVITATIONS_ALLOWED=false
 # admin enable（TOKEN不能加引号，否则界面输入后识别不出来）
 ADMIN_TOKEN=Dxn0bNfpSbTF2BVR7rwsn92rfV5lxtocnfiesVAQICHRWLR1tXE0rzU0Q28Xe626
 
+# enable events logging
+ORG_EVENTS_ENABLED=true
 EOF
 
 touch .vaultwarden.env
