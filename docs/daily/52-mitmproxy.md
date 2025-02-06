@@ -43,6 +43,11 @@ mitmproxy
 ## 二、网络包
 
 ```bash
+# install rvictl 匹配 macOS 的版本
+# https://developer.apple.com/download/all/?q=command%20tools%20for%20xcode
+# 用于 macOS 14.2
+# https://m.8ops.top/mac/Command_Line_Tools_macOS_10.14_for_Xcode_10.1.dmg
+
 https://www.pgyer.com/tools/udid 通过第三方获取设备uuid
 
 rvictl -s udid
