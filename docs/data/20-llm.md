@@ -7,6 +7,17 @@
 [lm studio](https://lmstudio.ai/)
 
 ```bash
+# 加速下载
+wget https://github.moeyy.xyz/https://github.com/ollama/ollama/releases/download/v0.5.7/ollama-linux-amd64
+```
+
+
+
+
+
+### 1.1 使用集锦
+
+```bash
 ollama run deepseek-r1:1.5b
 ollama run deepseek-r1:7b
 ollama run deepseek-r1:8b
@@ -72,7 +83,15 @@ docker run -d -p 19090:8080 -e OLLAMA_BASE_URL=http://10.110.83.55:19090/ -v ope
 
 
 
-## 四、关键问题
+## 四、增强模型
+
+modelfile
+
+https://www.modelscope.cn/models/liush99/ollama_models
+
+
+
+## 五、关键问题
 
 ```bash
 # 1. 下载模型加速，复用？
