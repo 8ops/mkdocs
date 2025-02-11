@@ -48,7 +48,12 @@ docker run -d -p 3000:8080 -e OLLAMA_BASE_URL=https://example.com -v open-webui:
 docker run -d -p 3000:8080 --gpus all --add-host=host.docker.internal:host-gateway -v open-webui:/app/backend/data --name open-webui --restart always ghcr.io/open-webui/open-webui:cuda
 
 # sample
-docker run -d -p 19090:8080 -e OLLAMA_BASE_URL=http://10.110.83.55:19090/ -v open-webui:/app/backend/data --name open-webui --restart always ghcr.io/open-webui/open-webui:main
+docker run -d -p 19090:8080 \
+    -e OLLAMA_BASE_URL=http://10.110.83.55:19090/ \
+    -v open-webui:/app/backend/data \
+    --name open-webui \
+    --restart always \
+    ghcr.io/open-webui/open-webui:main
 ```
 
 
@@ -69,7 +74,14 @@ docker run -d -p 19090:8080 -e OLLAMA_BASE_URL=http://10.110.83.55:19090/ -v ope
 
 [lm studio](https://lmstudio.ai/)
 
-[anytingllm](https://anythingllm.com/)
+[anythingllm](https://anythingllm.com/)
+
+
+
+docker 
+
+- open-webui
+- anytinglm
 
 
 
@@ -83,11 +95,55 @@ docker run -d -p 19090:8080 -e OLLAMA_BASE_URL=http://10.110.83.55:19090/ -v ope
 
 
 
+### 3.2 lm studio
+
+
+
+### 3.3 anythingllm
+
+[env.example](https://github.com/Mintplex-Labs/anything-llm/blob/bffdfffe81bcae39b62218a897ca2732c5168937/server/.env.example)
+
+```bash
+docker pull mintplexlabs/anythingllm:1.4
+
+export STORAGE_LOCATION=/data1/lib/anythingllm && \
+    mkdir -p $STORAGE_LOCATION && \
+    touch "$STORAGE_LOCATION/.env" && \
+    chown 1000.1000 -R $STORAGE_LOCATION
+
+cat > $STORAGE_LOCATION/.env <<EOF
+###########################################
+######## LLM API SElECTION ################
+###########################################
+LLM_PROVIDER='ollama'
+OLLAMA_BASE_PATH='http://10.110.83.55:19090/'
+OLLAMA_MODEL_PREF='deepseek-r1:7b'
+OLLAMA_MODEL_TOKEN_LIMIT=4096
+EOF
+
+docker run -d -p 19091:3001 \
+    --name anythingllm \
+    --restart always \
+    --cap-add SYS_ADMIN \
+    -v ${STORAGE_LOCATION}:/app/server/storage \
+    -v ${STORAGE_LOCATION}/.env:/app/server/.env \
+    -e STORAGE_DIR="/app/server/storage" \
+    mintplexlabs/anythingllm:1.4
+```
+
+
+
+
+
 ## 四、增强模型
 
-modelfile
-
 https://www.modelscope.cn/models/liush99/ollama_models
+
+Modelfile
+
+Generate a response
+
+prompt
 
 
 
