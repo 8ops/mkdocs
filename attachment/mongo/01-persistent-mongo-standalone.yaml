@@ -1,0 +1,31 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: PersistentVolume
+  metadata:
+    annotations:
+      pv.kubernetes.io/bound-by-controller: "yes"
+    finalizers:
+    - kubernetes.io/pv-protection
+    labels:
+      pvname: pv-mongo-standalone
+    name: pv-mongo-standalone
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    capacity:
+      storage: 8Gi
+    local:
+      path: /opt/data/mongo/standalone
+    nodeAffinity:
+      required:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: kubernetes.io/hostname
+            operator: In
+            values:
+            - k-kube-lab-11
+    persistentVolumeReclaimPolicy: Retain
+    storageClassName: mongo-standalone
+    volumeMode: Filesystem
+kind: List
