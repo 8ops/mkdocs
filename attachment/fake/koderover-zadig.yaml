@@ -1,0 +1,18 @@
+endpoint:
+  FQDN: zadig.8ops.top
+global:
+  image:
+    registry: koderover.tencentcloudcr.com/koderover-public
+  extensions:
+    extAuth:
+      extauthzServerRef:
+        namespace: kube-server
+
+dex:
+  config:
+    staticClients:
+      - id: zadig
+        redirectURIs:
+          - 'http://zadig.8ops.top/api/v1/callback'
+        name: 'zadig'
+        secret: ZXhhbXBsZS1hcHAtc2VjcmV0

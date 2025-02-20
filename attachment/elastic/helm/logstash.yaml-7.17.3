@@ -1,0 +1,63 @@
+
+replicas: 2
+
+logstashPipeline: 
+  logstash.conf: |
+    input {
+      kafka {
+        bootstrap_servers => "kafka-headless:9092"
+        topics => ["demo-json", "demo-out", "demo-test"]
+        codec => "json"
+      }
+    }
+    output { 
+      elasticsearch {
+        hosts => ["elastic-cluster-client-headless:9200"]
+        index => "%{[fields][topic]}-%{+YYYY.MM.dd}"
+      }
+    }
+
+# logstashPipeline: 
+#   logstash.conf: |
+#     input {
+#       exec {
+#         command => "uptime"
+#         interval => 5
+#       }
+#     }
+#     output { stdout { } }
+
+# logstashPipeline: 
+#   logstash.conf: |
+#     input {
+#       kafka {
+#         bootstrap_servers => "kafka-headless:9092"
+#         auto_offset_reset => "latest"
+#         group_id => logstash_4
+#         consumer_threads => 2
+#         topics => ["json","out","test""]
+#         codec => "json"
+#       }
+#     }
+#     output { 
+#       elasticsearch {
+#         hosts => ["elastic-cluster-client-headless:9200"]
+#         index => "%{[fields][type]}-%{+YYYY.MM.dd}"
+#       }
+#     }
+
+image: "hub.8ops.top/elastic/logstash"
+imageTag: "7.17.3"
+
+logstashJavaOpts: "-Xmx1g -Xms1g"
+
+resources:
+  requests:
+    cpu: "500m"
+    memory: "2Gi"
+  limits:
+    cpu: "500m"
+    memory: "2Gi"
+
+antiAffinity: "soft"
+

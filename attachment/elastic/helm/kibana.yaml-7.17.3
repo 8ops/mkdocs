@@ -1,0 +1,61 @@
+
+image: "hub.8ops.top/elastic/kibana"
+imageTag: "7.17.3"
+
+elasticsearchHosts: "http://elastic-cluster-client:9200"
+
+# kibanaConfig:
+#   kibana.yml: |
+#     server.ssl:
+#       enabled: true
+#       key: /usr/share/kibana/config/certs/elastic-certificate.pem
+#       certificate: /usr/share/kibana/config/certs/elastic-certificate.pem
+#     xpack.security.encryptionKey: ${KIBANA_ENCRYPTION_KEY}
+#     elasticsearch.ssl:
+#       certificateAuthorities: /usr/share/kibana/config/certs/elastic-certificate.pem
+#       verificationMode: certificate
+# 
+# protocol: https
+# 
+# secretMounts:
+#   - name: elastic-certificate-pem
+#     secretName: elastic-certificate-pem
+#     path: /usr/share/kibana/config/certs
+# 
+# extraEnvs:
+#   - name: ELASTIC_USERNAME
+#     valueFrom:
+#       secretKeyRef:
+#         name: elastic-credentials
+#         key: username
+#   - name: ELASTIC_PASSWORD
+#     valueFrom:
+#       secretKeyRef:
+#         name: elastic-credentials
+#         key: password
+#   - name: 'KIBANA_ENCRYPTION_KEY'
+#     valueFrom:
+#       secretKeyRef:
+#         name: kibana
+#         key: encryptionkey
+
+resources:
+  requests:
+    cpu: "500m"
+    memory: "1Gi"
+  limits:
+    cpu: "500m"
+    memory: "1Gi"
+
+ingress:
+  enabled: true
+  className: "external"
+  hosts:
+    - host: kibana.8ops.top
+      paths:
+        - path: /
+  tls: 
+    - secretName: tls-8ops.top
+      hosts:
+        - kibana.8ops.top
+

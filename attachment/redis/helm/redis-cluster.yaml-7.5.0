@@ -1,0 +1,53 @@
+
+image:
+  registry: hub.8ops.top
+  repository: bitnami/redis-cluster
+  tag: 6.2.6
+
+usePassword: true
+password: "jesse"
+
+persistence:
+  storageClass: "redis-cluster"
+  size: 1Gi
+
+service:
+  type: NodePort
+
+redis:
+  resources:
+    limits:
+       cpu: 500m
+       memory: 512Mi
+    requests:
+       cpu: 50m
+       memory: 64Mi
+
+  extraEnvVars:
+    - name: TZ
+      value: Asia/Shanghai
+
+cluster:
+  init: true
+  nodes: 6
+  replicas: 1
+
+metrics:
+  enabled: true
+  image:
+    registry: hub.8ops.top
+    repository: bitnami/redis-exporter
+    tag: 1.37.0
+
+  resources:
+    limits:
+       cpu: 50m
+       memory: 64Mi
+    requests:
+       cpu: 50m
+       memory: 64Mi
+
+  podAnnotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9121"
+

@@ -1,0 +1,208 @@
+
+
+global:
+  imageRegistry: "hub.8ops.top"
+  imageTag: v2.26.1
+
+externalDatabase:
+  engine: mysql
+  host: mysql-standalone
+  port: 3306
+  user: root
+  password: "jumpserver"
+  database: jumpserver
+
+externalRedis:
+  host: redis-sentinel
+  port: 6379
+  password: "jesse"
+
+ingress:
+  enabled: true
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/proxy-body-size: "4096m"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      proxy_set_header Upgrade "websocket";
+      proxy_set_header Connection "Upgrade";
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+  hosts:
+    - jumpserver.8ops.top
+  tls:
+    - secretName: tls-8ops.top
+      hosts:
+        - jumpserver.8ops.top
+
+core:
+  enabled: true
+  config:
+    secretKey: "0QM7ktfTxNYT0qlwDuD3XDFAZ9MSq1Kj9hMUsw5bovU54sRu8u"
+    bootstrapToken: "mzeMDtLZ47Y7dmDPtkDq4KWh"
+
+  image:
+    registry: hub.8ops.top
+    repository: third/jumpserver-core
+    tag: v2.26.1
+
+  resources: 
+     limits:
+       cpu: 1
+       memory: 2Gi
+     requests:
+       cpu: 500m
+       memory: 1Gi
+
+  persistence:
+    storageClassName: jumpserver-data
+    accessModes:
+      - ReadWriteMany
+    size: 100Gi
+
+koko:
+  enabled: true
+
+  image:
+    registry: hub.8ops.top
+    repository: third/jumpserver-koko
+    tag: v2.26.1
+
+  resources: 
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+  persistence:
+    storageClassName: jumpserver-data
+    accessModes:
+      - ReadWriteMany
+    size: 10Gi
+    finalizers:
+      - kubernetes.io/pvc-protection
+
+lion:
+  enabled: true
+
+  image:
+    registry: hub.8ops.top
+    repository: third/jumpserver-lion
+    tag: v2.26.1
+
+  resources: 
+    limits:
+      cpu: 100m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 512Mi
+
+  persistence:
+    storageClassName: jumpserver-data
+    accessModes:
+      - ReadWriteMany
+    size: 50Gi
+    finalizers:
+      - kubernetes.io/pvc-protection
+
+magnus:
+  enabled: true
+
+  image:
+    registry: hub.8ops.top
+    repository: third/jumpserver-magnus
+    tag: v2.26.1
+
+  resources: 
+    limits:
+      cpu: 100m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 512Mi
+
+  persistence:
+    storageClassName: jumpserver-data
+    accessModes:
+      - ReadWriteMany
+    size: 10Gi
+    finalizers:
+      - kubernetes.io/pvc-protection
+
+omnidb:
+
+  image:
+    registry: hub.8ops.top
+    repository: third/jumpserver-omnidb
+    tag: v2.26.1
+
+  resources: 
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+  persistence:
+    storageClassName: jumpserver-data
+    accessModes:
+      - ReadWriteMany
+    size: 10Gi
+    finalizers:
+      - kubernetes.io/pvc-protection
+
+razor:
+
+  image:
+    registry: hub.8ops.top
+    repository: third/jumpserver-razor
+    tag: v2.26.1
+
+  resources: 
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+  persistence:
+    storageClassName: jumpserver-data
+    accessModes:
+      - ReadWriteMany
+    size: 50Gi
+    finalizers:
+      - kubernetes.io/pvc-protection
+
+web:
+  enabled: true
+
+  image:
+    registry: hub.8ops.top
+    repository: third/jumpserver-web
+    tag: v2.26.1
+
+  resources: 
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+  persistence:
+    storageClassName: jumpserver-data
+    accessModes:
+      - ReadWriteMany
+    size: 1Gi
+    finalizers:
+      - kubernetes.io/pvc-protection
+
+
+
+
+
+

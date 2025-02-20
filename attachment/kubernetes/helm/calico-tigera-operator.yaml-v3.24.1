@@ -1,0 +1,17 @@
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 50m
+    memory: 64Mi
+
+tigeraOperator:
+  image: google_containers/calico-tigera-operator
+  version: v1.28.1
+  registry: hub.8ops.top
+calicoctl:
+  image: hub.8ops.top/google_containers/calico-ctl
+  tag: v3.24.1
+

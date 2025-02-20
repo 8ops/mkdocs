@@ -1,0 +1,81 @@
+
+replicas: 2
+
+image:
+  repository: hub.8ops.top/prometheus/grafana
+  tag: 9.1.5
+
+testFramework:
+  enabled: false
+
+initChownData:
+  enabled: false
+
+service:
+  enabled: true
+  type: ClusterIP
+  port: 3000
+  targetPort: 3000
+  annotations: 
+    prometheus.io/scrape: "true"
+  portName: service
+
+ingress:
+  enabled: true
+  ingressClassName: external
+  path: /
+  pathType: Prefix
+  hosts:
+    - grafana.8ops.top
+  tls: 
+    - secretName: tls-8ops.top
+      hosts:
+        - grafana.8ops.top
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 50m
+    memory: 64Mi
+
+initChownData:
+  enabled: false
+
+datasources: 
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+    - name: Prometheus
+      type: prometheus
+      url: http://prometheus-server:9090
+      access: proxy
+      isDefault: true
+
+env:
+  TZ: "Asia/Shanghai"
+
+grafana.ini:
+  paths:
+    data: /var/lib/grafana/
+    logs: /var/log/grafana
+    plugins: /var/lib/grafana/plugins
+    provisioning: /etc/grafana/provisioning
+  analytics:
+    check_for_updates: true
+  log:
+    mode: console
+  database:
+    type: mysql
+    # host: mysql-replication-primary
+    host: mysql-standalone
+    name: grafana
+    user: grafana
+    password: grafana
+  security:
+    admin_user: admin
+    admin_password: admin
+
+revisionHistoryLimit: 5
+

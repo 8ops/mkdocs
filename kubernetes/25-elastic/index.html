@@ -1,0 +1,803 @@
+<!doctype html><html lang=zh class=no-js> <head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="爱运维,运维日常实践,devops,aiops,dataops,xops,kubernetes,linux,os,nginx,prometheus,运维,系统,内核,监控,开发,数据,智能,随记 爱运维,运维虾的在线文档囊括运维日常实践、Kubernetes、运维开发、数据处理、人工智能、生活随记"><meta name=author content=Jesse><link href=https://books.8ops.top/kubernetes/25-elastic/ rel=canonical><link href=../24-redis/ rel=prev><link href=../26-harbor/ rel=next><link rel=icon href=../../favicon.ico><meta name=generator content="mkdocs-1.6.1, mkdocs-material-9.6.5"><title>Helm + Elastic - 爱运维</title><link rel=stylesheet href=../../assets/stylesheets/main.8608ea7d.min.css><link rel=stylesheet href=../../assets/stylesheets/palette.06af60db.min.css><link rel=preconnect href=https://fonts.gstatic.com crossorigin><link rel=stylesheet href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback"><style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style><link rel=stylesheet href=../../extra/extra.css><script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script></head> <body dir=ltr data-md-color-scheme=default data-md-color-primary=teal data-md-color-accent=teal> <input class=md-toggle data-md-toggle=drawer type=checkbox id=__drawer autocomplete=off> <input class=md-toggle data-md-toggle=search type=checkbox id=__search autocomplete=off> <label class=md-overlay for=__drawer></label> <div data-md-component=skip> <a href=#helm-elastic class=md-skip> 跳转至 </a> </div> <div data-md-component=announce> </div> <header class=md-header data-md-component=header> <nav class="md-header__inner md-grid" aria-label=页眉> <a href=../.. title=爱运维 class="md-header__button md-logo" aria-label=爱运维 data-md-component=logo> <img src=../../logo.png alt=logo> </a> <label class="md-header__button md-icon" for=__drawer> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg> </label> <div class=md-header__title data-md-component=header-title> <div class=md-header__ellipsis> <div class=md-header__topic> <span class=md-ellipsis> 爱运维 </span> </div> <div class=md-header__topic data-md-component=header-topic> <span class=md-ellipsis> Helm + Elastic </span> </div> </div> </div> <form class=md-header__option data-md-component=palette> <input class=md-option data-md-color-media data-md-color-scheme=default data-md-color-primary=teal data-md-color-accent=teal aria-label="Switch to dark mode" type=radio name=__palette id=__palette_0> <label class="md-header__button md-icon" title="Switch to dark mode" for=__palette_1 hidden> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg> </label> <input class=md-option data-md-color-media data-md-color-scheme=slate data-md-color-primary=teal data-md-color-accent=teal aria-label="Switch to light mode" type=radio name=__palette id=__palette_1> <label class="md-header__button md-icon" title="Switch to light mode" for=__palette_0 hidden> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg> </label> </form> <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script> <label class="md-header__button md-icon" for=__search> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg> </label> <div class=md-search data-md-component=search role=dialog> <label class=md-search__overlay for=__search></label> <div class=md-search__inner role=search> <form class=md-search__form name=search> <input type=text class=md-search__input name=query aria-label=搜索 placeholder=搜索 autocapitalize=off autocorrect=off autocomplete=off spellcheck=false data-md-component=search-query required> <label class="md-search__icon md-icon" for=__search> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg> </label> <nav class=md-search__options aria-label=查找> <a href=javascript:void(0) class="md-search__icon md-icon" title=分享 aria-label=分享 data-clipboard data-clipboard-text data-md-component=search-share tabindex=-1> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg> </a> <button type=reset class="md-search__icon md-icon" title=清空当前内容 aria-label=清空当前内容 tabindex=-1> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg> </button> </nav> <div class=md-search__suggest data-md-component=search-suggest></div> </form> <div class=md-search__output> <div class=md-search__scrollwrap tabindex=0 data-md-scrollfix> <div class=md-search-result data-md-component=search-result> <div class=md-search-result__meta> 正在初始化搜索引擎 </div> <ol class=md-search-result__list role=presentation></ol> </div> </div> </div> </div> </div> <div class=md-header__source> <a href=https://github.com/8ops/mkdocs title=前往仓库 class=md-source data-md-component=source> <div class="md-source__icon md-icon"> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 448 512"><!-- Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg> </div> <div class=md-source__repository> 8ops/mkdocs </div> </a> </div> </nav> </header> <div class=md-container data-md-component=container> <nav class=md-tabs aria-label=标签 data-md-component=tabs> <div class=md-grid> <ul class=md-tabs__list> <li class=md-tabs__item> <a href=../.. class=md-tabs__link> 首页 </a> </li> <li class=md-tabs__item> <a href=../../daily/09-ansible/ class=md-tabs__link> 日常实践 </a> </li> <li class="md-tabs__item md-tabs__item--active"> <a href=../01-cluster-init/ class=md-tabs__link> Kubernetes </a> </li> <li class=md-tabs__item> <a href=../../ops/01-devops/ class=md-tabs__link> 运维进阶 </a> </li> <li class=md-tabs__item> <a href=../../dev/10-golang/ class=md-tabs__link> 运维开发 </a> </li> <li class=md-tabs__item> <a href=../../data/01-mysql/ class=md-tabs__link> 数据处理 </a> </li> <li class=md-tabs__item> <a href=../../note/00-class/ class=md-tabs__link> 生活随记 </a> </li> <li class=md-tabs__item> <a href=../../about/ class=md-tabs__link> 关于我 </a> </li> </ul> </div> </nav> <main class=md-main data-md-component=main> <div class="md-main__inner md-grid"> <div class="md-sidebar md-sidebar--primary" data-md-component=sidebar data-md-type=navigation> <div class=md-sidebar__scrollwrap> <div class=md-sidebar__inner> <nav class="md-nav md-nav--primary md-nav--lifted" aria-label=导航栏 data-md-level=0> <label class=md-nav__title for=__drawer> <a href=../.. title=爱运维 class="md-nav__button md-logo" aria-label=爱运维 data-md-component=logo> <img src=../../logo.png alt=logo> </a> 爱运维 </label> <div class=md-nav__source> <a href=https://github.com/8ops/mkdocs title=前往仓库 class=md-source data-md-component=source> <div class="md-source__icon md-icon"> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 448 512"><!-- Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg> </div> <div class=md-source__repository> 8ops/mkdocs </div> </a> </div> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../.. class=md-nav__link> <span class=md-ellipsis> 首页 </span> </a> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_2> <label class=md-nav__link for=__nav_2 id=__nav_2_label tabindex=0> <span class=md-ellipsis> 日常实践 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=1 aria-labelledby=__nav_2_label aria-expanded=false> <label class=md-nav__title for=__nav_2> <span class="md-nav__icon md-icon"></span> 日常实践 </label> <ul class=md-nav__list data-md-scrollfix> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_2_1> <label class=md-nav__link for=__nav_2_1 id=__nav_2_1_label tabindex=0> <span class=md-ellipsis> 【系统能力】 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=2 aria-labelledby=__nav_2_1_label aria-expanded=false> <label class=md-nav__title for=__nav_2_1> <span class="md-nav__icon md-icon"></span> 【系统能力】 </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../daily/09-ansible/ class=md-nav__link> <span class=md-ellipsis> Ansible </span> </a> </li> <li class=md-nav__item> <a href=../../daily/10-hardware/ class=md-nav__link> <span class=md-ellipsis> 硬件管理 </span> </a> </li> <li class=md-nav__item> <a href=../../daily/11-system/ class=md-nav__link> <span class=md-ellipsis> 系统管理 </span> </a> </li> <li class=md-nav__item> <a href=../../daily/12-command/ class=md-nav__link> <span class=md-ellipsis> 常用命令 </span> </a> </li> <li class=md-nav__item> <a href=../../daily/14-imagemagick/ class=md-nav__link> <span class=md-ellipsis> 图片处理 </span> </a> </li> <li class=md-nav__item> <a href=../../daily/15-openssl/ class=md-nav__link> <span class=md-ellipsis> 证书管理 </span> </a> </li> <li class=md-nav__item> <a href=../../daily/16-network/ class=md-nav__link> <span class=md-ellipsis> 网络信息 </span> </a> </li> <li class=md-nav__item> <a href=../../daily/17-io/ class=md-nav__link> <span class=md-ellipsis> io </span> </a> </li> <li class=md-nav__item> <a href=../../daily/18-git/ class=md-nav__link> <span class=md-ellipsis> git </span> </a> </li> <li class=md-nav__item> <a href=../../daily/19-firewall/ class=md-nav__link> <span class=md-ellipsis> firewall </span> </a> </li> <li class=md-nav__item> <a href=../../daily/20-curl/ class=md-nav__link> <span class=md-ellipsis> curl </span> </a> </li> <li class=md-nav__item> <a href=../../daily/21-oauth2/ class=md-nav__link> <span class=md-ellipsis> oauth2 </span> </a> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_2_2> <label class=md-nav__link for=__nav_2_2 id=__nav_2_2_label tabindex=0> <span class=md-ellipsis> 【常用组件】 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=2 aria-labelledby=__nav_2_2_label aria-expanded=false> <label class=md-nav__title for=__nav_2_2> <span class="md-nav__icon md-icon"></span> 【常用组件】 </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../daily/33-ppp/ class=md-nav__link> <span class=md-ellipsis> ppp </span> </a> </li> <li class=md-nav__item> <a href=../../daily/34-kickstart/ class=md-nav__link> <span class=md-ellipsis> kickstart </span> </a> </li> <li class=md-nav__item> <a href=../../daily/35-mogilefs/ class=md-nav__link> <span class=md-ellipsis> mogilefs </span> </a> </li> <li class=md-nav__item> <a href=../../daily/36-postgresql/ class=md-nav__link> <span class=md-ellipsis> postgresql </span> </a> </li> <li class=md-nav__item> <a href=../../daily/37-rabbitmq/ class=md-nav__link> <span class=md-ellipsis> rabbitmq </span> </a> </li> <li class=md-nav__item> <a href=../../daily/38-saltstack/ class=md-nav__link> <span class=md-ellipsis> saltstack </span> </a> </li> <li class=md-nav__item> <a href=../../daily/39-neo4j/ class=md-nav__link> <span class=md-ellipsis> neo4j </span> </a> </li> <li class=md-nav__item> <a href=../../daily/40-haproxy/ class=md-nav__link> <span class=md-ellipsis> haproxy </span> </a> </li> <li class=md-nav__item> <a href=../../daily/41-dnsmasq/ class=md-nav__link> <span class=md-ellipsis> dnsmasq </span> </a> </li> <li class=md-nav__item> <a href=../../daily/42-kvm/ class=md-nav__link> <span class=md-ellipsis> kvm </span> </a> </li> <li class=md-nav__item> <a href=../../daily/43-jumpserver/ class=md-nav__link> <span class=md-ellipsis> jumpServer </span> </a> </li> <li class=md-nav__item> <a href=../../daily/44-rsyncd/ class=md-nav__link> <span class=md-ellipsis> rsyncd </span> </a> </li> <li class=md-nav__item> <a href=../../daily/45-nfs/ class=md-nav__link> <span class=md-ellipsis> nfs </span> </a> </li> <li class=md-nav__item> <a href=../../daily/46-nginx/ class=md-nav__link> <span class=md-ellipsis> nginx </span> </a> </li> <li class=md-nav__item> <a href=../../daily/47-elastic/ class=md-nav__link> <span class=md-ellipsis> elastic </span> </a> </li> <li class=md-nav__item> <a href=../../daily/48-mysql/ class=md-nav__link> <span class=md-ellipsis> mysql </span> </a> </li> <li class=md-nav__item> <a href=../../daily/50-denyhosts/ class=md-nav__link> <span class=md-ellipsis> denyhosts </span> </a> </li> <li class=md-nav__item> <a href=../../daily/51-sentry/ class=md-nav__link> <span class=md-ellipsis> sentry </span> </a> </li> <li class=md-nav__item> <a href=../../daily/52-mitmproxy/ class=md-nav__link> <span class=md-ellipsis> mitmproxy </span> </a> </li> <li class=md-nav__item> <a href=../../daily/53-ntp/ class=md-nav__link> <span class=md-ellipsis> ntp </span> </a> </li> <li class=md-nav__item> <a href=../../daily/54-cloudstack/ class=md-nav__link> <span class=md-ellipsis> cloudstack </span> </a> </li> <li class=md-nav__item> <a href=../../daily/55-highon-coffee/ class=md-nav__link> <span class=md-ellipsis> highon.coffee </span> </a> </li> </ul> </nav> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_3 checked> <label class=md-nav__link for=__nav_3 id=__nav_3_label tabindex> <span class=md-ellipsis> Kubernetes </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=1 aria-labelledby=__nav_3_label aria-expanded=true> <label class=md-nav__title for=__nav_3> <span class="md-nav__icon md-icon"></span> Kubernetes </label> <ul class=md-nav__list data-md-scrollfix> <li class="md-nav__item md-nav__item--section md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_3_1> <label class=md-nav__link for=__nav_3_1 id=__nav_3_1_label tabindex> <span class=md-ellipsis> 【快速搭建】 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=2 aria-labelledby=__nav_3_1_label aria-expanded=false> <label class=md-nav__title for=__nav_3_1> <span class="md-nav__icon md-icon"></span> 【快速搭建】 </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../01-cluster-init/ class=md-nav__link> <span class=md-ellipsis> Quick Start </span> </a> </li> <li class=md-nav__item> <a href=../01-cluster-init-flannel/ class=md-nav__link> <span class=md-ellipsis> Quick Start - Flannel </span> </a> </li> <li class=md-nav__item> <a href=../01-cluster-init-cilium/ class=md-nav__link> <span class=md-ellipsis> Quick Start - Cilium </span> </a> </li> <li class=md-nav__item> <a href=../01-cluster-init-calico/ class=md-nav__link> <span class=md-ellipsis> Quick Start - Calico </span> </a> </li> <li class=md-nav__item> <a href=../01-cluster-init-calico-1.31/ class=md-nav__link> <span class=md-ellipsis> Quick Start - Calico - v1.31.1 </span> </a> </li> <li class=md-nav__item> <a href=../02-cluster-reset/ class=md-nav__link> <span class=md-ellipsis> Quick Reset </span> </a> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--section md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_3_2> <label class=md-nav__link for=__nav_3_2 id=__nav_3_2_label tabindex> <span class=md-ellipsis> 【升级版本】 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=2 aria-labelledby=__nav_3_2_label aria-expanded=false> <label class=md-nav__title for=__nav_3_2> <span class="md-nav__icon md-icon"></span> 【升级版本】 </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../06-cluster-renew-certs/ class=md-nav__link> <span class=md-ellipsis> Renew certs </span> </a> </li> <li class=md-nav__item> <a href=../06-cluster-upgrade/ class=md-nav__link> <span class=md-ellipsis> Upgrade </span> </a> </li> <li class=md-nav__item> <a href=../06-cluster-upgrade-1.24/ class=md-nav__link> <span class=md-ellipsis> Upgrade - v1.24.0 </span> </a> </li> <li class=md-nav__item> <a href=../06-cluster-upgrade-1.25/ class=md-nav__link> <span class=md-ellipsis> Upgrade - v1.25.0 </span> </a> </li> <li class=md-nav__item> <a href=../06-cluster-upgrade-1.26/ class=md-nav__link> <span class=md-ellipsis> Upgrade - v1.26.0 </span> </a> </li> <li class=md-nav__item> <a href=../06-cluster-upgrade-qa/ class=md-nav__link> <span class=md-ellipsis> 常见问题 </span> </a> </li> <li class=md-nav__item> <a href=../07-app-migrate/ class=md-nav__link> <span class=md-ellipsis> 迁移容器 </span> </a> </li> <li class=md-nav__item> <a href=../08-docker/ class=md-nav__link> <span class=md-ellipsis> Docker </span> </a> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_3_3 checked> <label class=md-nav__link for=__nav_3_3 id=__nav_3_3_label tabindex> <span class=md-ellipsis> 【常用组件】 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=2 aria-labelledby=__nav_3_3_label aria-expanded=true> <label class=md-nav__title for=__nav_3_3> <span class="md-nav__icon md-icon"></span> 【常用组件】 </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../04-argocd/ class=md-nav__link> <span class=md-ellipsis> ArgoCD </span> </a> </li> <li class=md-nav__item> <a href=../05-helm/ class=md-nav__link> <span class=md-ellipsis> Helm </span> </a> </li> <li class=md-nav__item> <a href=../20-prometheus/ class=md-nav__link> <span class=md-ellipsis> Helm + Prometheus </span> </a> </li> <li class=md-nav__item> <a href=../21-mysql/ class=md-nav__link> <span class=md-ellipsis> Helm + MySQL </span> </a> </li> <li class=md-nav__item> <a href=../22-mongo/ class=md-nav__link> <span class=md-ellipsis> Helm + MongoDB </span> </a> </li> <li class=md-nav__item> <a href=../23-grafana/ class=md-nav__link> <span class=md-ellipsis> Helm + Grafana </span> </a> </li> <li class=md-nav__item> <a href=../24-redis/ class=md-nav__link> <span class=md-ellipsis> Helm + Redis </span> </a> </li> <li class="md-nav__item md-nav__item--active"> <input class="md-nav__toggle md-toggle" type=checkbox id=__toc> <label class="md-nav__link md-nav__link--active" for=__toc> <span class=md-ellipsis> Helm + Elastic </span> <span class="md-nav__icon md-icon"></span> </label> <a href=./ class="md-nav__link md-nav__link--active"> <span class=md-ellipsis> Helm + Elastic </span> </a> <nav class="md-nav md-nav--secondary" aria-label=目录> <label class=md-nav__title for=__toc> <span class="md-nav__icon md-icon"></span> 目录 </label> <ul class=md-nav__list data-md-component=toc data-md-scrollfix> <li class=md-nav__item> <a href=#eck-operater class=md-nav__link> <span class=md-ellipsis> 一、ECK-Operater </span> </a> </li> <li class=md-nav__item> <a href=#onekey class=md-nav__link> <span class=md-ellipsis> 二、OneKey </span> </a> </li> <li class=md-nav__item> <a href=#helm class=md-nav__link> <span class=md-ellipsis> 三、Helm </span> </a> <nav class=md-nav aria-label=三、Helm> <ul class=md-nav__list> <li class=md-nav__item> <a href=#31 class=md-nav__link> <span class=md-ellipsis> 3.1 安全准备 </span> </a> </li> <li class=md-nav__item> <a href=#32 class=md-nav__link> <span class=md-ellipsis> 3.2 安装 </span> </a> <nav class=md-nav aria-label="3.2 安装"> <ul class=md-nav__list> <li class=md-nav__item> <a href=#321-elasticsearch class=md-nav__link> <span class=md-ellipsis> 3.2.1 elasticsearch </span> </a> </li> <li class=md-nav__item> <a href=#322-kibana class=md-nav__link> <span class=md-ellipsis> 3.2.2 kibana </span> </a> </li> <li class=md-nav__item> <a href=#323-kafka class=md-nav__link> <span class=md-ellipsis> 3.2.3 kafka </span> </a> </li> <li class=md-nav__item> <a href=#324-logstash class=md-nav__link> <span class=md-ellipsis> 3.2.4 logstash </span> </a> </li> <li class=md-nav__item> <a href=#325-filebeat class=md-nav__link> <span class=md-ellipsis> 3.2.5 filebeat </span> </a> </li> </ul> </nav> </li> </ul> </nav> </li> <li class=md-nav__item> <a href=#_1 class=md-nav__link> <span class=md-ellipsis> 四、常用实践 </span> </a> <nav class=md-nav aria-label=四、常用实践> <ul class=md-nav__list> <li class=md-nav__item> <a href=#41 class=md-nav__link> <span class=md-ellipsis> 4.1 容器环境收集日志方案 </span> </a> </li> <li class=md-nav__item> <a href=#42-ilm class=md-nav__link> <span class=md-ellipsis> 4.2 ILM </span> </a> </li> </ul> </nav> </li> <li class=md-nav__item> <a href=#_2 class=md-nav__link> <span class=md-ellipsis> 五、常见问题 </span> </a> <nav class=md-nav aria-label=五、常见问题> <ul class=md-nav__list> <li class=md-nav__item> <a href=#51-ilm class=md-nav__link> <span class=md-ellipsis> 5.1 ILM出现错误 </span> </a> </li> <li class=md-nav__item> <a href=#52-docker class=md-nav__link> <span class=md-ellipsis> 5.2 docker部署问题 </span> </a> </li> </ul> </nav> </li> <li class=md-nav__item> <a href=#docker class=md-nav__link> <span class=md-ellipsis> 六、Docker实践 </span> </a> <nav class=md-nav aria-label=六、Docker实践> <ul class=md-nav__list> <li class=md-nav__item> <a href=#61-chatgpt class=md-nav__link> <span class=md-ellipsis> 6.1 ChatGPT </span> </a> <nav class=md-nav aria-label="6.1 ChatGPT"> <ul class=md-nav__list> <li class=md-nav__item> <a href=#611 class=md-nav__link> <span class=md-ellipsis> 6.1.1 环境准备 </span> </a> </li> <li class=md-nav__item> <a href=#612-topic-cosumer class=md-nav__link> <span class=md-ellipsis> 6.1.2 查看 topic &amp; cosumer </span> </a> </li> <li class=md-nav__item> <a href=#613-topic-partition-replication class=md-nav__link> <span class=md-ellipsis> 6.1.3 变更topic partition replication </span> </a> </li> <li class=md-nav__item> <a href=#614-topic class=md-nav__link> <span class=md-ellipsis> 6.1.4 删除topic </span> </a> </li> </ul> </nav> </li> <li class=md-nav__item> <a href=#62 class=md-nav__link> <span class=md-ellipsis> 6.2 实践 </span> </a> <nav class=md-nav aria-label="6.2 实践"> <ul class=md-nav__list> <li class=md-nav__item> <a href=#621 class=md-nav__link> <span class=md-ellipsis> 6.2.1 环境准备 </span> </a> </li> <li class=md-nav__item> <a href=#622-kafka class=md-nav__link> <span class=md-ellipsis> 6.2.2 安装kafka </span> </a> </li> <li class=md-nav__item> <a href=#623-kafka class=md-nav__link> <span class=md-ellipsis> 6.2.3 测试kafka </span> </a> </li> <li class=md-nav__item> <a href=#624-elastic class=md-nav__link> <span class=md-ellipsis> 6.2.4 安装elastic </span> </a> </li> <li class=md-nav__item> <a href=#625-elastic class=md-nav__link> <span class=md-ellipsis> 6.2.5 测试elastic </span> </a> </li> <li class=md-nav__item> <a href=#626 class=md-nav__link> <span class=md-ellipsis> 6.2.6 辅助工具 </span> </a> </li> <li class=md-nav__item> <a href=#627 class=md-nav__link> <span class=md-ellipsis> 6.2.7 优化配置 </span> </a> </li> </ul> </nav> </li> </ul> </nav> </li> </ul> </nav> </li> <li class=md-nav__item> <a href=../26-harbor/ class=md-nav__link> <span class=md-ellipsis> Harbor </span> </a> </li> <li class=md-nav__item> <a href=../27-kong/ class=md-nav__link> <span class=md-ellipsis> Kong </span> </a> </li> <li class=md-nav__item> <a href=../28-rabbitmq/ class=md-nav__link> <span class=md-ellipsis> Rabbitmq </span> </a> </li> <li class=md-nav__item> <a href=../42-metallb/ class=md-nav__link> <span class=md-ellipsis> MetalLB </span> </a> </li> <li class=md-nav__item> <a href=../29-dashboard/ class=md-nav__link> <span class=md-ellipsis> Dashboard </span> </a> </li> <li class=md-nav__item> <a href=../29-controller/ class=md-nav__link> <span class=md-ellipsis> Controller </span> </a> </li> <li class=md-nav__item> <a href=../29-rancher/ class=md-nav__link> <span class=md-ellipsis> Rancher </span> </a> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--section md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_3_4> <label class=md-nav__link for=__nav_3_4 id=__nav_3_4_label tabindex> <span class=md-ellipsis> 【日常应用】 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=2 aria-labelledby=__nav_3_4_label aria-expanded=false> <label class=md-nav__title for=__nav_3_4> <span class="md-nav__icon md-icon"></span> 【日常应用】 </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../30-resource/ class=md-nav__link> <span class=md-ellipsis> 资源集锦 </span> </a> </li> <li class=md-nav__item> <a href=../30-readme/ class=md-nav__link> <span class=md-ellipsis> 应用集锦 </span> </a> </li> <li class=md-nav__item> <a href=../09-account/ class=md-nav__link> <span class=md-ellipsis> 用户体系 </span> </a> </li> <li class=md-nav__item> <a href=../10-access-image/ class=md-nav__link> <span class=md-ellipsis> 加速镜像 </span> </a> </li> <li class=md-nav__item> <a href=../20-promql/ class=md-nav__link> <span class=md-ellipsis> PromQL </span> </a> </li> <li class=md-nav__item> <a href=../20-promql-func/ class=md-nav__link> <span class=md-ellipsis> PromQL 内置函数 </span> </a> </li> <li class=md-nav__item> <a href=../31-kubeconfig/ class=md-nav__link> <span class=md-ellipsis> kubeconfig </span> </a> </li> <li class=md-nav__item> <a href=../32-daemonset/ class=md-nav__link> <span class=md-ellipsis> daemon set </span> </a> </li> <li class=md-nav__item> <a href=../33-statefulset/ class=md-nav__link> <span class=md-ellipsis> statefulset </span> </a> </li> <li class=md-nav__item> <a href=../39-etcd/ class=md-nav__link> <span class=md-ellipsis> etcd </span> </a> </li> <li class=md-nav__item> <a href=../44-jsonpath/ class=md-nav__link> <span class=md-ellipsis> JsonPath </span> </a> </li> <li class=md-nav__item> <a href=../45-taint-and-toleration/ class=md-nav__link> <span class=md-ellipsis> Taints and Tolerations </span> </a> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--section md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_3_5> <label class=md-nav__link for=__nav_3_5 id=__nav_3_5_label tabindex> <span class=md-ellipsis> 【存储】 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=2 aria-labelledby=__nav_3_5_label aria-expanded=false> <label class=md-nav__title for=__nav_3_5> <span class="md-nav__icon md-icon"></span> 【存储】 </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../51-minio/ class=md-nav__link> <span class=md-ellipsis> MinIO </span> </a> </li> <li class=md-nav__item> <a href=../52-nfs-provider/ class=md-nav__link> <span class=md-ellipsis> NFS Provider </span> </a> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--section md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_3_6> <label class=md-nav__link for=__nav_3_6 id=__nav_3_6_label tabindex> <span class=md-ellipsis> 【安全】 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=2 aria-labelledby=__nav_3_6_label aria-expanded=false> <label class=md-nav__title for=__nav_3_6> <span class="md-nav__icon md-icon"></span> 【安全】 </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../61-audit/ class=md-nav__link> <span class=md-ellipsis> Kubernetes Audit </span> </a> </li> </ul> </nav> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_4> <label class=md-nav__link for=__nav_4 id=__nav_4_label tabindex=0> <span class=md-ellipsis> 运维进阶 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=1 aria-labelledby=__nav_4_label aria-expanded=false> <label class=md-nav__title for=__nav_4> <span class="md-nav__icon md-icon"></span> 运维进阶 </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../ops/01-devops/ class=md-nav__link> <span class=md-ellipsis> DevOps </span> </a> </li> <li class=md-nav__item> <a href=../../ops/02-dataops/ class=md-nav__link> <span class=md-ellipsis> DataOps </span> </a> </li> <li class=md-nav__item> <a href=../../ops/03-aiops/ class=md-nav__link> <span class=md-ellipsis> AIOps </span> </a> </li> <li class=md-nav__item> <a href=../../ops/04-devsecops/ class=md-nav__link> <span class=md-ellipsis> DevSecOps </span> </a> </li> <li class=md-nav__item> <a href=../../ops/05-chatops/ class=md-nav__link> <span class=md-ellipsis> ChatOps </span> </a> </li> <li class=md-nav__item> <a href=../../ops/06-finops/ class=md-nav__link> <span class=md-ellipsis> FinOps </span> </a> </li> <li class=md-nav__item> <a href=../../ops/07-autoops/ class=md-nav__link> <span class=md-ellipsis> AutoOps </span> </a> </li> <li class=md-nav__item> <a href=../../ops/08-xops/ class=md-nav__link> <span class=md-ellipsis> XOps </span> </a> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_4_9> <label class=md-nav__link for=__nav_4_9 id=__nav_4_9_label tabindex=0> <span class=md-ellipsis> 【SRE】 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=2 aria-labelledby=__nav_4_9_label aria-expanded=false> <label class=md-nav__title for=__nav_4_9> <span class="md-nav__icon md-icon"></span> 【SRE】 </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../ops/50-sre-mogu/ class=md-nav__link> <span class=md-ellipsis> SRE实战 </span> </a> </li> <li class=md-nav__item> <a href=../../ops/51-sre-didi/ class=md-nav__link> <span class=md-ellipsis> 稳定性思考 </span> </a> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_4_10> <label class=md-nav__link for=__nav_4_10 id=__nav_4_10_label tabindex=0> <span class=md-ellipsis> 【监控】 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=2 aria-labelledby=__nav_4_10_label aria-expanded=false> <label class=md-nav__title for=__nav_4_10> <span class="md-nav__icon md-icon"></span> 【监控】 </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../ops/60-monitor/ class=md-nav__link> <span class=md-ellipsis> 建设监控 </span> </a> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_4_11> <label class=md-nav__link for=__nav_4_11 id=__nav_4_11_label tabindex=0> <span class=md-ellipsis> 【安全】 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=2 aria-labelledby=__nav_4_11_label aria-expanded=false> <label class=md-nav__title for=__nav_4_11> <span class="md-nav__icon md-icon"></span> 【安全】 </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../ops/70-pam/ class=md-nav__link> <span class=md-ellipsis> PAM </span> </a> </li> </ul> </nav> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_5> <label class=md-nav__link for=__nav_5 id=__nav_5_label tabindex=0> <span class=md-ellipsis> 运维开发 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=1 aria-labelledby=__nav_5_label aria-expanded=false> <label class=md-nav__title for=__nav_5> <span class="md-nav__icon md-icon"></span> 运维开发 </label> <ul class=md-nav__list data-md-scrollfix> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_5_1> <label class=md-nav__link for=__nav_5_1 id=__nav_5_1_label tabindex=0> <span class=md-ellipsis> 【Golang】 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=2 aria-labelledby=__nav_5_1_label aria-expanded=false> <label class=md-nav__title for=__nav_5_1> <span class="md-nav__icon md-icon"></span> 【Golang】 </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../dev/10-golang/ class=md-nav__link> <span class=md-ellipsis> Golang </span> </a> </li> <li class=md-nav__item> <a href=../../dev/11-cleint-go/ class=md-nav__link> <span class=md-ellipsis> client-go </span> </a> </li> <li class=md-nav__item> <a href=../../dev/12-chromedp/ class=md-nav__link> <span class=md-ellipsis> chromedp </span> </a> </li> <li class=md-nav__item> <a href=../../dev/13-smtp/ class=md-nav__link> <span class=md-ellipsis> smtp </span> </a> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_5_2> <label class=md-nav__link for=__nav_5_2 id=__nav_5_2_label tabindex=0> <span class=md-ellipsis> 【Python】 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=2 aria-labelledby=__nav_5_2_label aria-expanded=false> <label class=md-nav__title for=__nav_5_2> <span class="md-nav__icon md-icon"></span> 【Python】 </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../dev/20-python/ class=md-nav__link> <span class=md-ellipsis> python </span> </a> </li> <li class=md-nav__item> <a href=../../dev/21-conda/ class=md-nav__link> <span class=md-ellipsis> conda </span> </a> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_5_3> <label class=md-nav__link for=__nav_5_3 id=__nav_5_3_label tabindex=0> <span class=md-ellipsis> 【HTML】 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=2 aria-labelledby=__nav_5_3_label aria-expanded=false> <label class=md-nav__title for=__nav_5_3> <span class="md-nav__icon md-icon"></span> 【HTML】 </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../dev/70-admin/ class=md-nav__link> <span class=md-ellipsis> admin </span> </a> </li> <li class=md-nav__item> <a href=../../dev/80-html/ class=md-nav__link> <span class=md-ellipsis> html </span> </a> </li> <li class=md-nav__item> <a href=../../dev/81-vue/ class=md-nav__link> <span class=md-ellipsis> vue </span> </a> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_5_4> <label class=md-nav__link for=__nav_5_4 id=__nav_5_4_label tabindex=0> <span class=md-ellipsis> 【MarkDown】 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=2 aria-labelledby=__nav_5_4_label aria-expanded=false> <label class=md-nav__title for=__nav_5_4> <span class="md-nav__icon md-icon"></span> 【MarkDown】 </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../dev/90-gitbook/ class=md-nav__link> <span class=md-ellipsis> gitbook </span> </a> </li> <li class=md-nav__item> <a href=../../dev/91-docsify/ class=md-nav__link> <span class=md-ellipsis> docsify </span> </a> </li> <li class=md-nav__item> <a href=../../dev/92-mkdocs/ class=md-nav__link> <span class=md-ellipsis> mkdocs </span> </a> </li> <li class=md-nav__item> <a href=../../dev/96-macbook/ class=md-nav__link> <span class=md-ellipsis> MacBook </span> </a> </li> <li class=md-nav__item> <a href=../../dev/99-article/ class=md-nav__link> <span class=md-ellipsis> 文章管理 </span> </a> </li> </ul> </nav> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_6> <label class=md-nav__link for=__nav_6 id=__nav_6_label tabindex=0> <span class=md-ellipsis> 数据处理 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=1 aria-labelledby=__nav_6_label aria-expanded=false> <label class=md-nav__title for=__nav_6> <span class="md-nav__icon md-icon"></span> 数据处理 </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../data/01-mysql/ class=md-nav__link> <span class=md-ellipsis> MySQL </span> </a> </li> <li class=md-nav__item> <a href=../../data/02-neo4j/ class=md-nav__link> <span class=md-ellipsis> Neo4J </span> </a> </li> <li class=md-nav__item> <a href=../../data/03-redis/ class=md-nav__link> <span class=md-ellipsis> Redis </span> </a> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_6_4> <label class=md-nav__link for=__nav_6_4 id=__nav_6_4_label tabindex=0> <span class=md-ellipsis> 【NLP】 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=2 aria-labelledby=__nav_6_4_label aria-expanded=false> <label class=md-nav__title for=__nav_6_4> <span class="md-nav__icon md-icon"></span> 【NLP】 </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../data/10-chatgpt/ class=md-nav__link> <span class=md-ellipsis> chatgpt </span> </a> </li> <li class=md-nav__item> <a href=../../data/11-huggingface/ class=md-nav__link> <span class=md-ellipsis> huggingface </span> </a> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_6_5> <label class=md-nav__link for=__nav_6_5 id=__nav_6_5_label tabindex=0> <span class=md-ellipsis> 【LLM】 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=2 aria-labelledby=__nav_6_5_label aria-expanded=false> <label class=md-nav__title for=__nav_6_5> <span class="md-nav__icon md-icon"></span> 【LLM】 </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../data/20-llm/ class=md-nav__link> <span class=md-ellipsis> LLM </span> </a> </li> </ul> </nav> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_7> <label class=md-nav__link for=__nav_7 id=__nav_7_label tabindex=0> <span class=md-ellipsis> 生活随记 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=1 aria-labelledby=__nav_7_label aria-expanded=false> <label class=md-nav__title for=__nav_7> <span class="md-nav__icon md-icon"></span> 生活随记 </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../note/00-class/ class=md-nav__link> <span class=md-ellipsis> 经典语录 </span> </a> </li> <li class=md-nav__item> <a href=../../note/01-effect/ class=md-nav__link> <span class=md-ellipsis> 心理效应 </span> </a> </li> <li class=md-nav__item> <a href=../../note/02-start/ class=md-nav__link> <span class=md-ellipsis> 新年寄语 </span> </a> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_7_4> <label class=md-nav__link for=__nav_7_4 id=__nav_7_4_label tabindex=0> <span class=md-ellipsis> 【私野别墅】 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=2 aria-labelledby=__nav_7_4_label aria-expanded=false> <label class=md-nav__title for=__nav_7_4> <span class="md-nav__icon md-icon"></span> 【私野别墅】 </label> <ul class=md-nav__list data-md-scrollfix> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_7_4_1> <label class=md-nav__link for=__nav_7_4_1 id=__nav_7_4_1_label tabindex=0> <span class=md-ellipsis> 一层 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=3 aria-labelledby=__nav_7_4_1_label aria-expanded=false> <label class=md-nav__title for=__nav_7_4_1> <span class="md-nav__icon md-icon"></span> 一层 </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../note/84-villa-00-01/ class=md-nav__link> <span class=md-ellipsis> 别墅【00-01】 </span> </a> </li> <li class=md-nav__item> <a href=../../note/84-villa-00-02/ class=md-nav__link> <span class=md-ellipsis> 别墅【00-02】 </span> </a> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_7_4_2> <label class=md-nav__link for=__nav_7_4_2 id=__nav_7_4_2_label tabindex=0> <span class=md-ellipsis> 二层 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=3 aria-labelledby=__nav_7_4_2_label aria-expanded=false> <label class=md-nav__title for=__nav_7_4_2> <span class="md-nav__icon md-icon"></span> 二层 </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../note/84-villa-00-70/ class=md-nav__link> <span class=md-ellipsis> 别墅【00-70】 </span> </a> </li> <li class=md-nav__item> <a href=../../note/84-villa-34-80/ class=md-nav__link> <span class=md-ellipsis> 别墅【34-80】 </span> </a> </li> <li class=md-nav__item> <a href=../../note/84-villa-82-90/ class=md-nav__link> <span class=md-ellipsis> 别墅【82-90】 </span> </a> </li> </ul> </nav> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_7_5> <label class=md-nav__link for=__nav_7_5 id=__nav_7_5_label tabindex=0> <span class=md-ellipsis> 【工具集锦】 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=2 aria-labelledby=__nav_7_5_label aria-expanded=false> <label class=md-nav__title for=__nav_7_5> <span class="md-nav__icon md-icon"></span> 【工具集锦】 </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../note/90-hls-repair/ class=md-nav__link> <span class=md-ellipsis> 海信电视 </span> </a> </li> <li class=md-nav__item> <a href=../../note/91-qywx/ class=md-nav__link> <span class=md-ellipsis> 企业微信 </span> </a> </li> <li class=md-nav__item> <a href=../../note/92-bt/ class=md-nav__link> <span class=md-ellipsis> BT </span> </a> </li> <li class=md-nav__item> <a href=../../note/93-vmware-funsion/ class=md-nav__link> <span class=md-ellipsis> vmware fusion </span> </a> </li> </ul> </nav> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_8> <label class=md-nav__link for=__nav_8 id=__nav_8_label tabindex=0> <span class=md-ellipsis> 关于我 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=1 aria-labelledby=__nav_8_label aria-expanded=false> <label class=md-nav__title for=__nav_8> <span class="md-nav__icon md-icon"></span> 关于我 </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../about/ class=md-nav__link> <span class=md-ellipsis> 关于我 </span> </a> </li> </ul> </nav> </li> </ul> </nav> </div> </div> </div> <div class="md-sidebar md-sidebar--secondary" data-md-component=sidebar data-md-type=toc> <div class=md-sidebar__scrollwrap> <div class=md-sidebar__inner> <nav class="md-nav md-nav--secondary" aria-label=目录> <label class=md-nav__title for=__toc> <span class="md-nav__icon md-icon"></span> 目录 </label> <ul class=md-nav__list data-md-component=toc data-md-scrollfix> <li class=md-nav__item> <a href=#eck-operater class=md-nav__link> <span class=md-ellipsis> 一、ECK-Operater </span> </a> </li> <li class=md-nav__item> <a href=#onekey class=md-nav__link> <span class=md-ellipsis> 二、OneKey </span> </a> </li> <li class=md-nav__item> <a href=#helm class=md-nav__link> <span class=md-ellipsis> 三、Helm </span> </a> <nav class=md-nav aria-label=三、Helm> <ul class=md-nav__list> <li class=md-nav__item> <a href=#31 class=md-nav__link> <span class=md-ellipsis> 3.1 安全准备 </span> </a> </li> <li class=md-nav__item> <a href=#32 class=md-nav__link> <span class=md-ellipsis> 3.2 安装 </span> </a> <nav class=md-nav aria-label="3.2 安装"> <ul class=md-nav__list> <li class=md-nav__item> <a href=#321-elasticsearch class=md-nav__link> <span class=md-ellipsis> 3.2.1 elasticsearch </span> </a> </li> <li class=md-nav__item> <a href=#322-kibana class=md-nav__link> <span class=md-ellipsis> 3.2.2 kibana </span> </a> </li> <li class=md-nav__item> <a href=#323-kafka class=md-nav__link> <span class=md-ellipsis> 3.2.3 kafka </span> </a> </li> <li class=md-nav__item> <a href=#324-logstash class=md-nav__link> <span class=md-ellipsis> 3.2.4 logstash </span> </a> </li> <li class=md-nav__item> <a href=#325-filebeat class=md-nav__link> <span class=md-ellipsis> 3.2.5 filebeat </span> </a> </li> </ul> </nav> </li> </ul> </nav> </li> <li class=md-nav__item> <a href=#_1 class=md-nav__link> <span class=md-ellipsis> 四、常用实践 </span> </a> <nav class=md-nav aria-label=四、常用实践> <ul class=md-nav__list> <li class=md-nav__item> <a href=#41 class=md-nav__link> <span class=md-ellipsis> 4.1 容器环境收集日志方案 </span> </a> </li> <li class=md-nav__item> <a href=#42-ilm class=md-nav__link> <span class=md-ellipsis> 4.2 ILM </span> </a> </li> </ul> </nav> </li> <li class=md-nav__item> <a href=#_2 class=md-nav__link> <span class=md-ellipsis> 五、常见问题 </span> </a> <nav class=md-nav aria-label=五、常见问题> <ul class=md-nav__list> <li class=md-nav__item> <a href=#51-ilm class=md-nav__link> <span class=md-ellipsis> 5.1 ILM出现错误 </span> </a> </li> <li class=md-nav__item> <a href=#52-docker class=md-nav__link> <span class=md-ellipsis> 5.2 docker部署问题 </span> </a> </li> </ul> </nav> </li> <li class=md-nav__item> <a href=#docker class=md-nav__link> <span class=md-ellipsis> 六、Docker实践 </span> </a> <nav class=md-nav aria-label=六、Docker实践> <ul class=md-nav__list> <li class=md-nav__item> <a href=#61-chatgpt class=md-nav__link> <span class=md-ellipsis> 6.1 ChatGPT </span> </a> <nav class=md-nav aria-label="6.1 ChatGPT"> <ul class=md-nav__list> <li class=md-nav__item> <a href=#611 class=md-nav__link> <span class=md-ellipsis> 6.1.1 环境准备 </span> </a> </li> <li class=md-nav__item> <a href=#612-topic-cosumer class=md-nav__link> <span class=md-ellipsis> 6.1.2 查看 topic &amp; cosumer </span> </a> </li> <li class=md-nav__item> <a href=#613-topic-partition-replication class=md-nav__link> <span class=md-ellipsis> 6.1.3 变更topic partition replication </span> </a> </li> <li class=md-nav__item> <a href=#614-topic class=md-nav__link> <span class=md-ellipsis> 6.1.4 删除topic </span> </a> </li> </ul> </nav> </li> <li class=md-nav__item> <a href=#62 class=md-nav__link> <span class=md-ellipsis> 6.2 实践 </span> </a> <nav class=md-nav aria-label="6.2 实践"> <ul class=md-nav__list> <li class=md-nav__item> <a href=#621 class=md-nav__link> <span class=md-ellipsis> 6.2.1 环境准备 </span> </a> </li> <li class=md-nav__item> <a href=#622-kafka class=md-nav__link> <span class=md-ellipsis> 6.2.2 安装kafka </span> </a> </li> <li class=md-nav__item> <a href=#623-kafka class=md-nav__link> <span class=md-ellipsis> 6.2.3 测试kafka </span> </a> </li> <li class=md-nav__item> <a href=#624-elastic class=md-nav__link> <span class=md-ellipsis> 6.2.4 安装elastic </span> </a> </li> <li class=md-nav__item> <a href=#625-elastic class=md-nav__link> <span class=md-ellipsis> 6.2.5 测试elastic </span> </a> </li> <li class=md-nav__item> <a href=#626 class=md-nav__link> <span class=md-ellipsis> 6.2.6 辅助工具 </span> </a> </li> <li class=md-nav__item> <a href=#627 class=md-nav__link> <span class=md-ellipsis> 6.2.7 优化配置 </span> </a> </li> </ul> </nav> </li> </ul> </nav> </li> </ul> </nav> </div> </div> </div> <div class=md-content data-md-component=content> <article class="md-content__inner md-typeset"> <h1 id=helm-elastic>Helm + Elastic<a class=headerlink href=#helm-elastic title="Permanent link">&para;</a></h1> <h2 id=eck-operater>一、ECK-Operater<a class=headerlink href=#eck-operater title="Permanent link">&para;</a></h2> <p>Elastic Cloud on Kubernetes</p> <p>基于kubernetes部署</p> <p><a href=https://www.elastic.co/cn/downloads/elastic-cloud-kubernetes>Reference</a></p> <div class=highlight><pre><span></span><code><span class=c1># https://download.elastic.co/downloads/eck/1.2.1/all-in-one.yaml</span>
+<span class=c1># https://download.elastic.co/downloads/eck/2.4.0/crds.yaml</span>
+<span class=c1># https://download.elastic.co/downloads/eck/2.4.0/operator.yaml</span>
+</code></pre></div> <p><a href=http://icyfenix.cn/appendix/operation-env-setup/elk-setup.html>参考</a></p> <blockquote> <p>演示3节点的集群</p> </blockquote> <div class=highlight><pre><span></span><code><span class=c1># version: 7.17.3</span>
+
+<span class=c1># Example</span>
+<span class=c1>#   https://books.8ops.top/attachment/elastic/01-persistent-elastic-eck-pv.yaml</span>
+<span class=c1>#   https://books.8ops.top/attachment/elastic/01-persistent-elastic-eck-pvc.yaml</span>
+<span class=c1>#   https://books.8ops.top/attachment/elastic/10-eck_crds.yaml-2.4.0</span>
+<span class=c1>#   https://books.8ops.top/attachment/elastic/10-eck_operator.yaml-2.4.0</span>
+<span class=c1>#   https://books.8ops.top/attachment/elastic/11-eck-elastic.yaml-7.17.3</span>
+<span class=c1>#   https://books.8ops.top/attachment/elastic/12-eck-kibana.yaml-7.17.3</span>
+<span class=c1>#</span>
+
+<span class=c1># 1，安装 ECK 对应的 Operator 资源对象</span>
+kubectl<span class=w> </span>apply<span class=w> </span>-f<span class=w> </span>elastic_eck_crds.yaml-2.4.0
+kubectl<span class=w> </span>apply<span class=w> </span>-f<span class=w> </span>elastic_eck_operator.yaml-2.4.0
+
+<span class=c1># 2，创建磁盘挂载</span>
+kubectl<span class=w> </span>apply<span class=w> </span>-f<span class=w> </span><span class=m>01</span>-persistent-elastic-pv.yaml
+kubectl<span class=w> </span>apply<span class=w> </span>-f<span class=w> </span><span class=m>01</span>-persistent-elastic-pvc.yaml
+
+<span class=c1># 3，创建 elastic 节点</span>
+kubectl<span class=w> </span>apply<span class=w> </span>-f<span class=w> </span><span class=m>10</span>-elastic.yaml-7.17.3
+
+kubectl<span class=w> </span>port-forward<span class=w> </span>service/quickstart-es-http<span class=w> </span><span class=m>5601</span>
+
+<span class=c1>## 获取 ES 密码</span>
+kubectl<span class=w> </span>get<span class=w> </span>secret<span class=w> </span>quickstart-es-elastic-user<span class=w> </span>-o<span class=w> </span>go-template<span class=o>=</span><span class=s1>&#39;{{.data.elastic | base64decode}}&#39;</span><span class=w> </span><span class=p>|</span><span class=w> </span><span class=nb>echo</span>
+
+<span class=c1># 4，创建kibana组件</span>
+kubectl<span class=w> </span>apply<span class=w> </span>-f<span class=w> </span><span class=m>11</span>-kibana.yaml-7.17.3
+
+kubectl<span class=w> </span>port-forward<span class=w> </span>service/quickstart-kb-http<span class=w> </span><span class=m>5601</span>
+
+<span class=c1>## 获取 KB 密码</span>
+kubectl<span class=w> </span>get<span class=w> </span>secret<span class=w> </span>quickstart-es-elastic-user<span class=w> </span>-o<span class=o>=</span><span class=nv>jsonpath</span><span class=o>=</span><span class=s1>&#39;{.data.elastic}&#39;</span><span class=w> </span><span class=p>|</span><span class=w> </span>base64<span class=w> </span>--decode<span class=p>;</span><span class=w> </span><span class=nb>echo</span>
+</code></pre></div> <h2 id=onekey>二、OneKey<a class=headerlink href=#onekey title="Permanent link">&para;</a></h2> <p>基于单机部署</p> <ul> <li> <p>version: 7.0.1</p> </li> <li> <p>method: docker-compose</p> </li> </ul> <div class=highlight><pre><span></span><code>version: &#39;2.2&#39;
+services:
+  es-node-01:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.0.1
+    container_name: es-node-01
+    environment:
+      - node.name=es-node-01
+      - discovery.seed_hosts=es-node-02
+      - cluster.initial_master_nodes=es-node-01,es-node-02
+      - cluster.name=es-cluster
+      - bootstrap.memory_lock=true
+      - &quot;ES_JAVA_OPTS=-Xms4g -Xmx4g&quot;
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - 19200:9200
+    networks:
+      - esnet
+  es-node-02:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.0.1
+    container_name: es-node-02
+    environment:
+      - node.name=es-node-02
+      - discovery.seed_hosts=es-node-01
+      - cluster.initial_master_nodes=es-node-01,es-node-02
+      - cluster.name=es-cluster
+      - bootstrap.memory_lock=true
+      - &quot;ES_JAVA_OPTS=-Xms4g -Xmx4g&quot;
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - 29200:9200
+    networks:
+      - esnet
+  es-node-03:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.0.1
+    container_name: es-node-03
+    environment:
+      - node.name=es-node-03
+      - discovery.seed_hosts=es-node-01
+      - cluster.initial_master_nodes=es-node-01,es-node-02
+      - cluster.name=es-cluster
+      - bootstrap.memory_lock=true
+      - &quot;ES_JAVA_OPTS=-Xms4g -Xmx4g&quot;
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    networks:
+      - esnet
+
+  es-redis:
+    image: redis:5.0.5
+    container_name: es-redis
+    ports:
+      - 16379:6379
+    networks:
+      - esnet
+
+  es-logstash-01:
+    image: docker.elastic.co/logstash/logstash:7.0.1
+    container_name: es-logstash-01
+    links:
+      - es-node-01
+      - es-node-02
+      - es-redis
+    volumes:
+      - /data/elk/logstash/pipeline:/usr/share/logstash/pipeline
+    networks:
+      - esnet
+
+networks:
+  esnet:
+</code></pre></div> <h2 id=helm>三、Helm<a class=headerlink href=#helm title="Permanent link">&para;</a></h2> <p><a href=https://developer.aliyun.com/article/861272>Reference</a></p> <h3 id=31>3.1 安全准备<a class=headerlink href=#31 title="Permanent link">&para;</a></h3> <p>ElasticSearch 7.x 版本默认安装了 X-Pack 插件，并且部分功能免费，这里我们配置安全证书文件。</p> <blockquote> <p>生成证书</p> </blockquote> <div class=highlight><pre><span></span><code><span class=c1># 运行容器生成证书</span>
+docker<span class=w> </span>run<span class=w> </span>--name<span class=w> </span>elastic-charts-certs<span class=w> </span><span class=se>\</span>
+<span class=w>  </span>-i<span class=w> </span>-w<span class=w> </span>/app<span class=w> </span>hub.8ops.top/elastic/elasticsearch:7.17.3<span class=w> </span><span class=se>\</span>
+<span class=w>  </span>/bin/sh<span class=w> </span>-c<span class=w> </span><span class=s2>&quot;elasticsearch-certutil ca --out /app/elastic-stack-ca.p12 --pass &#39;&#39; &amp;&amp; elasticsearch-certutil cert --name security-master --dns security-master --ca /app/elastic-stack-ca.p12 --pass &#39;&#39; --ca-pass &#39;&#39; --out /app/elastic-certificates.p12&quot;</span>
+
+<span class=c1># 从容器中将生成的证书拷贝出来</span>
+docker<span class=w> </span>cp<span class=w> </span>elastic-charts-certs:/app/elastic-certificates.p12<span class=w> </span>./<span class=w> </span>
+
+<span class=c1># 删除容器</span>
+docker<span class=w> </span>rm<span class=w> </span>-f<span class=w> </span>elastic-charts-certs
+
+<span class=c1># 将 pcks12 中的信息分离出来，写入文件</span>
+openssl<span class=w> </span>pkcs12<span class=w> </span>-nodes<span class=w> </span>-passin<span class=w> </span>pass:<span class=s1>&#39;&#39;</span><span class=w> </span><span class=se>\</span>
+<span class=w>  </span>-in<span class=w> </span>elastic-certificates.p12<span class=w> </span><span class=se>\</span>
+<span class=w>  </span>-out<span class=w> </span>elastic-certificate.pem
+</code></pre></div> <blockquote> <p>添加证书到集群</p> </blockquote> <div class=highlight><pre><span></span><code><span class=c1># 添加证书</span>
+kubectl<span class=w> </span>-n<span class=w> </span>elastic-system<span class=w> </span>create<span class=w> </span>secret<span class=w> </span>generic<span class=w> </span>elastic-certificates<span class=w> </span><span class=se>\</span>
+<span class=w>  </span>--from-file<span class=o>=</span>lib/elastic-certificates.p12
+kubectl<span class=w> </span>-n<span class=w> </span>elastic-system<span class=w> </span>create<span class=w> </span>secret<span class=w> </span>generic<span class=w> </span>elastic-certificate-pem<span class=w> </span><span class=se>\</span>
+<span class=w>  </span>--from-file<span class=o>=</span>lib/elastic-certificate.pem
+
+<span class=c1># 设置集群用户名密码，用户名不建议修改</span>
+kubectl<span class=w> </span>-n<span class=w> </span>elastic-system<span class=w> </span>create<span class=w> </span>secret<span class=w> </span>generic<span class=w> </span>elastic-credentials<span class=w> </span><span class=se>\</span>
+<span class=w>  </span>--from-literal<span class=o>=</span><span class=nv>username</span><span class=o>=</span>elastic<span class=w> </span>--from-literal<span class=o>=</span><span class=nv>password</span><span class=o>=</span>xx
+
+kubectl<span class=w> </span>-n<span class=w> </span>elastic-system<span class=w> </span>create<span class=w> </span>secret<span class=w> </span>generic<span class=w> </span>kibana<span class=w> </span><span class=se>\</span>
+<span class=w>  </span>--from-literal<span class=o>=</span><span class=nv>encryptionkey</span><span class=o>=</span>zGFTX0cy3ubYVmzuunACDZuRj0PALqOM
+</code></pre></div> <p>尝试启动xpack资料</p> <ul> <li><a href=https://github.com/elastic/helm-charts/tree/7.17/kibana/examples/security>https://github.com/elastic/helm-charts/tree/7.17/kibana/examples/security</a></li> </ul> <h3 id=32>3.2 安装<a class=headerlink href=#32 title="Permanent link">&para;</a></h3> <h4 id=321-elasticsearch>3.2.1 elasticsearch<a class=headerlink href=#321-elasticsearch title="Permanent link">&para;</a></h4> <div class=highlight><pre><span></span><code>helm<span class=w> </span>repo<span class=w> </span>add<span class=w> </span>elastic<span class=w> </span>https://helm.elastic.co
+helm<span class=w> </span>repo<span class=w> </span>update<span class=w> </span>elastic
+
+helm<span class=w> </span>search<span class=w> </span>repo<span class=w> </span>elastic
+helm<span class=w> </span>show<span class=w> </span>values<span class=w> </span>elastic/elasticsearch<span class=w> </span>--version<span class=w> </span><span class=m>7</span>.17.3<span class=w> </span>&gt;<span class=w> </span>elasticsearch.yaml-7.17.3
+
+<span class=c1># Example</span>
+<span class=c1>#   https://books.8ops.top/attachment/elastic/01-persistent-elastic-cluster.yaml</span>
+<span class=c1>#   https://books.8ops.top/attachment/elastic/helm/elastic-cluster-master.yaml-7.17.3</span>
+<span class=c1>#   https://books.8ops.top/attachment/elastic/helm/elastic-cluster-data.yaml-7.17.3</span>
+<span class=c1>#   https://books.8ops.top/attachment/elastic/helm/elastic-cluster-client.yaml-7.17.3</span>
+<span class=c1>#</span>
+
+<span class=c1># master 节点</span>
+helm<span class=w> </span>upgrade<span class=w> </span>--install<span class=w> </span>elastic-cluster-master<span class=w> </span>elastic/elasticsearch<span class=w> </span><span class=se>\</span>
+<span class=w>    </span>-f<span class=w> </span>elastic-cluster-master.yaml-7.17.3<span class=w> </span><span class=se>\</span>
+<span class=w>    </span>-n<span class=w> </span>elastic-system<span class=se>\</span>
+<span class=w>    </span>--version<span class=w> </span><span class=m>7</span>.17.3
+
+<span class=c1># data 节点</span>
+helm<span class=w> </span>upgrade<span class=w> </span>--install<span class=w> </span>elastic-cluster-data<span class=w> </span>elastic/elasticsearch<span class=w> </span><span class=se>\</span>
+<span class=w>    </span>-f<span class=w> </span>elastic-cluster-data.yaml-7.17.3<span class=w> </span><span class=se>\</span>
+<span class=w>    </span>-n<span class=w> </span>elastic-system<span class=se>\</span>
+<span class=w>    </span>--version<span class=w> </span><span class=m>7</span>.17.3
+
+<span class=c1># client 节点</span>
+helm<span class=w> </span>upgrade<span class=w> </span>--install<span class=w> </span>elastic-cluster-client<span class=w> </span>elastic/elasticsearch<span class=w> </span><span class=se>\</span>
+<span class=w>    </span>-f<span class=w> </span>elastic-cluster-client.yaml-7.17.3<span class=w> </span><span class=se>\</span>
+<span class=w>    </span>-n<span class=w> </span>elastic-system<span class=se>\</span>
+<span class=w>    </span>--version<span class=w> </span><span class=m>7</span>.17.3
+
+<span class=c1>#### </span>
+<span class=c1># 尝试禁用 xpack.security.enabled </span>
+<span class=c1># </span>
+kubectl<span class=w> </span>-n<span class=w> </span>elastic-system<span class=w> </span>delete<span class=w> </span>pvc<span class=w> </span><span class=se>\</span>
+<span class=w>    </span>elastic-cluster-data-elastic-cluster-data-0<span class=w> </span><span class=se>\</span>
+<span class=w>    </span>elastic-cluster-data-elastic-cluster-data-1<span class=w> </span><span class=se>\</span>
+<span class=w>    </span>elastic-cluster-data-elastic-cluster-data-2<span class=w> </span><span class=se>\</span>
+<span class=w>    </span>elastic-cluster-master-elastic-cluster-master-0<span class=w> </span><span class=se>\</span>
+<span class=w>    </span>elastic-cluster-master-elastic-cluster-master-1<span class=w> </span><span class=se>\</span>
+<span class=w>    </span>elastic-cluster-master-elastic-cluster-master-2
+</code></pre></div> <p><img alt="elastic 首页" src=../../images/elastic/elastic.png></p> <p><img alt="elastic _cat" src=../../images/elastic/elastic-1.png></p> <p><img alt="elastic 索引" src=../../images/elastic/elastic-2.png></p> <h4 id=322-kibana>3.2.2 kibana<a class=headerlink href=#322-kibana title="Permanent link">&para;</a></h4> <div class=highlight><pre><span></span><code>helm<span class=w> </span>search<span class=w> </span>repo<span class=w> </span>kibana
+helm<span class=w> </span>show<span class=w> </span>values<span class=w> </span>elastic/kibana<span class=w> </span>--version<span class=w> </span><span class=m>7</span>.17.3<span class=w> </span>&gt;<span class=w> </span>kibana.yaml-7.17.3
+
+<span class=c1># Example</span>
+<span class=c1>#   https://books.8ops.top/attachment/elastic/helm/kibana.yaml-7.17.3</span>
+<span class=c1># </span>
+
+helm<span class=w> </span>upgrade<span class=w> </span>--install<span class=w> </span>kibana<span class=w> </span>elastic/kibana<span class=w> </span><span class=se>\</span>
+<span class=w>    </span>-f<span class=w> </span>kibana.yaml-7.17.3<span class=w> </span><span class=se>\</span>
+<span class=w>    </span>-n<span class=w> </span>elastic-system<span class=w> </span><span class=se>\</span>
+<span class=w>    </span>--version<span class=w> </span><span class=m>7</span>.17.3
+</code></pre></div> <p><img alt="kibana 首页" src=../../images/elastic/kibana.png></p> <p><img alt="kibana discover" src=../../images/elastic/kibana-1.png></p> <h4 id=323-kafka>3.2.3 kafka<a class=headerlink href=#323-kafka title="Permanent link">&para;</a></h4> <p><a href=https://kafka.apache.org/ >Reference</a></p> <div class=highlight><pre><span></span><code><span class=c1># Example</span>
+<span class=c1>#   https://github.com/bitnami/containers/tree/main/bitnami/kafka</span>
+<span class=c1>#   </span>
+<span class=c1>#   https://books.8ops.top/attachment/elastic/helm/kafka.yaml-19.0.1</span>
+<span class=c1>#   </span>
+
+helm<span class=w> </span>repo<span class=w> </span>update<span class=w> </span>bitnami
+helm<span class=w> </span>search<span class=w> </span>repo<span class=w> </span>kafka
+helm<span class=w> </span>show<span class=w> </span>values<span class=w> </span>bitnami/kafka<span class=w> </span>--version<span class=w> </span><span class=m>19</span>.0.1<span class=w> </span>&gt;<span class=w> </span>kafka.yaml-19.0.1.default
+
+helm<span class=w> </span>upgrade<span class=w> </span>--install<span class=w> </span>kafka<span class=w> </span>bitnami/kafka<span class=w> </span><span class=se>\</span>
+<span class=w>    </span>-f<span class=w> </span>kafka.yaml-19.0.1<span class=w> </span><span class=se>\</span>
+<span class=w>    </span>-n<span class=w> </span>elastic-system<span class=w> </span><span class=se>\</span>
+<span class=w>    </span>--version<span class=w> </span><span class=m>19</span>.0.1
+
+<span class=c1>#</span>
+<span class=c1># 若重置需要删除原数据，或者不挂载磁盘</span>
+<span class=c1># 否则会因为cluster_id冲突</span>
+<span class=c1># --------------------------------------------- #</span>
+<span class=c1># usage</span>
+kubectl<span class=w> </span>run<span class=w> </span>kafka-client<span class=w> </span>--restart<span class=o>=</span><span class=s1>&#39;Never&#39;</span><span class=w> </span><span class=se>\</span>
+<span class=w>  </span>--image<span class=w> </span>hub.8ops.top/bitnami/kafka:3.3.1-debian-11-r1<span class=w> </span><span class=se>\</span>
+<span class=w>  </span>--namespace<span class=w> </span>elastic-system<span class=w> </span>--command<span class=w> </span>--<span class=w> </span>sleep<span class=w> </span>infinity
+
+kubectl<span class=w> </span><span class=nb>exec</span><span class=w> </span>--tty<span class=w> </span>-i<span class=w> </span>kafka-client<span class=w> </span>--namespace<span class=w> </span>elastic-system<span class=w> </span>--<span class=w> </span>bash
+
+<span class=c1># 新版本不需要连接 ZK</span>
+<span class=c1>## PRODUCER:</span>
+kafka-console-producer.sh<span class=w> </span><span class=se>\</span>
+<span class=w>    </span>--broker-list<span class=w> </span>kafka-0.kafka-headless.elastic-system.svc.cluster.local:9092<span class=w> </span><span class=se>\</span>
+<span class=w>    </span>--topic<span class=w> </span><span class=nb>test</span>
+
+<span class=c1>## CONSUMER:</span>
+kafka-console-consumer.sh<span class=w> </span><span class=se>\</span>
+<span class=w>    </span>--bootstrap-server<span class=w> </span>kafka.elastic-system.svc.cluster.local:9092<span class=w> </span><span class=se>\</span>
+<span class=w>    </span>--topic<span class=w> </span>www-online-ui<span class=w> </span><span class=se>\</span>
+<span class=w>    </span>--from-beginning
+
+<span class=c1># 查看消费情况</span>
+kafka-consumer-groups.sh<span class=w> </span><span class=se>\</span>
+<span class=w>    </span>--bootstrap-server<span class=w> </span>kafka-headless.elastic-system.svc.cluster.local:9092<span class=w> </span><span class=se>\</span>
+<span class=w>    </span>--describe<span class=w> </span>
+
+<span class=c1># 查看topic</span>
+kafka-topics.sh<span class=w> </span><span class=se>\</span>
+<span class=w>    </span>--bootstrap-server<span class=w> </span>kafka-headless.elastic-system.svc.cluster.local:9092<span class=w> </span><span class=se>\</span>
+<span class=w>    </span>--list
+
+<span class=c1># 查看同步单个topic</span>
+kafka-topics.sh<span class=w> </span><span class=se>\</span>
+<span class=w>    </span>--bootstrap-server<span class=w> </span>kafka-headless.elastic-system.svc.cluster.local:9092<span class=w> </span><span class=se>\</span>
+<span class=w>    </span>--topic<span class=w> </span><span class=nb>test</span><span class=w> </span>--describe
+
+<span class=c1># 删除topic - TODO</span>
+kafka-run-class.sh<span class=w> </span>kafka.admin.TopicCommand<span class=w> </span><span class=se>\</span>
+<span class=w>    </span>--bootstrap-server<span class=w> </span>kafka-headless.elastic-system.svc.cluster.local:9092<span class=w> </span><span class=se>\</span>
+<span class=w>    </span>--delete<span class=w> </span>--topic<span class=w> </span><span class=nb>test</span><span class=w> </span>
+
+<span class=c1># 修改副本数/ 存储过期时间 - TODO</span>
+kafka-topics.sh<span class=w> </span><span class=se>\</span>
+<span class=w>    </span>--bootstrap-server<span class=w> </span>kafka-headless.elastic-system.svc.cluster.local:9092<span class=w> </span><span class=se>\</span>
+<span class=w>    </span>--topic<span class=w> </span>demo-json<span class=w> </span>--partitions<span class=w> </span><span class=m>6</span>
+</code></pre></div> <p><img alt=kafka src=../../images/elastic/kafka.png></p> <h4 id=324-logstash>3.2.4 logstash<a class=headerlink href=#324-logstash title="Permanent link">&para;</a></h4> <div class=highlight><pre><span></span><code><span class=c1># Example</span>
+<span class=c1>#   https://books.8ops.top/attachment/elastic/helm/logstash.yaml-7.17.3</span>
+<span class=c1>#   </span>
+
+helm<span class=w> </span>search<span class=w> </span>repo<span class=w> </span>logstash
+helm<span class=w> </span>show<span class=w> </span>values<span class=w> </span>elastic/logstash<span class=w> </span>--version<span class=w> </span><span class=m>7</span>.17.3<span class=w> </span>&gt;<span class=w> </span>logstash.yaml-7.17.3-default
+
+helm<span class=w> </span>upgrade<span class=w> </span>--install<span class=w> </span>logstash<span class=w> </span>elastic/logstash<span class=w> </span><span class=se>\</span>
+<span class=w>    </span>-f<span class=w> </span>logstash.yaml-7.17.3<span class=w> </span><span class=se>\</span>
+<span class=w>    </span>-n<span class=w> </span>elastic-system<span class=w> </span><span class=se>\</span>
+<span class=w>    </span>--version<span class=w> </span><span class=m>7</span>.17.3
+</code></pre></div> <h4 id=325-filebeat>3.2.5 filebeat<a class=headerlink href=#325-filebeat title="Permanent link">&para;</a></h4> <p><a href=https://www.elastic.co/guide/en/beats/filebeat/current/configuring-howto-filebeat.html>Reference</a></p> <div class=highlight><pre><span></span><code><span class=c1># Example: </span>
+<span class=c1>#   - demo.json/demo.out --&gt; filebeat --&gt; elasticsearch --&gt; kibana</span>
+<span class=c1>#   https://books.8ops.top/attachment/elastic/50-filebeat-demo.yaml</span>
+<span class=c1># </span>
+<span class=c1>#   - demo.json/demo.out --&gt; filebeat --&gt; kafka --&gt; elasticsearch --&gt; logstash --&gt; kibana</span>
+<span class=c1>#   https://books.8ops.top/attachment/elastic/50-filebeat-demo-kafka.yaml</span>
+<span class=c1># </span>
+
+<span class=c1># ---</span>
+helm<span class=w> </span>search<span class=w> </span>repo<span class=w> </span>filebeat
+helm<span class=w> </span>show<span class=w> </span>values<span class=w> </span>elastic/filebeat<span class=w> </span>--version<span class=w> </span><span class=m>7</span>.17.3<span class=w> </span>&gt;<span class=w> </span>filebeat.yaml-7.17.3.default
+</code></pre></div> <h2 id=_1>四、常用实践<a class=headerlink href=#_1 title="Permanent link">&para;</a></h2> <h3 id=41>4.1 容器环境收集日志方案<a class=headerlink href=#41 title="Permanent link">&para;</a></h3> <table> <thead> <tr> <th><strong>方案</strong></th> <th><strong>优点</strong></th> <th><strong>缺点</strong></th> </tr> </thead> <tbody> <tr> <td>每个app的镜像中都集成日志收集组件<br>或由app镜像直接将信息推送到采集端</td> <td>部署方便，kubernetes的yaml文件无须特别配置，可以为每个app自定义日志收集配置</td> <td>强耦合，不方便应用和日志收集组件升级和维护且会导致镜像过大</td> </tr> <tr> <td>单独创建一个日志收集组件跟app的容器一起运行在同一个pod中</td> <td>低耦合，扩展性强，方便维护和升级</td> <td>需要对kubernetes的yaml文件进行单独配置，略显繁琐</td> </tr> <tr> <td>将所有的Pod的日志都挂载到宿主机上，每台主机上单独起一个日志收集Pod</td> <td>完全解耦，性能最高，管理起来最方便</td> <td>需要统一日志收集规则，目录和输出方式</td> </tr> </tbody> </table> <p><img alt=收集区别 src=../../images/elastic/collect.png></p> <h3 id=42-ilm>4.2 ILM<a class=headerlink href=#42-ilm title="Permanent link">&para;</a></h3> <p>进入kibana管理界面，进入<code>Management --&gt; Dev Tools</code></p> <div class=highlight><pre><span></span><code><span class=c1># 第一步，创建生命周期管理策略</span>
+PUT<span class=w> </span>/_ilm/policy/clean_index_7days
+<span class=o>{</span>
+<span class=w>  </span><span class=s2>&quot;policy&quot;</span>:<span class=w> </span><span class=o>{</span>
+<span class=w>    </span><span class=s2>&quot;phases&quot;</span>:<span class=w> </span><span class=o>{</span>
+<span class=w>      </span><span class=s2>&quot;delete&quot;</span>:<span class=w> </span><span class=o>{</span>
+<span class=w>        </span><span class=s2>&quot;min_age&quot;</span>:<span class=w> </span><span class=s2>&quot;7d&quot;</span>,
+<span class=w>        </span><span class=s2>&quot;actions&quot;</span>:<span class=w> </span><span class=o>{</span>
+<span class=w>          </span><span class=s2>&quot;delete&quot;</span>:<span class=w> </span><span class=o>{}</span>
+<span class=w>        </span><span class=o>}</span>
+<span class=w>      </span><span class=o>}</span>
+<span class=w>    </span><span class=o>}</span>
+<span class=w>  </span><span class=o>}</span>
+<span class=o>}</span>
+
+GET<span class=w> </span>/_ilm/policy/clean_index_7days
+
+<span class=c1># 第二步，创建模板</span>
+PUT<span class=w> </span>/_template/demo
+<span class=o>{</span>
+<span class=w>  </span><span class=s2>&quot;index_patterns&quot;</span>:<span class=w> </span><span class=o>[</span><span class=s2>&quot;demo-*&quot;</span><span class=o>]</span>,
+<span class=w>  </span><span class=s2>&quot;order&quot;</span>:<span class=w> </span><span class=m>1</span>,
+<span class=w>  </span><span class=s2>&quot;settings&quot;</span>:<span class=w> </span><span class=o>{</span>
+<span class=w>    </span><span class=s2>&quot;number_of_shards&quot;</span>:<span class=w> </span><span class=m>1</span>,
+<span class=w>    </span><span class=s2>&quot;number_of_replicas&quot;</span>:<span class=w> </span><span class=m>1</span>,
+<span class=w>    </span><span class=s2>&quot;index.lifecycle.name&quot;</span>:<span class=w> </span><span class=s2>&quot;clean_index_7days&quot;</span>
+<span class=w>  </span><span class=o>}</span>
+<span class=o>}</span>
+
+GET<span class=w> </span>/_template/demo
+
+<span class=c1># 第三步，绑定索引和策略（已经产生的索引不会自动绑定）</span>
+PUT<span class=w> </span>/demo-json-2023.01.01/_settings
+<span class=o>{</span>
+<span class=w>    </span><span class=s2>&quot;index&quot;</span><span class=w> </span>:<span class=w> </span><span class=o>{</span>
+<span class=w>        </span><span class=s2>&quot;lifecycle&quot;</span><span class=w> </span>:<span class=w> </span><span class=o>{</span>
+<span class=w>            </span><span class=s2>&quot;name&quot;</span><span class=w> </span>:<span class=w> </span><span class=s2>&quot;clean_index_7days&quot;</span>
+<span class=w>        </span><span class=o>}</span>
+<span class=w>    </span><span class=o>}</span>
+<span class=o>}</span>
+
+GET<span class=w> </span>/demo-json-2023.01.01/_ilm/explain
+
+<span class=c1># 第四步，调整检测策略</span>
+PUT<span class=w> </span>/_cluster/settings
+<span class=o>{</span>
+<span class=w>  </span><span class=s2>&quot;transient&quot;</span>:<span class=w> </span><span class=o>{</span>
+<span class=w>    </span><span class=s2>&quot;indices.lifecycle.poll_interval&quot;</span>:<span class=w> </span><span class=s2>&quot;10s&quot;</span>
+<span class=w>  </span><span class=o>}</span>
+<span class=o>}</span>
+
+GET<span class=w> </span>/_cluster/settings
+</code></pre></div> <p><u>区分 HOT / WARM /DELETE 存储</u></p> <div class=highlight><pre><span></span><code>PUT<span class=w> </span>_ilm/policy/clean_index_7days
+<span class=o>{</span>
+<span class=w>  </span><span class=s2>&quot;policy&quot;</span>:<span class=w> </span><span class=o>{</span>
+<span class=w>    </span><span class=s2>&quot;phases&quot;</span>:<span class=w> </span><span class=o>{</span>
+<span class=w>      </span><span class=s2>&quot;hot&quot;</span>:<span class=w> </span><span class=o>{</span>
+<span class=w>        </span><span class=s2>&quot;min_age&quot;</span>:<span class=w> </span><span class=s2>&quot;0ms&quot;</span>,
+<span class=w>        </span><span class=s2>&quot;actions&quot;</span>:<span class=w> </span><span class=o>{}</span>
+<span class=w>      </span><span class=o>}</span>,
+<span class=w>      </span><span class=s2>&quot;warm&quot;</span>:<span class=w> </span><span class=o>{</span>
+<span class=w>        </span><span class=s2>&quot;min_age&quot;</span>:<span class=w> </span><span class=s2>&quot;2d&quot;</span>,
+<span class=w>        </span><span class=s2>&quot;actions&quot;</span>:<span class=w> </span><span class=o>{</span>
+<span class=w>          </span><span class=s2>&quot;allocate&quot;</span>:<span class=w> </span><span class=o>{</span>
+<span class=w>            </span><span class=s2>&quot;number_of_replicas&quot;</span>:<span class=w> </span><span class=m>0</span>
+<span class=w>          </span><span class=o>}</span>
+<span class=w>        </span><span class=o>}</span>
+<span class=w>      </span><span class=o>}</span>,
+<span class=w>      </span><span class=s2>&quot;delete&quot;</span>:<span class=w> </span><span class=o>{</span>
+<span class=w>        </span><span class=s2>&quot;min_age&quot;</span>:<span class=w> </span><span class=s2>&quot;8d&quot;</span>,
+<span class=w>        </span><span class=s2>&quot;actions&quot;</span>:<span class=w> </span><span class=o>{</span>
+<span class=w>          </span><span class=s2>&quot;delete&quot;</span>:<span class=w> </span><span class=o>{</span>
+<span class=w>            </span><span class=s2>&quot;delete_searchable_snapshot&quot;</span>:<span class=w> </span><span class=nb>true</span>
+<span class=w>          </span><span class=o>}</span>
+<span class=w>        </span><span class=o>}</span>
+<span class=w>      </span><span class=o>}</span>
+<span class=w>    </span><span class=o>}</span>
+<span class=w>  </span><span class=o>}</span>
+<span class=o>}</span>
+</code></pre></div> <h2 id=_2>五、常见问题<a class=headerlink href=#_2 title="Permanent link">&para;</a></h2> <h3 id=51-ilm>5.1 ILM出现错误<a class=headerlink href=#51-ilm title="Permanent link">&para;</a></h3> <p><u>现象</u></p> <div class=highlight><pre><span></span><code>illegal_argument_exception:<span class=w> </span>index.lifecycle.rollover_alias<span class=w> </span><span class=o>[</span>demo<span class=o>]</span><span class=w> </span>does<span class=w> </span>not<span class=w> </span>point<span class=w> </span>to<span class=w> </span>index<span class=w> </span><span class=o>[</span>demo-2023.01.05<span class=o>]</span>
+
+illegal_argument_exception:<span class=w> </span>rollover<span class=w> </span>target<span class=w> </span><span class=o>[</span>logs<span class=o>]</span><span class=w> </span>does<span class=w> </span>not<span class=w> </span>point<span class=w> </span>to<span class=w> </span>a<span class=w> </span>write<span class=w> </span>index
+
+illegal_argument_exception:<span class=w> </span>setting<span class=w> </span><span class=o>[</span>index.lifecycle.rollover_alias<span class=o>]</span><span class=w> </span><span class=k>for</span><span class=w> </span>index<span class=w> </span><span class=o>[</span>demo-2023.01.05<span class=o>]</span><span class=w> </span>is<span class=w> </span>empty<span class=w> </span>or<span class=w> </span>not<span class=w> </span>defined
+</code></pre></div> <p><u>原因</u></p> <ul> <li>启用滚动更新需要为每个索引设置别名，按天分割的索引不适合动态设置别名。</li> </ul> <p><u>解决</u></p> <ul> <li>先移除旧策略，再绑定新策略（直接替换不生效）。</li> </ul> <h3 id=52-docker>5.2 docker部署问题<a class=headerlink href=#52-docker title="Permanent link">&para;</a></h3> <div class=highlight><pre><span></span><code><span class=m>1</span>，挂载数据的时候出现访问受限以至于无法启动时，可将挂载数据的目录所有者和用户组改为<span class=w> </span>elastic<span class=w> </span>前提条件得先创建用户和用户组,省事一点就直接<span class=w> </span>chown<span class=w> </span>-R<span class=w> </span><span class=m>1000</span>:1000<span class=w> </span>/home/elasticsearch/data
+<span class=m>2</span>，在运行elasticsearch时出现<span class=w> </span>max<span class=w> </span>virtual<span class=w> </span>memory<span class=w> </span>areas<span class=w> </span>vm.max_map_count<span class=w> </span><span class=o>[</span><span class=m>65530</span><span class=o>]</span>,<span class=w> </span>请在宿主机中执行:<span class=w> </span>sudo<span class=w> </span>sysctl<span class=w> </span>-w<span class=w> </span>vm.max_map_count<span class=o>=</span><span class=m>262144</span><span class=w> </span>或者运行sudo<span class=w> </span>vi<span class=w> </span>/etc/sysctl.conf在文件中追加vm.max_map_count<span class=o>=</span><span class=m>262144</span><span class=w> </span>保存后执行sudo<span class=w> </span>sysctl<span class=w> </span>-p
+<span class=m>3</span>，cluster.initial_master_nodes<span class=w> </span>为集群创建初期具有master选举权的节点。
+<span class=m>4</span>，discovery.seed_hosts<span class=w> </span>发送信息给具有master选举权的节点，如果当前节点具有master节点的选举权，则需要向其他同样具有master节点选举权的发送消息。如果无master<span class=w> </span>节点选举权，则须把所有具有master选举权的节点host<span class=w> </span>加入。
+<span class=m>5</span>，集群master节点须大于等于3个，因为如果当前主节点挂了之后es须从具有master<span class=w> </span>选举权的节点中重新选举出新的主节点，如果具有master<span class=w> </span>选举权的节点存活少于一半时，节点是无法完成选举的，所以必须有大于一半以上且具有master选举权的节点存在时es才能重新选举出新的主节点。不然节点无法工作。
+<span class=m>6</span>，elasticsearch.yml里的配置都可在docker-compose.yml中environment里覆盖。
+</code></pre></div> <h2 id=docker>六、Docker实践<a class=headerlink href=#docker title="Permanent link">&para;</a></h2> <h3 id=61-chatgpt>6.1 ChatGPT<a class=headerlink href=#61-chatgpt title="Permanent link">&para;</a></h3> <p>在三台 Docker 机器上搭建一个 Kafka 集群需要配置 ZooKeeper 集群和 Kafka 集群。ZooKeeper 用于管理 Kafka 集群的元数据。以下是详细步骤。</p> <h4 id=611>6.1.1 环境准备<a class=headerlink href=#611 title="Permanent link">&para;</a></h4> <p>假设你有三台 Docker 机器，分别是 <code>machine1</code>、<code>machine2</code> 和 <code>machine3</code>，并且你已经安装了 Docker 和 Docker Compose。</p> <ol> <li>ZooKeeper 集群配置</li> </ol> <p>首先，为每台机器创建 ZooKeeper 的 Docker Compose 文件 <code>docker-compose-zookeeper.yml</code>。</p> <p>machine1 (ZooKeeper1)</p> <div class=highlight><pre><span></span><code><span class=nt>version</span><span class=p>:</span><span class=w> </span><span class=s>&#39;3&#39;</span>
+<span class=nt>services</span><span class=p>:</span>
+<span class=w>  </span><span class=nt>zookeeper</span><span class=p>:</span>
+<span class=w>    </span><span class=nt>image</span><span class=p>:</span><span class=w> </span><span class="l l-Scalar l-Scalar-Plain">zookeeper:3.7.1</span>
+<span class=w>    </span><span class=nt>container_name</span><span class=p>:</span><span class=w> </span><span class="l l-Scalar l-Scalar-Plain">zookeeper1</span>
+<span class=w>    </span><span class=nt>ports</span><span class=p>:</span>
+<span class=w>      </span><span class="p p-Indicator">-</span><span class=w> </span><span class=s>&quot;2181:2181&quot;</span>
+<span class=w>    </span><span class=nt>environment</span><span class=p>:</span>
+<span class=w>      </span><span class=nt>ZOO_MY_ID</span><span class=p>:</span><span class=w> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class=w>      </span><span class=nt>ZOO_SERVERS</span><span class=p>:</span><span class=w> </span><span class="l l-Scalar l-Scalar-Plain">server.1=machine1:2888:3888;2181 server.2=machine2:2888:3888;2181 server.3=machine3:2888:3888;2181</span>
+</code></pre></div> <p>machine2 (ZooKeeper2)</p> <div class=highlight><pre><span></span><code><span class=nt>version</span><span class=p>:</span><span class=w> </span><span class=s>&#39;3&#39;</span>
+<span class=nt>services</span><span class=p>:</span>
+<span class=w>  </span><span class=nt>zookeeper</span><span class=p>:</span>
+<span class=w>    </span><span class=nt>image</span><span class=p>:</span><span class=w> </span><span class="l l-Scalar l-Scalar-Plain">zookeeper:3.7.1</span>
+<span class=w>    </span><span class=nt>container_name</span><span class=p>:</span><span class=w> </span><span class="l l-Scalar l-Scalar-Plain">zookeeper2</span>
+<span class=w>    </span><span class=nt>ports</span><span class=p>:</span>
+<span class=w>      </span><span class="p p-Indicator">-</span><span class=w> </span><span class=s>&quot;2181:2181&quot;</span>
+<span class=w>    </span><span class=nt>environment</span><span class=p>:</span>
+<span class=w>      </span><span class=nt>ZOO_MY_ID</span><span class=p>:</span><span class=w> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+<span class=w>      </span><span class=nt>ZOO_SERVERS</span><span class=p>:</span><span class=w> </span><span class="l l-Scalar l-Scalar-Plain">server.1=machine1:2888:3888;2181 server.2=machine2:2888:3888;2181 server.3=machine3:2888:3888;2181</span>
+</code></pre></div> <p>machine3 (ZooKeeper3)</p> <div class=highlight><pre><span></span><code><span class=nt>version</span><span class=p>:</span><span class=w> </span><span class=s>&#39;3&#39;</span>
+<span class=nt>services</span><span class=p>:</span>
+<span class=w>  </span><span class=nt>zookeeper</span><span class=p>:</span>
+<span class=w>    </span><span class=nt>image</span><span class=p>:</span><span class=w> </span><span class="l l-Scalar l-Scalar-Plain">zookeeper:3.7.1</span>
+<span class=w>    </span><span class=nt>container_name</span><span class=p>:</span><span class=w> </span><span class="l l-Scalar l-Scalar-Plain">zookeeper3</span>
+<span class=w>    </span><span class=nt>ports</span><span class=p>:</span>
+<span class=w>      </span><span class="p p-Indicator">-</span><span class=w> </span><span class=s>&quot;2181:2181&quot;</span>
+<span class=w>    </span><span class=nt>environment</span><span class=p>:</span>
+<span class=w>      </span><span class=nt>ZOO_MY_ID</span><span class=p>:</span><span class=w> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+<span class=w>      </span><span class=nt>ZOO_SERVERS</span><span class=p>:</span><span class=w> </span><span class="l l-Scalar l-Scalar-Plain">server.1=machine1:2888:3888;2181 server.2=machine2:2888:3888;2181 server.3=machine3:2888:3888;2181</span>
+</code></pre></div> <p>启动每台机器上的 ZooKeeper 容器：</p> <div class=highlight><pre><span></span><code><span class="l l-Scalar l-Scalar-Plain">docker-compose -f docker-compose-zookeeper.yml up -d</span>
+</code></pre></div> <ol> <li>Kafka 集群配置</li> </ol> <p>为每台机器创建 Kafka 的 Docker Compose 文件 <code>docker-compose-kafka.yml</code>。</p> <p>machine1 (Kafka1)</p> <div class=highlight><pre><span></span><code><span class=nt>version</span><span class=p>:</span><span class=w> </span><span class=s>&#39;3&#39;</span>
+<span class=nt>services</span><span class=p>:</span>
+<span class=w>  </span><span class=nt>kafka</span><span class=p>:</span>
+<span class=w>    </span><span class=nt>image</span><span class=p>:</span><span class=w> </span><span class="l l-Scalar l-Scalar-Plain">wurstmeister/kafka:latest</span>
+<span class=w>    </span><span class=nt>container_name</span><span class=p>:</span><span class=w> </span><span class="l l-Scalar l-Scalar-Plain">kafka1</span>
+<span class=w>    </span><span class=nt>ports</span><span class=p>:</span>
+<span class=w>      </span><span class="p p-Indicator">-</span><span class=w> </span><span class=s>&quot;9092:9092&quot;</span>
+<span class=w>    </span><span class=nt>environment</span><span class=p>:</span>
+<span class=w>      </span><span class=nt>KAFKA_BROKER_ID</span><span class=p>:</span><span class=w> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class=w>      </span><span class=nt>KAFKA_ZOOKEEPER_CONNECT</span><span class=p>:</span><span class=w> </span><span class="l l-Scalar l-Scalar-Plain">machine1:2181,machine2:2181,machine3:2181</span>
+<span class=w>      </span><span class=nt>KAFKA_ADVERTISED_LISTENERS</span><span class=p>:</span><span class=w> </span><span class="l l-Scalar l-Scalar-Plain">PLAINTEXT://machine1:9092</span>
+<span class=w>      </span><span class=nt>KAFKA_LISTENERS</span><span class=p>:</span><span class=w> </span><span class="l l-Scalar l-Scalar-Plain">PLAINTEXT://0.0.0.0:9092</span>
+<span class=w>      </span><span class=nt>KAFKA_LOG_DIRS</span><span class=p>:</span><span class=w> </span><span class="l l-Scalar l-Scalar-Plain">/kafka/kafka-logs</span>
+<span class=w>    </span><span class=nt>volumes</span><span class=p>:</span>
+<span class=w>      </span><span class="p p-Indicator">-</span><span class=w> </span><span class="l l-Scalar l-Scalar-Plain">/var/run/docker.sock:/var/run/docker.sock</span>
+</code></pre></div> <p>machine2 (Kafka2)</p> <div class=highlight><pre><span></span><code><span class=nt>version</span><span class=p>:</span><span class=w> </span><span class=s>&#39;3&#39;</span>
+<span class=nt>services</span><span class=p>:</span>
+<span class=w>  </span><span class=nt>kafka</span><span class=p>:</span>
+<span class=w>    </span><span class=nt>image</span><span class=p>:</span><span class=w> </span><span class="l l-Scalar l-Scalar-Plain">wurstmeister/kafka:latest</span>
+<span class=w>    </span><span class=nt>container_name</span><span class=p>:</span><span class=w> </span><span class="l l-Scalar l-Scalar-Plain">kafka2</span>
+<span class=w>    </span><span class=nt>ports</span><span class=p>:</span>
+<span class=w>      </span><span class="p p-Indicator">-</span><span class=w> </span><span class=s>&quot;9092:9092&quot;</span>
+<span class=w>    </span><span class=nt>environment</span><span class=p>:</span>
+<span class=w>      </span><span class=nt>KAFKA_BROKER_ID</span><span class=p>:</span><span class=w> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+<span class=w>      </span><span class=nt>KAFKA_ZOOKEEPER_CONNECT</span><span class=p>:</span><span class=w> </span><span class="l l-Scalar l-Scalar-Plain">machine1:2181,machine2:2181,machine3:2181</span>
+<span class=w>      </span><span class=nt>KAFKA_ADVERTISED_LISTENERS</span><span class=p>:</span><span class=w> </span><span class="l l-Scalar l-Scalar-Plain">PLAINTEXT://machine2:9092</span>
+<span class=w>      </span><span class=nt>KAFKA_LISTENERS</span><span class=p>:</span><span class=w> </span><span class="l l-Scalar l-Scalar-Plain">PLAINTEXT://0.0.0.0:9092</span>
+<span class=w>      </span><span class=nt>KAFKA_LOG_DIRS</span><span class=p>:</span><span class=w> </span><span class="l l-Scalar l-Scalar-Plain">/kafka/kafka-logs</span>
+<span class=w>    </span><span class=nt>volumes</span><span class=p>:</span>
+<span class=w>      </span><span class="p p-Indicator">-</span><span class=w> </span><span class="l l-Scalar l-Scalar-Plain">/var/run/docker.sock:/var/run/docker.sock</span>
+</code></pre></div> <p>machine3 (Kafka3)</p> <div class=highlight><pre><span></span><code><span class=nt>version</span><span class=p>:</span><span class=w> </span><span class=s>&#39;3&#39;</span>
+<span class=nt>services</span><span class=p>:</span>
+<span class=w>  </span><span class=nt>kafka</span><span class=p>:</span>
+<span class=w>    </span><span class=nt>image</span><span class=p>:</span><span class=w> </span><span class="l l-Scalar l-Scalar-Plain">wurstmeister/kafka:latest</span>
+<span class=w>    </span><span class=nt>container_name</span><span class=p>:</span><span class=w> </span><span class="l l-Scalar l-Scalar-Plain">kafka3</span>
+<span class=w>    </span><span class=nt>ports</span><span class=p>:</span>
+<span class=w>      </span><span class="p p-Indicator">-</span><span class=w> </span><span class=s>&quot;9092:9092&quot;</span>
+<span class=w>    </span><span class=nt>environment</span><span class=p>:</span>
+<span class=w>      </span><span class=nt>KAFKA_BROKER_ID</span><span class=p>:</span><span class=w> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+<span class=w>      </span><span class=nt>KAFKA_ZOOKEEPER_CONNECT</span><span class=p>:</span><span class=w> </span><span class="l l-Scalar l-Scalar-Plain">machine1:2181,machine2:2181,machine3:2181</span>
+<span class=w>      </span><span class=nt>KAFKA_ADVERTISED_LISTENERS</span><span class=p>:</span><span class=w> </span><span class="l l-Scalar l-Scalar-Plain">PLAINTEXT://machine3:9092</span>
+<span class=w>      </span><span class=nt>KAFKA_LISTENERS</span><span class=p>:</span><span class=w> </span><span class="l l-Scalar l-Scalar-Plain">PLAINTEXT://0.0.0.0:9092</span>
+<span class=w>      </span><span class=nt>KAFKA_LOG_DIRS</span><span class=p>:</span><span class=w> </span><span class="l l-Scalar l-Scalar-Plain">/kafka/kafka-logs</span>
+<span class=w>    </span><span class=nt>volumes</span><span class=p>:</span>
+<span class=w>      </span><span class="p p-Indicator">-</span><span class=w> </span><span class="l l-Scalar l-Scalar-Plain">/var/run/docker.sock:/var/run/docker.sock</span>
+</code></pre></div> <p>启动每台机器上的 Kafka 容器：</p> <div class=highlight><pre><span></span><code>docker-compose<span class=w> </span>-f<span class=w> </span>docker-compose-kafka.yml<span class=w> </span>up<span class=w> </span>-d
+</code></pre></div> <ol> <li>验证集群</li> </ol> <p>使用 <code>kafka-topics.sh</code> 工具验证 Kafka 集群是否正常工作。</p> <p>创建测试主题</p> <p>在任意一台机器上运行：</p> <div class=highlight><pre><span></span><code>docker<span class=w> </span><span class=nb>exec</span><span class=w> </span>-it<span class=w> </span>kafka1<span class=w> </span>kafka-topics.sh<span class=w> </span>--create<span class=w> </span>--topic<span class=w> </span>test-topic<span class=w> </span>--bootstrap-server<span class=w> </span>machine1:9092,machine2:9092,machine3:9092<span class=w> </span>--replication-factor<span class=w> </span><span class=m>3</span><span class=w> </span>--partitions<span class=w> </span><span class=m>1</span>
+</code></pre></div> <p>查看主题列表</p> <p>在任意一台机器上运行：</p> <div class=highlight><pre><span></span><code>docker<span class=w> </span><span class=nb>exec</span><span class=w> </span>-it<span class=w> </span>kafka1<span class=w> </span>kafka-topics.sh<span class=w> </span>--list<span class=w> </span>--bootstrap-server<span class=w> </span>machine1:9092,machine2:9092,machine3:9092
+</code></pre></div> <p>总结</p> <p>通过以上步骤，你已经成功在三台 Docker 机器上搭建了一个 Kafka 集群。此集群包含三台 ZooKeeper 服务器和三台 Kafka 代理，能够提供高可用性和扩展性。根据需要，你可以进一步调整和优化配置，以满足具体的生产需求。</p> <h4 id=612-topic-cosumer>6.1.2 查看 topic &amp; cosumer<a class=headerlink href=#612-topic-cosumer title="Permanent link">&para;</a></h4> <p>要查看 Kafka topic 的详细信息，可以使用 Kafka 提供的命令行工具 <code>kafka-topics.sh</code> 和 <code>kafka-consumer-groups.sh</code>。这些工具可以显示 topic 的配置、分区信息、副本状态等详细信息。以下是具体的命令和步骤：</p> <p>使用 <code>kafka-topics.sh</code> 查看 topic 详情</p> <p>首先，确保你已经连接到 Kafka 集群，并且 Kafka bin 目录在你的环境变量中。如果没有，可以使用绝对路径访问 <code>kafka-topics.sh</code>。</p> <p>查看 topic 列表</p> <p>查看集群中所有的 topic：</p> <div class=highlight><pre><span></span><code>kafka-topics.sh<span class=w> </span>--list<span class=w> </span>--bootstrap-server<span class=w> </span>&lt;broker_address&gt;
+</code></pre></div> <p>例如：</p> <div class=highlight><pre><span></span><code>sh
+复制代码
+kafka-topics.sh --list --bootstrap-server localhost:9092
+</code></pre></div> <p>查看单个 topic 的详细信息</p> <p>查看某个特定 topic 的详细信息：</p> <div class=highlight><pre><span></span><code>kafka-topics.sh<span class=w> </span>--describe<span class=w> </span>--topic<span class=w> </span>&lt;topic_name&gt;<span class=w> </span>--bootstrap-server<span class=w> </span>&lt;broker_address&gt;
+</code></pre></div> <p>例如，查看 <code>test-topic</code> 的详细信息：</p> <div class=highlight><pre><span></span><code>kafka-topics.sh<span class=w> </span>--describe<span class=w> </span>--topic<span class=w> </span>test-topic<span class=w> </span>--bootstrap-server<span class=w> </span>localhost:9092
+</code></pre></div> <p>输出示例：</p> <div class=highlight><pre><span></span><code>Topic: test-topic  PartitionCount: 1  ReplicationFactor: 3  Configs: segment.bytes=1073741824
+  Topic: test-topic  Partition: 0  Leader: 1  Replicas: 1,2,3  Isr: 1,2,3
+</code></pre></div> <p>解释输出信息</p> <ul> <li><strong>Topic</strong>: topic 的名称。</li> <li><strong>PartitionCount</strong>: topic 的分区数。</li> <li><strong>ReplicationFactor</strong>: topic 的副本因子。</li> <li><strong>Configs</strong>: topic 的配置。</li> <li><strong>Partition</strong>: 分区编号。</li> <li><strong>Leader</strong>: 该分区的 Leader broker ID。</li> <li><strong>Replicas</strong>: 该分区的副本 broker ID 列表。</li> <li><strong>Isr</strong>: 同步副本（in-sync replicas）的 broker ID 列表。</li> </ul> <p>使用 <code>kafka-consumer-groups.sh</code> 查看消费者组信息</p> <p>除了查看 topic 的信息，你还可以查看消费者组的详细信息。</p> <p>列出消费者组</p> <p>列出所有消费者组：</p> <div class=highlight><pre><span></span><code>kafka-consumer-groups.sh<span class=w> </span>--list<span class=w> </span>--bootstrap-server<span class=w> </span>&lt;broker_address&gt;
+</code></pre></div> <p>例如：</p> <div class=highlight><pre><span></span><code>kafka-consumer-groups.sh<span class=w> </span>--list<span class=w> </span>--bootstrap-server<span class=w> </span>localhost:9092
+</code></pre></div> <p>查看消费者组详细信息</p> <p>查看某个消费者组的详细信息，包括每个分区的偏移量等：</p> <div class=highlight><pre><span></span><code>kafka-consumer-groups.sh<span class=w> </span>--describe<span class=w> </span>--group<span class=w> </span>&lt;group_name&gt;<span class=w> </span>--bootstrap-server<span class=w> </span>&lt;broker_address&gt;
+</code></pre></div> <p>例如，查看 <code>test-group</code> 的详细信息：</p> <div class=highlight><pre><span></span><code>kafka-consumer-groups.sh<span class=w> </span>--describe<span class=w> </span>--group<span class=w> </span>test-group<span class=w> </span>--bootstrap-server<span class=w> </span>localhost:9092
+</code></pre></div> <p>输出示例：</p> <div class=highlight><pre><span></span><code>GROUP           TOPIC           PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             CONSUMER-ID        HOST            CLIENT-ID
+test-group      test-topic      0          5               10              5               consumer-1         /127.0.0.1      consumer-1
+</code></pre></div> <p>解释输出信息</p> <ul> <li><strong>GROUP</strong>: 消费者组名称。</li> <li><strong>TOPIC</strong>: 消费的 topic 名称。</li> <li><strong>PARTITION</strong>: topic 的分区编号。</li> <li><strong>CURRENT-OFFSET</strong>: 当前消费者消费到的偏移量。</li> <li><strong>LOG-END-OFFSET</strong>: 分区的最新偏移量。</li> <li><strong>LAG</strong>: 当前消费者的滞后量（未消费的消息数量）。</li> <li><strong>CONSUMER-ID</strong>: 消费者 ID。</li> <li><strong>HOST</strong>: 消费者所在的主机。</li> <li><strong>CLIENT-ID</strong>: 消费者的客户端 ID。</li> </ul> <p>示例</p> <p>假设你的 Kafka broker 在 <code>localhost:9092</code>，并且你想查看 <code>my-topic</code> 的详细信息：</p> <div class=highlight><pre><span></span><code>kafka-topics.sh<span class=w> </span>--describe<span class=w> </span>--topic<span class=w> </span>my-topic<span class=w> </span>--bootstrap-server<span class=w> </span>localhost:9092
+</code></pre></div> <p>如果你有一个消费者组 <code>my-group</code>，想查看其详细信息：</p> <div class=highlight><pre><span></span><code>kafka-consumer-groups.sh<span class=w> </span>--describe<span class=w> </span>--group<span class=w> </span>my-group<span class=w> </span>--bootstrap-server<span class=w> </span>localhost:9092
+</code></pre></div> <p>通过这些命令，你可以全面了解 Kafka topic 和消费者组的详细信息，以便更好地管理和调试 Kafka 集群。</p> <h4 id=613-topic-partition-replication>6.1.3 变更topic partition replication<a class=headerlink href=#613-topic-partition-replication title="Permanent link">&para;</a></h4> <p>在 Kafka 中，调整 topic 的分区数和副本因子可以帮助你根据需要进行扩展和提高数据的容错性。以下是详细的步骤和命令，用于变更 Kafka topic 的分区数和副本因子。</p> <p>增加分区数</p> <p>注意：你只能增加分区数，不能减少。增加分区数会改变消息的分布，可能会影响消息的顺序。</p> <p>使用 <code>kafka-topics.sh</code> 增加分区数</p> <p>假设你要将 <code>my-topic</code> 的分区数增加到 5：</p> <div class=highlight><pre><span></span><code>kafka-topics.sh<span class=w> </span>--alter<span class=w> </span>--topic<span class=w> </span>my-topic<span class=w> </span>--partitions<span class=w> </span><span class=m>5</span><span class=w> </span>--bootstrap-server<span class=w> </span>localhost:9092
+</code></pre></div> <p>调整副本因子</p> <p>调整副本因子稍微复杂一些，因为你需要手动指定分区的副本分布。你可以使用 <code>kafka-reassign-partitions.sh</code> 工具来完成此任务。</p> <ol> <li>生成分区重新分配计划</li> </ol> <p>创建一个文件 <code>increase-replication-factor.json</code>，其中包含新的分区分配计划。假设你有一个 3 节点的 Kafka 集群（broker1、broker2、broker3），并且你想将 <code>my-topic</code> 的副本因子从 1 增加到 3。</p> <p>首先，生成当前分区分配计划：</p> <div class=highlight><pre><span></span><code>kafka-reassign-partitions.sh<span class=w> </span>--zookeeper<span class=w> </span>localhost:2181<span class=w> </span>--topics-to-move-json-file<span class=w> </span>topics-to-move.json<span class=w> </span>--broker-list<span class=w> </span><span class=s2>&quot;1,2,3&quot;</span><span class=w> </span>--generate
+</code></pre></div> <p><code>topics-to-move.json</code> 内容示例：</p> <div class=highlight><pre><span></span><code><span class=p>{</span>
+<span class=w>  </span><span class=nt>&quot;version&quot;</span><span class=p>:</span><span class=mi>1</span><span class=p>,</span>
+<span class=w>  </span><span class=nt>&quot;topics&quot;</span><span class=p>:[</span>
+<span class=w>    </span><span class=p>{</span>
+<span class=w>      </span><span class=nt>&quot;topic&quot;</span><span class=p>:</span><span class=s2>&quot;my-topic&quot;</span>
+<span class=w>    </span><span class=p>}</span>
+<span class=w>  </span><span class=p>]</span>
+<span class=p>}</span>
+</code></pre></div> <p>这将生成一个 JSON 输出文件，包含当前和建议的分区分配计划。</p> <ol> <li>修改分区重新分配计划</li> </ol> <p>根据生成的建议，编辑 <code>increase-replication-factor.json</code> 文件，使其符合你的需求。假设生成的文件如下所示：</p> <div class=highlight><pre><span></span><code><span class=p>{</span>
+<span class=w>  </span><span class=nt>&quot;version&quot;</span><span class=p>:</span><span class=w> </span><span class=mi>1</span><span class=p>,</span>
+<span class=w>  </span><span class=nt>&quot;partitions&quot;</span><span class=p>:</span><span class=w> </span><span class=p>[</span>
+<span class=w>    </span><span class=p>{</span>
+<span class=w>      </span><span class=nt>&quot;topic&quot;</span><span class=p>:</span><span class=w> </span><span class=s2>&quot;my-topic&quot;</span><span class=p>,</span>
+<span class=w>      </span><span class=nt>&quot;partition&quot;</span><span class=p>:</span><span class=w> </span><span class=mi>0</span><span class=p>,</span>
+<span class=w>      </span><span class=nt>&quot;replicas&quot;</span><span class=p>:</span><span class=w> </span><span class=p>[</span><span class=mi>1</span><span class=p>,</span><span class=w> </span><span class=mi>2</span><span class=p>,</span><span class=w> </span><span class=mi>3</span><span class=p>]</span>
+<span class=w>    </span><span class=p>},</span>
+<span class=w>    </span><span class=p>{</span>
+<span class=w>      </span><span class=nt>&quot;topic&quot;</span><span class=p>:</span><span class=w> </span><span class=s2>&quot;my-topic&quot;</span><span class=p>,</span>
+<span class=w>      </span><span class=nt>&quot;partition&quot;</span><span class=p>:</span><span class=w> </span><span class=mi>1</span><span class=p>,</span>
+<span class=w>      </span><span class=nt>&quot;replicas&quot;</span><span class=p>:</span><span class=w> </span><span class=p>[</span><span class=mi>2</span><span class=p>,</span><span class=w> </span><span class=mi>3</span><span class=p>,</span><span class=w> </span><span class=mi>1</span><span class=p>]</span>
+<span class=w>    </span><span class=p>},</span>
+<span class=w>    </span><span class=p>{</span>
+<span class=w>      </span><span class=nt>&quot;topic&quot;</span><span class=p>:</span><span class=w> </span><span class=s2>&quot;my-topic&quot;</span><span class=p>,</span>
+<span class=w>      </span><span class=nt>&quot;partition&quot;</span><span class=p>:</span><span class=w> </span><span class=mi>2</span><span class=p>,</span>
+<span class=w>      </span><span class=nt>&quot;replicas&quot;</span><span class=p>:</span><span class=w> </span><span class=p>[</span><span class=mi>3</span><span class=p>,</span><span class=w> </span><span class=mi>1</span><span class=p>,</span><span class=w> </span><span class=mi>2</span><span class=p>]</span>
+<span class=w>    </span><span class=p>}</span>
+<span class=w>  </span><span class=p>]</span>
+<span class=p>}</span>
+</code></pre></div> <p>确保每个分区的 <code>replicas</code> 列表中包含新的副本分布。</p> <ol> <li>执行分区重新分配计划</li> </ol> <p>使用 <code>kafka-reassign-partitions.sh</code> 工具执行新的分区分配计划：</p> <div class=highlight><pre><span></span><code>kafka-reassign-partitions.sh<span class=w> </span>--zookeeper<span class=w> </span>localhost:2181<span class=w> </span>--reassignment-json-file<span class=w> </span>increase-replication-factor.json<span class=w> </span>--execute
+</code></pre></div> <ol> <li>验证分区重新分配状态</li> </ol> <p>你可以验证重新分配过程是否完成：</p> <div class=highlight><pre><span></span><code>kafka-reassign-partitions.sh<span class=w> </span>--zookeeper<span class=w> </span>localhost:2181<span class=w> </span>--reassignment-json-file<span class=w> </span>increase-replication-factor.json<span class=w> </span>--verify
+</code></pre></div> <p>示例完整流程</p> <ol> <li><strong>生成分区重新分配计划</strong></li> </ol> <p>生成 <code>topics-to-move.json</code>：</p> <div class=highlight><pre><span></span><code><span class=p>{</span>
+<span class=w>  </span><span class=nt>&quot;version&quot;</span><span class=p>:</span><span class=mi>1</span><span class=p>,</span>
+<span class=w>  </span><span class=nt>&quot;topics&quot;</span><span class=p>:[</span>
+<span class=w>    </span><span class=p>{</span>
+<span class=w>      </span><span class=nt>&quot;topic&quot;</span><span class=p>:</span><span class=s2>&quot;my-topic&quot;</span>
+<span class=w>    </span><span class=p>}</span>
+<span class=w>  </span><span class=p>]</span>
+<span class=p>}</span>
+</code></pre></div> <p>生成当前分区分配计划：</p> <div class=highlight><pre><span></span><code>kafka-reassign-partitions.sh<span class=w> </span>--zookeeper<span class=w> </span>localhost:2181<span class=w> </span>--topics-to-move-json-file<span class=w> </span>topics-to-move.json<span class=w> </span>--broker-list<span class=w> </span><span class=s2>&quot;1,2,3&quot;</span><span class=w> </span>--generate
+</code></pre></div> <p>这将输出建议的分配计划。将其复制到 <code>increase-replication-factor.json</code>。</p> <ol> <li><strong>修改分区重新分配计划</strong></li> </ol> <p>编辑 <code>increase-replication-factor.json</code> 使其符合你的需求：</p> <div class=highlight><pre><span></span><code><span class=p>{</span>
+<span class=w>  </span><span class=nt>&quot;version&quot;</span><span class=p>:</span><span class=w> </span><span class=mi>1</span><span class=p>,</span>
+<span class=w>  </span><span class=nt>&quot;partitions&quot;</span><span class=p>:</span><span class=w> </span><span class=p>[</span>
+<span class=w>    </span><span class=p>{</span>
+<span class=w>      </span><span class=nt>&quot;topic&quot;</span><span class=p>:</span><span class=w> </span><span class=s2>&quot;my-topic&quot;</span><span class=p>,</span>
+<span class=w>      </span><span class=nt>&quot;partition&quot;</span><span class=p>:</span><span class=w> </span><span class=mi>0</span><span class=p>,</span>
+<span class=w>      </span><span class=nt>&quot;replicas&quot;</span><span class=p>:</span><span class=w> </span><span class=p>[</span><span class=mi>1</span><span class=p>,</span><span class=w> </span><span class=mi>2</span><span class=p>,</span><span class=w> </span><span class=mi>3</span><span class=p>]</span>
+<span class=w>    </span><span class=p>},</span>
+<span class=w>    </span><span class=p>{</span>
+<span class=w>      </span><span class=nt>&quot;topic&quot;</span><span class=p>:</span><span class=w> </span><span class=s2>&quot;my-topic&quot;</span><span class=p>,</span>
+<span class=w>      </span><span class=nt>&quot;partition&quot;</span><span class=p>:</span><span class=w> </span><span class=mi>1</span><span class=p>,</span>
+<span class=w>      </span><span class=nt>&quot;replicas&quot;</span><span class=p>:</span><span class=w> </span><span class=p>[</span><span class=mi>2</span><span class=p>,</span><span class=w> </span><span class=mi>3</span><span class=p>,</span><span class=w> </span><span class=mi>1</span><span class=p>]</span>
+<span class=w>    </span><span class=p>},</span>
+<span class=w>    </span><span class=p>{</span>
+<span class=w>      </span><span class=nt>&quot;topic&quot;</span><span class=p>:</span><span class=w> </span><span class=s2>&quot;my-topic&quot;</span><span class=p>,</span>
+<span class=w>      </span><span class=nt>&quot;partition&quot;</span><span class=p>:</span><span class=w> </span><span class=mi>2</span><span class=p>,</span>
+<span class=w>      </span><span class=nt>&quot;replicas&quot;</span><span class=p>:</span><span class=w> </span><span class=p>[</span><span class=mi>3</span><span class=p>,</span><span class=w> </span><span class=mi>1</span><span class=p>,</span><span class=w> </span><span class=mi>2</span><span class=p>]</span>
+<span class=w>    </span><span class=p>}</span>
+<span class=w>  </span><span class=p>]</span>
+<span class=p>}</span>
+</code></pre></div> <ol> <li><strong>执行分区重新分配计划</strong></li> </ol> <div class=highlight><pre><span></span><code>kafka-reassign-partitions.sh<span class=w> </span>--zookeeper<span class=w> </span>localhost:2181<span class=w> </span>--reassignment-json-file<span class=w> </span>increase-replication-factor.json<span class=w> </span>--execute
+</code></pre></div> <ol> <li><strong>验证分区重新分配状态</strong></li> </ol> <div class=highlight><pre><span></span><code>kafka-reassign-partitions.sh<span class=w> </span>--zookeeper<span class=w> </span>localhost:2181<span class=w> </span>--reassignment-json-file<span class=w> </span>increase-replication-factor.json<span class=w> </span>--verify
+</code></pre></div> <p>通过这些步骤，你可以成功调整 Kafka topic 的分区数和副本因子。注意，在生产环境中进行这些操作前，务必做好备份和测试。</p> <h4 id=614-topic>6.1.4 删除topic<a class=headerlink href=#614-topic title="Permanent link">&para;</a></h4> <div class=highlight><pre><span></span><code>kafka-topics.sh<span class=w> </span>--delete<span class=w> </span>--topic<span class=w> </span>&lt;topic_name&gt;<span class=w> </span>--bootstrap-server<span class=w> </span>&lt;broker_address&gt;
+</code></pre></div> <h3 id=62>6.2 实践<a class=headerlink href=#62 title="Permanent link">&para;</a></h3> <h4 id=621>6.2.1 环境准备<a class=headerlink href=#621 title="Permanent link">&para;</a></h4> <div class=highlight><pre><span></span><code><span class=c1># ELK-DOCKER-01    10.131.1.237</span>
+<span class=c1># ELK-DOCKER-02    10.131.1.224</span>
+<span class=c1># ELK-DOCKER-03    10.131.1.209</span>
+<span class=c1># </span>
+<span class=c1># ELK-DOCKER-04    10.131.1.227</span>
+
+mkdir<span class=w> </span>-p<span class=w> </span>/data1/lib/docker
+ln<span class=w> </span>-s<span class=w> </span>/data1/lib/docker<span class=w> </span>/var/lib/docker
+
+systemctl<span class=w> </span><span class=nb>enable</span><span class=w> </span>docker
+systemctl<span class=w> </span>is-enabled<span class=w> </span>docker
+systemctl<span class=w> </span>start<span class=w> </span>docker
+systemctl<span class=w> </span>status<span class=w> </span>docker
+
+cat<span class=w> </span>&gt;<span class=w> </span>/etc/docker/daemon.json<span class=w> </span><span class=s>&lt;&lt;EOF</span>
+<span class=s>{</span>
+<span class=s>  &quot;insecure-registries&quot;: [</span>
+<span class=s>    &quot;hub.8ops.top&quot;</span>
+<span class=s>  ]</span>
+<span class=s>}</span>
+<span class=s>EOF</span>
+
+docker<span class=w> </span>pull<span class=w> </span>hub.8ops.top/middleware/zookeeper:3.9.2
+docker<span class=w> </span>pull<span class=w> </span>hub.8ops.top/bitnami/kafka:3.6.2
+</code></pre></div> <h4 id=622-kafka>6.2.2 安装kafka<a class=headerlink href=#622-kafka title="Permanent link">&para;</a></h4> <p><a href=https://hub.docker.com/r/bitnami/kafka>Reference</a></p> <div class=highlight><pre><span></span><code>cat<span class=w> </span>&gt;<span class=w> </span>docker-compose.yaml<span class=w> </span><span class=s>&lt;&lt;EOF</span>
+<span class=s>services:</span>
+<span class=s>  zookeeper:</span>
+<span class=s>    image: &#39;hub.8ops.top/middleware/zookeeper:3.9.2&#39;</span>
+<span class=s>    restart: always</span>
+<span class=s>    container_name: zookeeper</span>
+<span class=s>    network_mode: host</span>
+<span class=s>    ports:</span>
+<span class=s>      - 2181:2181</span>
+<span class=s>      - 2888:2888</span>
+<span class=s>      - 3888:3888</span>
+<span class=s>    environment:</span>
+<span class=s>      ZOO_MY_ID: 1</span>
+<span class=s>      ZOO_SERVERS: server.1=10.131.1.237:2888:3888;2181 server.2=10.131.1.224:2888:3888;2181 server.3=10.131.1.209:2888:3888;2181</span>
+
+<span class=s>  kafka:</span>
+<span class=s>    image: &#39;hub.8ops.top/bitnami/kafka:3.6.2&#39;</span>
+<span class=s>    restart: always</span>
+<span class=s>    container_name: kafka</span>
+<span class=s>    network_mode: host</span>
+<span class=s>    ports:</span>
+<span class=s>      - 9092:9092</span>
+<span class=s>    environment:</span>
+<span class=s>      - KAFKA_CFG_ZOOKEEPER_CONNECT=10.131.1.237:2181,10.131.1.224:2181,10.131.1.209:2181</span>
+<span class=s>      - ALLOW_PLAINTEXT_LISTENER=yes</span>
+<span class=s>      - KAFKA_BROKER_ID=1</span>
+<span class=s>      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://10.131.1.237:9092</span>
+<span class=s>      - KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092</span>
+<span class=s>      - KAFKA_CFG_NUM_PARTITIONS=3</span>
+<span class=s>      - KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR=2</span>
+<span class=s>      - KAFKA_LOG_DIRS=/kafka/kafka-logs</span>
+<span class=s>    volumes:</span>
+<span class=s>      - /var/run/docker.sock:/var/run/docker.sock</span>
+<span class=s>    depends_on:</span>
+<span class=s>      - zookeeper</span>
+
+<span class=s>EOF</span>
+
+docker<span class=w> </span>compose<span class=w> </span>down
+
+docker<span class=w> </span>compose<span class=w> </span>up<span class=w> </span>-d
+</code></pre></div> <h4 id=623-kafka>6.2.3 测试kafka<a class=headerlink href=#623-kafka title="Permanent link">&para;</a></h4> <blockquote> <p>功能测试</p> </blockquote> <div class=highlight><pre><span></span><code><span class=c1># detect zookeeper</span>
+docker<span class=w> </span>logs<span class=w> </span>zookeeper
+docker<span class=w> </span><span class=nb>exec</span><span class=w> </span>-it<span class=w> </span>zookeeper<span class=w> </span>bin/zkServer.sh<span class=w> </span>status
+
+<span class=c1># detect kafka topic</span>
+docker<span class=w> </span>logs<span class=w> </span>kafka
+
+<span class=c1># producter &amp; consumer</span>
+<span class=c1># /opt/bitnami/kafka/bin/kafka-topics.sh</span>
+<span class=nb>export</span><span class=w> </span><span class=nv>BOOTSTRAP_SERVER</span><span class=o>=</span><span class=m>10</span>.131.1.237:9092,10.131.1.224:9092,10.131.1.209:9092<span class=w> </span>
+
+docker<span class=w> </span><span class=nb>exec</span><span class=w> </span>-it<span class=w> </span>kafka-client<span class=w> </span>kafka-topics.sh<span class=w> </span>--list<span class=w> </span>--bootstrap-server<span class=w> </span><span class=si>${</span><span class=nv>BOOTSTRAP_SERVER</span><span class=si>}</span>
+
+docker<span class=w> </span><span class=nb>exec</span><span class=w> </span>-it<span class=w> </span>kafka-client<span class=w> </span>kafka-topics.sh<span class=w> </span>--create<span class=w> </span>--topic<span class=w> </span>test-topic<span class=w> </span>--bootstrap-server<span class=w> </span><span class=si>${</span><span class=nv>BOOTSTRAP_SERVER</span><span class=si>}</span><span class=w> </span>--replication-factor<span class=w> </span><span class=m>2</span><span class=w> </span>--partitions<span class=w> </span><span class=m>2</span>
+
+docker<span class=w> </span><span class=nb>exec</span><span class=w> </span>-it<span class=w> </span>kafka-client<span class=w> </span>kafka-topics.sh<span class=w> </span>--describe<span class=w> </span>--topic<span class=w> </span>test-topic<span class=w> </span>--bootstrap-server<span class=w> </span><span class=si>${</span><span class=nv>BOOTSTRAP_SERVER</span><span class=si>}</span>
+
+docker<span class=w> </span><span class=nb>exec</span><span class=w> </span>-it<span class=w> </span>kafka-client<span class=w> </span>kafka-topics.sh<span class=w> </span>--alter<span class=w> </span>--topic<span class=w> </span>test-topic<span class=w> </span>--partitions<span class=w> </span><span class=m>3</span><span class=w> </span>--bootstrap-server<span class=w> </span><span class=si>${</span><span class=nv>BOOTSTRAP_SERVER</span><span class=si>}</span>
+
+docker<span class=w> </span><span class=nb>exec</span><span class=w> </span>-it<span class=w> </span>kafka-client<span class=w> </span>kafka-topics.sh<span class=w> </span>--create<span class=w> </span>--topic<span class=w> </span>test-topic-02<span class=w> </span>--bootstrap-server<span class=w> </span><span class=si>${</span><span class=nv>BOOTSTRAP_SERVER</span><span class=si>}</span><span class=w> </span>--replication-factor<span class=w> </span><span class=m>1</span><span class=w> </span>--partitions<span class=w> </span><span class=m>1</span>
+
+docker<span class=w> </span><span class=nb>exec</span><span class=w> </span>-it<span class=w> </span>kafka-client<span class=w> </span>kafka-topics.sh<span class=w> </span>--delete<span class=w> </span>--topic<span class=w> </span>test-topic-02<span class=w> </span>--bootstrap-server<span class=w> </span><span class=si>${</span><span class=nv>BOOTSTRAP_SERVER</span><span class=si>}</span>
+
+<span class=c1># detect kafka consumer</span>
+docker<span class=w> </span><span class=nb>exec</span><span class=w> </span>-it<span class=w> </span>kafka-client<span class=w> </span>kafka-consumer-groups.sh<span class=w> </span>--list<span class=w> </span>--bootstrap-server<span class=w> </span><span class=si>${</span><span class=nv>BOOTSTRAP_SERVER</span><span class=si>}</span>
+
+docker<span class=w> </span><span class=nb>exec</span><span class=w> </span>-it<span class=w> </span>kafka-client<span class=w> </span>kafka-consumer-groups.sh<span class=w> </span>--describe<span class=w> </span>--all-groups<span class=w> </span>--bootstrap-server<span class=w> </span><span class=si>${</span><span class=nv>BOOTSTRAP_SERVER</span><span class=si>}</span>
+</code></pre></div> <blockquote> <p>性能测试</p> </blockquote> <div class=highlight><pre><span></span><code><span class=c1># producer</span>
+docker<span class=w> </span><span class=nb>exec</span><span class=w> </span>-it<span class=w> </span>kafka-client<span class=w> </span>kafka-producer-perf-test.sh<span class=w> </span><span class=se>\</span>
+<span class=w>    </span>--topic<span class=w> </span>test-topic<span class=w> </span><span class=se>\</span>
+<span class=w>    </span>--num-records<span class=w> </span><span class=m>10000000</span><span class=w> </span><span class=se>\</span>
+<span class=w>    </span>--record-size<span class=w> </span><span class=m>100</span><span class=w> </span><span class=se>\</span>
+<span class=w>    </span>--throughput<span class=w> </span><span class=m>1000000</span><span class=w> </span><span class=se>\</span>
+<span class=w>    </span>--producer-props<span class=w> </span><span class=se>\</span>
+<span class=w>    </span><span class=nv>acks</span><span class=o>=</span><span class=m>1</span><span class=w> </span><span class=se>\</span>
+<span class=w>    </span>bootstrap.servers<span class=o>=</span><span class=si>${</span><span class=nv>BOOTSTRAP_SERVER</span><span class=si>}</span>
+
+<span class=m>10000000</span><span class=w> </span>records<span class=w> </span>sent,<span class=w> </span><span class=m>269578</span>.110257<span class=w> </span>records/sec<span class=w> </span><span class=o>(</span><span class=m>25</span>.71<span class=w> </span>MB/sec<span class=o>)</span>,<span class=w> </span><span class=m>2</span>.11<span class=w> </span>ms<span class=w> </span>avg<span class=w> </span>latency,<span class=w> </span><span class=m>378</span>.00<span class=w> </span>ms<span class=w> </span>max<span class=w> </span>latency,<span class=w> </span><span class=m>1</span><span class=w> </span>ms<span class=w> </span>50th,<span class=w> </span><span class=m>2</span><span class=w> </span>ms<span class=w> </span>95th,<span class=w> </span><span class=m>30</span><span class=w> </span>ms<span class=w> </span>99th,<span class=w> </span><span class=m>116</span><span class=w> </span>ms<span class=w> </span><span class=m>99</span>.9th.
+
+<span class=c1># consumer</span>
+docker<span class=w> </span><span class=nb>exec</span><span class=w> </span>-it<span class=w> </span>kafka-client<span class=w> </span>kafka-consumer-perf-test.sh<span class=w> </span><span class=se>\</span>
+<span class=w>    </span>--bootstrap-server<span class=w> </span><span class=si>${</span><span class=nv>BOOTSTRAP_SERVER</span><span class=si>}</span><span class=w>  </span><span class=se>\</span>
+<span class=w>    </span>--topic<span class=w> </span>test-topic<span class=w> </span><span class=se>\</span>
+<span class=w>    </span>--fetch-size<span class=w> </span><span class=m>1048576</span><span class=w> </span><span class=se>\</span>
+<span class=w>    </span>--messages<span class=w> </span><span class=m>10000000</span><span class=w> </span><span class=se>\</span>
+<span class=w>    </span>--consumer.config<span class=w> </span>/opt/bitnami/kafka/config/consumer.properties
+
+start.time,<span class=w> </span>end.time,<span class=w> </span>data.consumed.in.MB,<span class=w> </span>MB.sec,<span class=w> </span>data.consumed.in.nMsg,<span class=w> </span>nMsg.sec,<span class=w> </span>rebalance.time.ms,<span class=w> </span>fetch.time.ms,<span class=w> </span>fetch.MB.sec,<span class=w> </span>fetch.nMsg.sec
+<span class=m>2024</span>-06-27<span class=w> </span><span class=m>09</span>:44:58:834,<span class=w> </span><span class=m>2024</span>-06-27<span class=w> </span><span class=m>09</span>:45:07:905,<span class=w> </span><span class=m>953</span>.6911,<span class=w> </span><span class=m>105</span>.1363,<span class=w> </span><span class=m>10000176</span>,<span class=w> </span><span class=m>1102433</span>.6898,<span class=w> </span><span class=m>3411</span>,<span class=w> </span><span class=m>5660</span>,<span class=w> </span><span class=m>168</span>.4967,<span class=w> </span><span class=m>1766815</span>.5477
+</code></pre></div> <h4 id=624-elastic>6.2.4 安装elastic<a class=headerlink href=#624-elastic title="Permanent link">&para;</a></h4> <p><a href=https://hub.docker.com/_/elasticsearch>Reference</a></p> <div class=highlight><pre><span></span><code><span class=c1># sysctl</span>
+cat<span class=w> </span>&gt;&gt;<span class=w> </span>/etc/sysctl.d/99-sysctl.conf<span class=w> </span><span class=s>&lt;&lt;EOF</span>
+<span class=s>vm.max_map_count = 262144</span>
+<span class=s>fs.file-max = 655360</span>
+<span class=s>EOF</span>
+
+sysctl<span class=w> </span>-p
+sysctl<span class=w> </span>vm.max_map_count<span class=w> </span>fs.file-max
+
+mkdir<span class=w> </span>-p<span class=w> </span>/data1/lib/elastic
+chown<span class=w> </span><span class=m>1000</span><span class=w> </span>/data1/lib/elastic
+
+<span class=nb>export</span><span class=w> </span><span class=nv>SEED_HOSTS</span><span class=o>=</span><span class=m>10</span>.131.1.237:9300,10.131.1.224:9300,10.131.1.209:9300
+<span class=nb>export</span><span class=w> </span><span class=nv>MASTER_NODES</span><span class=o>=</span><span class=m>10</span>.131.1.237,10.131.1.224,10.131.1.209
+
+<span class=c1># master/client - 机器复用</span>
+cat<span class=w> </span>&gt;&gt;<span class=w> </span>docker-compose.yaml<span class=w> </span><span class=s>&lt;&lt;EOF</span>
+
+<span class=s>  elasticsearch:</span>
+<span class=s>    image: hub.8ops.top/elastic/elasticsearch:7.17.22</span>
+<span class=s>    restart: always</span>
+<span class=s>    container_name: es-master</span>
+<span class=s>    network_mode: host</span>
+<span class=s>    environment:</span>
+<span class=s>      - node.name=es-master-01</span>
+<span class=s>      - node.roles=master,ingest</span>
+<span class=s>      - cluster.name=es-docker-cluster</span>
+<span class=s>      - discovery.seed_hosts=${SEED_HOSTS}</span>
+<span class=s>      - cluster.initial_master_nodes=${MASTER_NODES}</span>
+<span class=s>      - bootstrap.memory_lock=true</span>
+<span class=s>      - xpack.security.enabled=false</span>
+<span class=s>      - xpack.security.http.ssl.enabled=false</span>
+<span class=s>      - &quot;ES_JAVA_OPTS=-Xms2g -Xmx2g&quot;</span>
+<span class=s>      - network.host=0.0.0.0</span>
+<span class=s>    ulimits:</span>
+<span class=s>      memlock:</span>
+<span class=s>        soft: -1</span>
+<span class=s>        hard: -1</span>
+<span class=s>      nofile:</span>
+<span class=s>        soft: 655360</span>
+<span class=s>        hard: 655360</span>
+<span class=s>    volumes:</span>
+<span class=s>      - /data1/lib/elastic:/usr/share/elasticsearch/data</span>
+<span class=s>    ports:</span>
+<span class=s>      - 9200:9200</span>
+<span class=s>      - 9300:9300</span>
+
+<span class=s>EOF</span>
+
+docker<span class=w> </span>compose<span class=w> </span>up<span class=w> </span>-d
+
+<span class=c1># data</span>
+cat<span class=w> </span>&gt;<span class=w> </span>docker-compose.yaml<span class=w> </span><span class=s>&lt;&lt;EOF</span>
+<span class=s>services:</span>
+<span class=s>  elasticsearch:</span>
+<span class=s>    image: hub.8ops.top/elastic/elasticsearch:7.17.22</span>
+<span class=s>    restart: always</span>
+<span class=s>    container_name: es-data</span>
+<span class=s>    network_mode: host</span>
+<span class=s>    environment:</span>
+<span class=s>      - node.name=es-data-01</span>
+<span class=s>      - node.roles=data</span>
+<span class=s>      - cluster.name=es-docker-cluster</span>
+<span class=s>      - discovery.seed_hosts=${SEED_HOSTS}</span>
+<span class=s>      - cluster.initial_master_nodes=${MASTER_NODES}</span>
+<span class=s>      - bootstrap.memory_lock=true</span>
+<span class=s>      - xpack.security.enabled=false</span>
+<span class=s>      - xpack.security.http.ssl.enabled=false</span>
+<span class=s>      - &quot;ES_JAVA_OPTS=-Xms32g -Xmx32g&quot;</span>
+<span class=s>      - network.host=0.0.0.0</span>
+<span class=s>    ulimits:</span>
+<span class=s>      memlock:</span>
+<span class=s>        soft: -1</span>
+<span class=s>        hard: -1</span>
+<span class=s>      nofile:</span>
+<span class=s>        soft: 655360</span>
+<span class=s>        hard: 655360</span>
+<span class=s>    volumes:</span>
+<span class=s>      - /data1/lib/elastic:/usr/share/elasticsearch/data</span>
+<span class=s>    ports:</span>
+<span class=s>      - 9200:9200</span>
+<span class=s>      - 9300:9300</span>
+
+<span class=s>EOF</span>
+
+docker<span class=w> </span>compose<span class=w> </span>up<span class=w> </span>-d
+
+<span class=c1>#      # 两种角色方式都可以</span>
+<span class=c1>#      - node.roles=master,ingest,data,ml</span>
+<span class=c1>#      </span>
+<span class=c1>#      OR</span>
+<span class=c1>#</span>
+<span class=c1>#      - node.master=false</span>
+<span class=c1>#      - node.data=true</span>
+<span class=c1>#      - node.ingest=false</span>
+<span class=c1>#      - node.ml=false</span>
+</code></pre></div> <h4 id=625-elastic>6.2.5 测试elastic<a class=headerlink href=#625-elastic title="Permanent link">&para;</a></h4> <div class=highlight><pre><span></span><code>docker<span class=w> </span>logs<span class=w> </span>-f<span class=w> </span>es-docker-cluster-data
+
+pip<span class=w> </span>install<span class=w> </span>esrally
+
+<span class=nb>export</span><span class=w> </span><span class=nv>ELASTIC_SERVER</span><span class=o>=</span><span class=m>10</span>.131.1.237:9200,10.131.1.224:9200,10.131.1.209:9200
+
+<span class=c1># list tracks</span>
+esrally<span class=w> </span>list<span class=w> </span>tracks
+
+esrally<span class=w> </span>race<span class=w> </span>--track<span class=o>=</span>geonames<span class=w> </span>--target-hosts<span class=o>=</span><span class=si>${</span><span class=nv>ELASTIC_SERVER</span><span class=si>}</span><span class=w> </span>--pipeline<span class=o>=</span>benchmark-only<span class=w> </span>--client-options<span class=o>=</span><span class=s2>&quot;use_ssl:false&quot;</span><span class=w> </span>--on-error<span class=o>=</span>abort<span class=w> </span>--test-mode
+
+esrally<span class=w> </span>race<span class=w> </span>--track<span class=o>=</span>geonames<span class=w> </span>--target-hosts<span class=o>=</span><span class=si>${</span><span class=nv>ELASTIC_SERVER</span><span class=si>}</span><span class=w> </span>--pipeline<span class=o>=</span>benchmark-only<span class=w> </span>--client-options<span class=o>=</span><span class=s2>&quot;timeout:60&quot;</span>
+
+esrally<span class=w> </span>race<span class=w> </span>--track<span class=o>=</span>geonames<span class=w> </span>--target-hosts<span class=o>=</span><span class=si>${</span><span class=nv>ELASTIC_SERVER</span><span class=si>}</span><span class=w> </span>--pipeline<span class=o>=</span>benchmark-only<span class=w> </span>--report-file<span class=o>=</span>report.md<span class=w> </span>--report-format<span class=o>=</span>markdown<span class=w> </span>--quiet
+
+<span class=c1># challenge</span>
+esrally<span class=w> </span>race<span class=w> </span>--distribution-version<span class=o>=</span><span class=m>7</span>.17.22<span class=w> </span>--track<span class=o>=</span>geonames<span class=w> </span>--target-hosts<span class=o>=</span><span class=si>${</span><span class=nv>ELASTIC_SERVER</span><span class=si>}</span><span class=w> </span>--challenge<span class=o>=</span>append-no-conflicts
+
+esrally<span class=w> </span>race<span class=w> </span>--track<span class=o>=</span>geonames<span class=w> </span>--target-hosts<span class=o>=</span><span class=si>${</span><span class=nv>BOOTSTRAP_SERVER</span><span class=si>}</span><span class=w> </span>--pipeline<span class=o>=</span>benchmark-only
+
+esrally<span class=w> </span>race<span class=w> </span>--track<span class=o>=</span>geonames<span class=w> </span>--kill-running-processes
+
+<span class=c1># Deprecated</span>
+docker<span class=w> </span>run<span class=w> </span>--name<span class=w> </span>esrally<span class=w> </span>--rm<span class=w> </span>-it<span class=w> </span>-e<span class=w> </span><span class=nv>ENDPOINT</span><span class=o>=</span><span class=s2>&quot;</span><span class=si>${</span><span class=nv>ELASTIC_SERVER</span><span class=si>}</span><span class=s2>&quot;</span><span class=w> </span>hub.8ops.top/elastic/esrally:053
+</code></pre></div> <h4 id=626>6.2.6 辅助工具<a class=headerlink href=#626 title="Permanent link">&para;</a></h4> <div class=highlight><pre><span></span><code><span class=c1># kafka_manager、kibana、elastic ui</span>
+cat<span class=w> </span>&gt;<span class=w> </span>docker-compose.yaml<span class=w> </span><span class=s>&lt;&lt;EOF</span>
+<span class=s>services:</span>
+<span class=s>  kafka-client:</span>
+<span class=s>    image: &#39;hub.8ops.top/bitnami/kafka:3.6.2&#39;</span>
+<span class=s>    container_name: kafka-client</span>
+<span class=s>    network_mode: host</span>
+<span class=s>    command: [&quot;sleep&quot;,&quot;infinity&quot;]</span>
+
+<span class=s>  kafka-manager:</span>
+<span class=s>    image: hub.8ops.top/middleware/kafka-manager:3.0.0.5</span>
+<span class=s>    container_name: kafka-manager</span>
+<span class=s>    network_mode: host</span>
+<span class=s>    ports:</span>
+<span class=s>      - &quot;9000:9000&quot;</span>
+<span class=s>    environment:</span>
+<span class=s>      ZK_HOSTS: &quot;10.131.1.237:2181,10.131.1.224:2181,10.131.1.209:2181&quot;</span>
+<span class=s>      KAFKA_BROKERS: &quot;10.131.1.237:9092,10.131.1.224:9092,10.131.1.209:9092&quot;</span>
+<span class=s>      APPLICATION_SECRET: &quot;random-secret&quot;</span>
+<span class=s>      KAFKA_MANAGER_AUTH_ENABLED: &quot;true&quot;</span>
+<span class=s>      KAFKA_MANAGER_USERNAME: jesse</span>
+<span class=s>      KAFKA_MANAGER_PASSWORD: xqp4AtsTEBjj4rKJvhyY5XBN340</span>
+
+<span class=s>  kibana:</span>
+<span class=s>    image: hub.8ops.top/elastic/kibana:7.17.22</span>
+<span class=s>    container_name: kibana</span>
+<span class=s>    network_mode: host</span>
+<span class=s>    ports:</span>
+<span class=s>      - &quot;5601:5601&quot;</span>
+<span class=s>    environment:</span>
+<span class=s>      - ELASTICSEARCH_HOSTS=[&quot;http://10.131.1.237:9200&quot;,&quot;http://10.131.1.224:9200&quot;,&quot;http://10.131.1.209:9200&quot;]</span>
+
+<span class=s>EOF</span>
+
+docker<span class=w> </span>compose<span class=w> </span>up<span class=w> </span>-d
+</code></pre></div> <h4 id=627>6.2.7 优化配置<a class=headerlink href=#627 title="Permanent link">&para;</a></h4> <div class=highlight><pre><span></span><code><span class=c1># kafka</span>
+
+<span class=c1># vector</span>
+
+<span class=c1># elasticsearch</span>
+<span class=c1># 1，索引自动分片</span>
+<span class=c1># 2，ILM</span>
+</code></pre></div> </article> </div> <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script> </div> <button type=button class="md-top md-icon" data-md-component=top hidden> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg> 回到页面顶部 </button> </main> <footer class=md-footer> <nav class="md-footer__inner md-grid" aria-label=页脚> <a href=../24-redis/ class="md-footer__link md-footer__link--prev" aria-label="上一页: Helm + Redis"> <div class="md-footer__button md-icon"> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg> </div> <div class=md-footer__title> <span class=md-footer__direction> 上一页 </span> <div class=md-ellipsis> Helm + Redis </div> </div> </a> <a href=../26-harbor/ class="md-footer__link md-footer__link--next" aria-label="下一页: Harbor"> <div class=md-footer__title> <span class=md-footer__direction> 下一页 </span> <div class=md-ellipsis> Harbor </div> </div> <div class="md-footer__button md-icon"> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg> </div> </a> </nav> <div class="md-footer-meta md-typeset"> <div class="md-footer-meta__inner md-grid"> <div class=md-copyright> <div class=md-copyright__highlight> <a href=https://books.8ops.top/ target=_blank>爱运维</a> &nbsp; <a target=_blank href=/sitemap.xml>XML</a><br> <a href=http://beian.miit.gov.cn/ target=_blank>沪ICP备18030892号</a><br> <a target=_blank href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=31011502401428"><img src=/images/wa.png style=float:left;height:20px;>沪公网安备31011502401428号</a><br> <a target=_blank href="https://www.upyun.com/?utm_source=lianmeng&utm_medium=referral"><img src=/images/upyun.png style=float:left;height:20px;>提供CDN加速/云存储服务</a><br> Copyright &copy; 2017 - 2027 8OPS </div> Made with <a href=https://squidfunk.github.io/mkdocs-material/ target=_blank rel=noopener> Material for MkDocs </a> </div> </div> </div> </footer> </div> <div class=md-dialog data-md-component=dialog> <div class="md-dialog__inner md-typeset"></div> </div> <script id=__config type=application/json>{"base": "../..", "features": ["content.action.edit", "content.action.view", "content.code.annotate", "content.code.copy", "content.tooltips", "navigation.footer", "navigation.indexes", "navigation.sections", "navigation.tabs", "navigation.top", "navigation.tracking", "search.highlight", "search.share", "search.suggest", "toc.follow"], "search": "../../assets/javascripts/workers/search.f8cc74c7.min.js", "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}}</script> <script src=../../assets/javascripts/bundle.f1b6f286.min.js></script> <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML"></script> </body> </html>

@@ -1,0 +1,63 @@
+image:
+  repository: hub.8ops.top/google_containers/dashboard
+  tag: v2.5.1
+
+resources:
+  limits:
+    cpu: 1
+    memory: 1Gi
+  requests:
+    cpu: 500m
+    memory: 512Mi
+
+ingress:
+  enabled: true
+  annotations:
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+
+  className: "external"
+
+  hosts:
+    - dashboard.8ops.top
+  tls:
+    - secretName: tls-8ops.top
+      hosts:
+        - dashboard.8ops.top
+
+extraArgs: 
+  - --token-ttl=86400
+
+settings:
+  clusterName: "Dashboard of Lab"
+  itemsPerPage: 20
+  resourceAutoRefreshTimeInterval: 10
+
+metricsScraper:
+  enabled: true
+  image:
+    repository: hub.8ops.top/google_containers/metrics-scraper
+    tag: v1.0.7
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+
+metrics-server:
+  enabled: true
+  image:
+    repository: hub.8ops.top/google_containers/metrics-server
+    tag: v0.5.0
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+  args:
+    - --kubelet-preferred-address-types=InternalIP
+    - --kubelet-insecure-tls
+

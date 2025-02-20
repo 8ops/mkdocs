@@ -1,0 +1,542 @@
+<!doctype html><html lang=zh class=no-js> <head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="爱运维,运维日常实践,devops,aiops,dataops,xops,kubernetes,linux,os,nginx,prometheus,运维,系统,内核,监控,开发,数据,智能,随记 爱运维,运维虾的在线文档囊括运维日常实践、Kubernetes、运维开发、数据处理、人工智能、生活随记"><meta name=author content=Jesse><link href=https://books.8ops.top/daily/41-dnsmasq/ rel=canonical><link href=../40-haproxy/ rel=prev><link href=../42-kvm/ rel=next><link rel=icon href=../../favicon.ico><meta name=generator content="mkdocs-1.6.1, mkdocs-material-9.6.5"><title>dnsmasq - 爱运维</title><link rel=stylesheet href=../../assets/stylesheets/main.8608ea7d.min.css><link rel=stylesheet href=../../assets/stylesheets/palette.06af60db.min.css><link rel=preconnect href=https://fonts.gstatic.com crossorigin><link rel=stylesheet href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback"><style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style><link rel=stylesheet href=../../extra/extra.css><script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script></head> <body dir=ltr data-md-color-scheme=default data-md-color-primary=teal data-md-color-accent=teal> <input class=md-toggle data-md-toggle=drawer type=checkbox id=__drawer autocomplete=off> <input class=md-toggle data-md-toggle=search type=checkbox id=__search autocomplete=off> <label class=md-overlay for=__drawer></label> <div data-md-component=skip> <a href=#dnsmasq class=md-skip> 跳转至 </a> </div> <div data-md-component=announce> </div> <header class=md-header data-md-component=header> <nav class="md-header__inner md-grid" aria-label=页眉> <a href=../.. title=爱运维 class="md-header__button md-logo" aria-label=爱运维 data-md-component=logo> <img src=../../logo.png alt=logo> </a> <label class="md-header__button md-icon" for=__drawer> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg> </label> <div class=md-header__title data-md-component=header-title> <div class=md-header__ellipsis> <div class=md-header__topic> <span class=md-ellipsis> 爱运维 </span> </div> <div class=md-header__topic data-md-component=header-topic> <span class=md-ellipsis> dnsmasq </span> </div> </div> </div> <form class=md-header__option data-md-component=palette> <input class=md-option data-md-color-media data-md-color-scheme=default data-md-color-primary=teal data-md-color-accent=teal aria-label="Switch to dark mode" type=radio name=__palette id=__palette_0> <label class="md-header__button md-icon" title="Switch to dark mode" for=__palette_1 hidden> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg> </label> <input class=md-option data-md-color-media data-md-color-scheme=slate data-md-color-primary=teal data-md-color-accent=teal aria-label="Switch to light mode" type=radio name=__palette id=__palette_1> <label class="md-header__button md-icon" title="Switch to light mode" for=__palette_0 hidden> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg> </label> </form> <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script> <label class="md-header__button md-icon" for=__search> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg> </label> <div class=md-search data-md-component=search role=dialog> <label class=md-search__overlay for=__search></label> <div class=md-search__inner role=search> <form class=md-search__form name=search> <input type=text class=md-search__input name=query aria-label=搜索 placeholder=搜索 autocapitalize=off autocorrect=off autocomplete=off spellcheck=false data-md-component=search-query required> <label class="md-search__icon md-icon" for=__search> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg> </label> <nav class=md-search__options aria-label=查找> <a href=javascript:void(0) class="md-search__icon md-icon" title=分享 aria-label=分享 data-clipboard data-clipboard-text data-md-component=search-share tabindex=-1> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg> </a> <button type=reset class="md-search__icon md-icon" title=清空当前内容 aria-label=清空当前内容 tabindex=-1> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg> </button> </nav> <div class=md-search__suggest data-md-component=search-suggest></div> </form> <div class=md-search__output> <div class=md-search__scrollwrap tabindex=0 data-md-scrollfix> <div class=md-search-result data-md-component=search-result> <div class=md-search-result__meta> 正在初始化搜索引擎 </div> <ol class=md-search-result__list role=presentation></ol> </div> </div> </div> </div> </div> <div class=md-header__source> <a href=https://github.com/8ops/mkdocs title=前往仓库 class=md-source data-md-component=source> <div class="md-source__icon md-icon"> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 448 512"><!-- Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg> </div> <div class=md-source__repository> 8ops/mkdocs </div> </a> </div> </nav> </header> <div class=md-container data-md-component=container> <nav class=md-tabs aria-label=标签 data-md-component=tabs> <div class=md-grid> <ul class=md-tabs__list> <li class=md-tabs__item> <a href=../.. class=md-tabs__link> 首页 </a> </li> <li class="md-tabs__item md-tabs__item--active"> <a href=../09-ansible/ class=md-tabs__link> 日常实践 </a> </li> <li class=md-tabs__item> <a href=../../kubernetes/01-cluster-init/ class=md-tabs__link> Kubernetes </a> </li> <li class=md-tabs__item> <a href=../../ops/01-devops/ class=md-tabs__link> 运维进阶 </a> </li> <li class=md-tabs__item> <a href=../../dev/10-golang/ class=md-tabs__link> 运维开发 </a> </li> <li class=md-tabs__item> <a href=../../data/01-mysql/ class=md-tabs__link> 数据处理 </a> </li> <li class=md-tabs__item> <a href=../../note/00-class/ class=md-tabs__link> 生活随记 </a> </li> <li class=md-tabs__item> <a href=../../about/ class=md-tabs__link> 关于我 </a> </li> </ul> </div> </nav> <main class=md-main data-md-component=main> <div class="md-main__inner md-grid"> <div class="md-sidebar md-sidebar--primary" data-md-component=sidebar data-md-type=navigation> <div class=md-sidebar__scrollwrap> <div class=md-sidebar__inner> <nav class="md-nav md-nav--primary md-nav--lifted" aria-label=导航栏 data-md-level=0> <label class=md-nav__title for=__drawer> <a href=../.. title=爱运维 class="md-nav__button md-logo" aria-label=爱运维 data-md-component=logo> <img src=../../logo.png alt=logo> </a> 爱运维 </label> <div class=md-nav__source> <a href=https://github.com/8ops/mkdocs title=前往仓库 class=md-source data-md-component=source> <div class="md-source__icon md-icon"> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 448 512"><!-- Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg> </div> <div class=md-source__repository> 8ops/mkdocs </div> </a> </div> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../.. class=md-nav__link> <span class=md-ellipsis> 首页 </span> </a> </li> <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_2 checked> <label class=md-nav__link for=__nav_2 id=__nav_2_label tabindex> <span class=md-ellipsis> 日常实践 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=1 aria-labelledby=__nav_2_label aria-expanded=true> <label class=md-nav__title for=__nav_2> <span class="md-nav__icon md-icon"></span> 日常实践 </label> <ul class=md-nav__list data-md-scrollfix> <li class="md-nav__item md-nav__item--section md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_2_1> <label class=md-nav__link for=__nav_2_1 id=__nav_2_1_label tabindex> <span class=md-ellipsis> 【系统能力】 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=2 aria-labelledby=__nav_2_1_label aria-expanded=false> <label class=md-nav__title for=__nav_2_1> <span class="md-nav__icon md-icon"></span> 【系统能力】 </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../09-ansible/ class=md-nav__link> <span class=md-ellipsis> Ansible </span> </a> </li> <li class=md-nav__item> <a href=../10-hardware/ class=md-nav__link> <span class=md-ellipsis> 硬件管理 </span> </a> </li> <li class=md-nav__item> <a href=../11-system/ class=md-nav__link> <span class=md-ellipsis> 系统管理 </span> </a> </li> <li class=md-nav__item> <a href=../12-command/ class=md-nav__link> <span class=md-ellipsis> 常用命令 </span> </a> </li> <li class=md-nav__item> <a href=../14-imagemagick/ class=md-nav__link> <span class=md-ellipsis> 图片处理 </span> </a> </li> <li class=md-nav__item> <a href=../15-openssl/ class=md-nav__link> <span class=md-ellipsis> 证书管理 </span> </a> </li> <li class=md-nav__item> <a href=../16-network/ class=md-nav__link> <span class=md-ellipsis> 网络信息 </span> </a> </li> <li class=md-nav__item> <a href=../17-io/ class=md-nav__link> <span class=md-ellipsis> io </span> </a> </li> <li class=md-nav__item> <a href=../18-git/ class=md-nav__link> <span class=md-ellipsis> git </span> </a> </li> <li class=md-nav__item> <a href=../19-firewall/ class=md-nav__link> <span class=md-ellipsis> firewall </span> </a> </li> <li class=md-nav__item> <a href=../20-curl/ class=md-nav__link> <span class=md-ellipsis> curl </span> </a> </li> <li class=md-nav__item> <a href=../21-oauth2/ class=md-nav__link> <span class=md-ellipsis> oauth2 </span> </a> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_2_2 checked> <label class=md-nav__link for=__nav_2_2 id=__nav_2_2_label tabindex> <span class=md-ellipsis> 【常用组件】 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=2 aria-labelledby=__nav_2_2_label aria-expanded=true> <label class=md-nav__title for=__nav_2_2> <span class="md-nav__icon md-icon"></span> 【常用组件】 </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../33-ppp/ class=md-nav__link> <span class=md-ellipsis> ppp </span> </a> </li> <li class=md-nav__item> <a href=../34-kickstart/ class=md-nav__link> <span class=md-ellipsis> kickstart </span> </a> </li> <li class=md-nav__item> <a href=../35-mogilefs/ class=md-nav__link> <span class=md-ellipsis> mogilefs </span> </a> </li> <li class=md-nav__item> <a href=../36-postgresql/ class=md-nav__link> <span class=md-ellipsis> postgresql </span> </a> </li> <li class=md-nav__item> <a href=../37-rabbitmq/ class=md-nav__link> <span class=md-ellipsis> rabbitmq </span> </a> </li> <li class=md-nav__item> <a href=../38-saltstack/ class=md-nav__link> <span class=md-ellipsis> saltstack </span> </a> </li> <li class=md-nav__item> <a href=../39-neo4j/ class=md-nav__link> <span class=md-ellipsis> neo4j </span> </a> </li> <li class=md-nav__item> <a href=../40-haproxy/ class=md-nav__link> <span class=md-ellipsis> haproxy </span> </a> </li> <li class="md-nav__item md-nav__item--active"> <input class="md-nav__toggle md-toggle" type=checkbox id=__toc> <label class="md-nav__link md-nav__link--active" for=__toc> <span class=md-ellipsis> dnsmasq </span> <span class="md-nav__icon md-icon"></span> </label> <a href=./ class="md-nav__link md-nav__link--active"> <span class=md-ellipsis> dnsmasq </span> </a> <nav class="md-nav md-nav--secondary" aria-label=目录> <label class=md-nav__title for=__toc> <span class="md-nav__icon md-icon"></span> 目录 </label> <ul class=md-nav__list data-md-component=toc data-md-scrollfix> <li class=md-nav__item> <a href=#_1 class=md-nav__link> <span class=md-ellipsis> 一、配置 </span> </a> </li> <li class=md-nav__item> <a href=#_2 class=md-nav__link> <span class=md-ellipsis> 二、压测 </span> </a> <nav class=md-nav aria-label=二、压测> <ul class=md-nav__list> <li class=md-nav__item> <a href=#21 class=md-nav__link> <span class=md-ellipsis> 2.1 安装 </span> </a> </li> <li class=md-nav__item> <a href=#22-help class=md-nav__link> <span class=md-ellipsis> 2.2 HELP </span> </a> </li> <li class=md-nav__item> <a href=#23 class=md-nav__link> <span class=md-ellipsis> 2.3 使用 </span> </a> </li> </ul> </nav> </li> </ul> </nav> </li> <li class=md-nav__item> <a href=../42-kvm/ class=md-nav__link> <span class=md-ellipsis> kvm </span> </a> </li> <li class=md-nav__item> <a href=../43-jumpserver/ class=md-nav__link> <span class=md-ellipsis> jumpServer </span> </a> </li> <li class=md-nav__item> <a href=../44-rsyncd/ class=md-nav__link> <span class=md-ellipsis> rsyncd </span> </a> </li> <li class=md-nav__item> <a href=../45-nfs/ class=md-nav__link> <span class=md-ellipsis> nfs </span> </a> </li> <li class=md-nav__item> <a href=../46-nginx/ class=md-nav__link> <span class=md-ellipsis> nginx </span> </a> </li> <li class=md-nav__item> <a href=../47-elastic/ class=md-nav__link> <span class=md-ellipsis> elastic </span> </a> </li> <li class=md-nav__item> <a href=../48-mysql/ class=md-nav__link> <span class=md-ellipsis> mysql </span> </a> </li> <li class=md-nav__item> <a href=../50-denyhosts/ class=md-nav__link> <span class=md-ellipsis> denyhosts </span> </a> </li> <li class=md-nav__item> <a href=../51-sentry/ class=md-nav__link> <span class=md-ellipsis> sentry </span> </a> </li> <li class=md-nav__item> <a href=../52-mitmproxy/ class=md-nav__link> <span class=md-ellipsis> mitmproxy </span> </a> </li> <li class=md-nav__item> <a href=../53-ntp/ class=md-nav__link> <span class=md-ellipsis> ntp </span> </a> </li> <li class=md-nav__item> <a href=../54-cloudstack/ class=md-nav__link> <span class=md-ellipsis> cloudstack </span> </a> </li> <li class=md-nav__item> <a href=../55-highon-coffee/ class=md-nav__link> <span class=md-ellipsis> highon.coffee </span> </a> </li> </ul> </nav> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_3> <label class=md-nav__link for=__nav_3 id=__nav_3_label tabindex=0> <span class=md-ellipsis> Kubernetes </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=1 aria-labelledby=__nav_3_label aria-expanded=false> <label class=md-nav__title for=__nav_3> <span class="md-nav__icon md-icon"></span> Kubernetes </label> <ul class=md-nav__list data-md-scrollfix> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_3_1> <label class=md-nav__link for=__nav_3_1 id=__nav_3_1_label tabindex=0> <span class=md-ellipsis> 【快速搭建】 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=2 aria-labelledby=__nav_3_1_label aria-expanded=false> <label class=md-nav__title for=__nav_3_1> <span class="md-nav__icon md-icon"></span> 【快速搭建】 </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../kubernetes/01-cluster-init/ class=md-nav__link> <span class=md-ellipsis> Quick Start </span> </a> </li> <li class=md-nav__item> <a href=../../kubernetes/01-cluster-init-flannel/ class=md-nav__link> <span class=md-ellipsis> Quick Start - Flannel </span> </a> </li> <li class=md-nav__item> <a href=../../kubernetes/01-cluster-init-cilium/ class=md-nav__link> <span class=md-ellipsis> Quick Start - Cilium </span> </a> </li> <li class=md-nav__item> <a href=../../kubernetes/01-cluster-init-calico/ class=md-nav__link> <span class=md-ellipsis> Quick Start - Calico </span> </a> </li> <li class=md-nav__item> <a href=../../kubernetes/01-cluster-init-calico-1.31/ class=md-nav__link> <span class=md-ellipsis> Quick Start - Calico - v1.31.1 </span> </a> </li> <li class=md-nav__item> <a href=../../kubernetes/02-cluster-reset/ class=md-nav__link> <span class=md-ellipsis> Quick Reset </span> </a> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_3_2> <label class=md-nav__link for=__nav_3_2 id=__nav_3_2_label tabindex=0> <span class=md-ellipsis> 【升级版本】 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=2 aria-labelledby=__nav_3_2_label aria-expanded=false> <label class=md-nav__title for=__nav_3_2> <span class="md-nav__icon md-icon"></span> 【升级版本】 </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../kubernetes/06-cluster-renew-certs/ class=md-nav__link> <span class=md-ellipsis> Renew certs </span> </a> </li> <li class=md-nav__item> <a href=../../kubernetes/06-cluster-upgrade/ class=md-nav__link> <span class=md-ellipsis> Upgrade </span> </a> </li> <li class=md-nav__item> <a href=../../kubernetes/06-cluster-upgrade-1.24/ class=md-nav__link> <span class=md-ellipsis> Upgrade - v1.24.0 </span> </a> </li> <li class=md-nav__item> <a href=../../kubernetes/06-cluster-upgrade-1.25/ class=md-nav__link> <span class=md-ellipsis> Upgrade - v1.25.0 </span> </a> </li> <li class=md-nav__item> <a href=../../kubernetes/06-cluster-upgrade-1.26/ class=md-nav__link> <span class=md-ellipsis> Upgrade - v1.26.0 </span> </a> </li> <li class=md-nav__item> <a href=../../kubernetes/06-cluster-upgrade-qa/ class=md-nav__link> <span class=md-ellipsis> 常见问题 </span> </a> </li> <li class=md-nav__item> <a href=../../kubernetes/07-app-migrate/ class=md-nav__link> <span class=md-ellipsis> 迁移容器 </span> </a> </li> <li class=md-nav__item> <a href=../../kubernetes/08-docker/ class=md-nav__link> <span class=md-ellipsis> Docker </span> </a> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_3_3> <label class=md-nav__link for=__nav_3_3 id=__nav_3_3_label tabindex=0> <span class=md-ellipsis> 【常用组件】 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=2 aria-labelledby=__nav_3_3_label aria-expanded=false> <label class=md-nav__title for=__nav_3_3> <span class="md-nav__icon md-icon"></span> 【常用组件】 </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../kubernetes/04-argocd/ class=md-nav__link> <span class=md-ellipsis> ArgoCD </span> </a> </li> <li class=md-nav__item> <a href=../../kubernetes/05-helm/ class=md-nav__link> <span class=md-ellipsis> Helm </span> </a> </li> <li class=md-nav__item> <a href=../../kubernetes/20-prometheus/ class=md-nav__link> <span class=md-ellipsis> Helm + Prometheus </span> </a> </li> <li class=md-nav__item> <a href=../../kubernetes/21-mysql/ class=md-nav__link> <span class=md-ellipsis> Helm + MySQL </span> </a> </li> <li class=md-nav__item> <a href=../../kubernetes/22-mongo/ class=md-nav__link> <span class=md-ellipsis> Helm + MongoDB </span> </a> </li> <li class=md-nav__item> <a href=../../kubernetes/23-grafana/ class=md-nav__link> <span class=md-ellipsis> Helm + Grafana </span> </a> </li> <li class=md-nav__item> <a href=../../kubernetes/24-redis/ class=md-nav__link> <span class=md-ellipsis> Helm + Redis </span> </a> </li> <li class=md-nav__item> <a href=../../kubernetes/25-elastic/ class=md-nav__link> <span class=md-ellipsis> Helm + Elastic </span> </a> </li> <li class=md-nav__item> <a href=../../kubernetes/26-harbor/ class=md-nav__link> <span class=md-ellipsis> Harbor </span> </a> </li> <li class=md-nav__item> <a href=../../kubernetes/27-kong/ class=md-nav__link> <span class=md-ellipsis> Kong </span> </a> </li> <li class=md-nav__item> <a href=../../kubernetes/28-rabbitmq/ class=md-nav__link> <span class=md-ellipsis> Rabbitmq </span> </a> </li> <li class=md-nav__item> <a href=../../kubernetes/42-metallb/ class=md-nav__link> <span class=md-ellipsis> MetalLB </span> </a> </li> <li class=md-nav__item> <a href=../../kubernetes/29-dashboard/ class=md-nav__link> <span class=md-ellipsis> Dashboard </span> </a> </li> <li class=md-nav__item> <a href=../../kubernetes/29-controller/ class=md-nav__link> <span class=md-ellipsis> Controller </span> </a> </li> <li class=md-nav__item> <a href=../../kubernetes/29-rancher/ class=md-nav__link> <span class=md-ellipsis> Rancher </span> </a> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_3_4> <label class=md-nav__link for=__nav_3_4 id=__nav_3_4_label tabindex=0> <span class=md-ellipsis> 【日常应用】 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=2 aria-labelledby=__nav_3_4_label aria-expanded=false> <label class=md-nav__title for=__nav_3_4> <span class="md-nav__icon md-icon"></span> 【日常应用】 </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../kubernetes/30-resource/ class=md-nav__link> <span class=md-ellipsis> 资源集锦 </span> </a> </li> <li class=md-nav__item> <a href=../../kubernetes/30-readme/ class=md-nav__link> <span class=md-ellipsis> 应用集锦 </span> </a> </li> <li class=md-nav__item> <a href=../../kubernetes/09-account/ class=md-nav__link> <span class=md-ellipsis> 用户体系 </span> </a> </li> <li class=md-nav__item> <a href=../../kubernetes/10-access-image/ class=md-nav__link> <span class=md-ellipsis> 加速镜像 </span> </a> </li> <li class=md-nav__item> <a href=../../kubernetes/20-promql/ class=md-nav__link> <span class=md-ellipsis> PromQL </span> </a> </li> <li class=md-nav__item> <a href=../../kubernetes/20-promql-func/ class=md-nav__link> <span class=md-ellipsis> PromQL 内置函数 </span> </a> </li> <li class=md-nav__item> <a href=../../kubernetes/31-kubeconfig/ class=md-nav__link> <span class=md-ellipsis> kubeconfig </span> </a> </li> <li class=md-nav__item> <a href=../../kubernetes/32-daemonset/ class=md-nav__link> <span class=md-ellipsis> daemon set </span> </a> </li> <li class=md-nav__item> <a href=../../kubernetes/33-statefulset/ class=md-nav__link> <span class=md-ellipsis> statefulset </span> </a> </li> <li class=md-nav__item> <a href=../../kubernetes/39-etcd/ class=md-nav__link> <span class=md-ellipsis> etcd </span> </a> </li> <li class=md-nav__item> <a href=../../kubernetes/44-jsonpath/ class=md-nav__link> <span class=md-ellipsis> JsonPath </span> </a> </li> <li class=md-nav__item> <a href=../../kubernetes/45-taint-and-toleration/ class=md-nav__link> <span class=md-ellipsis> Taints and Tolerations </span> </a> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_3_5> <label class=md-nav__link for=__nav_3_5 id=__nav_3_5_label tabindex=0> <span class=md-ellipsis> 【存储】 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=2 aria-labelledby=__nav_3_5_label aria-expanded=false> <label class=md-nav__title for=__nav_3_5> <span class="md-nav__icon md-icon"></span> 【存储】 </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../kubernetes/51-minio/ class=md-nav__link> <span class=md-ellipsis> MinIO </span> </a> </li> <li class=md-nav__item> <a href=../../kubernetes/52-nfs-provider/ class=md-nav__link> <span class=md-ellipsis> NFS Provider </span> </a> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_3_6> <label class=md-nav__link for=__nav_3_6 id=__nav_3_6_label tabindex=0> <span class=md-ellipsis> 【安全】 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=2 aria-labelledby=__nav_3_6_label aria-expanded=false> <label class=md-nav__title for=__nav_3_6> <span class="md-nav__icon md-icon"></span> 【安全】 </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../kubernetes/61-audit/ class=md-nav__link> <span class=md-ellipsis> Kubernetes Audit </span> </a> </li> </ul> </nav> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_4> <label class=md-nav__link for=__nav_4 id=__nav_4_label tabindex=0> <span class=md-ellipsis> 运维进阶 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=1 aria-labelledby=__nav_4_label aria-expanded=false> <label class=md-nav__title for=__nav_4> <span class="md-nav__icon md-icon"></span> 运维进阶 </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../ops/01-devops/ class=md-nav__link> <span class=md-ellipsis> DevOps </span> </a> </li> <li class=md-nav__item> <a href=../../ops/02-dataops/ class=md-nav__link> <span class=md-ellipsis> DataOps </span> </a> </li> <li class=md-nav__item> <a href=../../ops/03-aiops/ class=md-nav__link> <span class=md-ellipsis> AIOps </span> </a> </li> <li class=md-nav__item> <a href=../../ops/04-devsecops/ class=md-nav__link> <span class=md-ellipsis> DevSecOps </span> </a> </li> <li class=md-nav__item> <a href=../../ops/05-chatops/ class=md-nav__link> <span class=md-ellipsis> ChatOps </span> </a> </li> <li class=md-nav__item> <a href=../../ops/06-finops/ class=md-nav__link> <span class=md-ellipsis> FinOps </span> </a> </li> <li class=md-nav__item> <a href=../../ops/07-autoops/ class=md-nav__link> <span class=md-ellipsis> AutoOps </span> </a> </li> <li class=md-nav__item> <a href=../../ops/08-xops/ class=md-nav__link> <span class=md-ellipsis> XOps </span> </a> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_4_9> <label class=md-nav__link for=__nav_4_9 id=__nav_4_9_label tabindex=0> <span class=md-ellipsis> 【SRE】 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=2 aria-labelledby=__nav_4_9_label aria-expanded=false> <label class=md-nav__title for=__nav_4_9> <span class="md-nav__icon md-icon"></span> 【SRE】 </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../ops/50-sre-mogu/ class=md-nav__link> <span class=md-ellipsis> SRE实战 </span> </a> </li> <li class=md-nav__item> <a href=../../ops/51-sre-didi/ class=md-nav__link> <span class=md-ellipsis> 稳定性思考 </span> </a> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_4_10> <label class=md-nav__link for=__nav_4_10 id=__nav_4_10_label tabindex=0> <span class=md-ellipsis> 【监控】 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=2 aria-labelledby=__nav_4_10_label aria-expanded=false> <label class=md-nav__title for=__nav_4_10> <span class="md-nav__icon md-icon"></span> 【监控】 </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../ops/60-monitor/ class=md-nav__link> <span class=md-ellipsis> 建设监控 </span> </a> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_4_11> <label class=md-nav__link for=__nav_4_11 id=__nav_4_11_label tabindex=0> <span class=md-ellipsis> 【安全】 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=2 aria-labelledby=__nav_4_11_label aria-expanded=false> <label class=md-nav__title for=__nav_4_11> <span class="md-nav__icon md-icon"></span> 【安全】 </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../ops/70-pam/ class=md-nav__link> <span class=md-ellipsis> PAM </span> </a> </li> </ul> </nav> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_5> <label class=md-nav__link for=__nav_5 id=__nav_5_label tabindex=0> <span class=md-ellipsis> 运维开发 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=1 aria-labelledby=__nav_5_label aria-expanded=false> <label class=md-nav__title for=__nav_5> <span class="md-nav__icon md-icon"></span> 运维开发 </label> <ul class=md-nav__list data-md-scrollfix> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_5_1> <label class=md-nav__link for=__nav_5_1 id=__nav_5_1_label tabindex=0> <span class=md-ellipsis> 【Golang】 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=2 aria-labelledby=__nav_5_1_label aria-expanded=false> <label class=md-nav__title for=__nav_5_1> <span class="md-nav__icon md-icon"></span> 【Golang】 </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../dev/10-golang/ class=md-nav__link> <span class=md-ellipsis> Golang </span> </a> </li> <li class=md-nav__item> <a href=../../dev/11-cleint-go/ class=md-nav__link> <span class=md-ellipsis> client-go </span> </a> </li> <li class=md-nav__item> <a href=../../dev/12-chromedp/ class=md-nav__link> <span class=md-ellipsis> chromedp </span> </a> </li> <li class=md-nav__item> <a href=../../dev/13-smtp/ class=md-nav__link> <span class=md-ellipsis> smtp </span> </a> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_5_2> <label class=md-nav__link for=__nav_5_2 id=__nav_5_2_label tabindex=0> <span class=md-ellipsis> 【Python】 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=2 aria-labelledby=__nav_5_2_label aria-expanded=false> <label class=md-nav__title for=__nav_5_2> <span class="md-nav__icon md-icon"></span> 【Python】 </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../dev/20-python/ class=md-nav__link> <span class=md-ellipsis> python </span> </a> </li> <li class=md-nav__item> <a href=../../dev/21-conda/ class=md-nav__link> <span class=md-ellipsis> conda </span> </a> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_5_3> <label class=md-nav__link for=__nav_5_3 id=__nav_5_3_label tabindex=0> <span class=md-ellipsis> 【HTML】 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=2 aria-labelledby=__nav_5_3_label aria-expanded=false> <label class=md-nav__title for=__nav_5_3> <span class="md-nav__icon md-icon"></span> 【HTML】 </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../dev/70-admin/ class=md-nav__link> <span class=md-ellipsis> admin </span> </a> </li> <li class=md-nav__item> <a href=../../dev/80-html/ class=md-nav__link> <span class=md-ellipsis> html </span> </a> </li> <li class=md-nav__item> <a href=../../dev/81-vue/ class=md-nav__link> <span class=md-ellipsis> vue </span> </a> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_5_4> <label class=md-nav__link for=__nav_5_4 id=__nav_5_4_label tabindex=0> <span class=md-ellipsis> 【MarkDown】 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=2 aria-labelledby=__nav_5_4_label aria-expanded=false> <label class=md-nav__title for=__nav_5_4> <span class="md-nav__icon md-icon"></span> 【MarkDown】 </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../dev/90-gitbook/ class=md-nav__link> <span class=md-ellipsis> gitbook </span> </a> </li> <li class=md-nav__item> <a href=../../dev/91-docsify/ class=md-nav__link> <span class=md-ellipsis> docsify </span> </a> </li> <li class=md-nav__item> <a href=../../dev/92-mkdocs/ class=md-nav__link> <span class=md-ellipsis> mkdocs </span> </a> </li> <li class=md-nav__item> <a href=../../dev/96-macbook/ class=md-nav__link> <span class=md-ellipsis> MacBook </span> </a> </li> <li class=md-nav__item> <a href=../../dev/99-article/ class=md-nav__link> <span class=md-ellipsis> 文章管理 </span> </a> </li> </ul> </nav> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_6> <label class=md-nav__link for=__nav_6 id=__nav_6_label tabindex=0> <span class=md-ellipsis> 数据处理 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=1 aria-labelledby=__nav_6_label aria-expanded=false> <label class=md-nav__title for=__nav_6> <span class="md-nav__icon md-icon"></span> 数据处理 </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../data/01-mysql/ class=md-nav__link> <span class=md-ellipsis> MySQL </span> </a> </li> <li class=md-nav__item> <a href=../../data/02-neo4j/ class=md-nav__link> <span class=md-ellipsis> Neo4J </span> </a> </li> <li class=md-nav__item> <a href=../../data/03-redis/ class=md-nav__link> <span class=md-ellipsis> Redis </span> </a> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_6_4> <label class=md-nav__link for=__nav_6_4 id=__nav_6_4_label tabindex=0> <span class=md-ellipsis> 【NLP】 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=2 aria-labelledby=__nav_6_4_label aria-expanded=false> <label class=md-nav__title for=__nav_6_4> <span class="md-nav__icon md-icon"></span> 【NLP】 </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../data/10-chatgpt/ class=md-nav__link> <span class=md-ellipsis> chatgpt </span> </a> </li> <li class=md-nav__item> <a href=../../data/11-huggingface/ class=md-nav__link> <span class=md-ellipsis> huggingface </span> </a> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_6_5> <label class=md-nav__link for=__nav_6_5 id=__nav_6_5_label tabindex=0> <span class=md-ellipsis> 【LLM】 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=2 aria-labelledby=__nav_6_5_label aria-expanded=false> <label class=md-nav__title for=__nav_6_5> <span class="md-nav__icon md-icon"></span> 【LLM】 </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../data/20-llm/ class=md-nav__link> <span class=md-ellipsis> LLM </span> </a> </li> </ul> </nav> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_7> <label class=md-nav__link for=__nav_7 id=__nav_7_label tabindex=0> <span class=md-ellipsis> 生活随记 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=1 aria-labelledby=__nav_7_label aria-expanded=false> <label class=md-nav__title for=__nav_7> <span class="md-nav__icon md-icon"></span> 生活随记 </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../note/00-class/ class=md-nav__link> <span class=md-ellipsis> 经典语录 </span> </a> </li> <li class=md-nav__item> <a href=../../note/01-effect/ class=md-nav__link> <span class=md-ellipsis> 心理效应 </span> </a> </li> <li class=md-nav__item> <a href=../../note/02-start/ class=md-nav__link> <span class=md-ellipsis> 新年寄语 </span> </a> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_7_4> <label class=md-nav__link for=__nav_7_4 id=__nav_7_4_label tabindex=0> <span class=md-ellipsis> 【私野别墅】 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=2 aria-labelledby=__nav_7_4_label aria-expanded=false> <label class=md-nav__title for=__nav_7_4> <span class="md-nav__icon md-icon"></span> 【私野别墅】 </label> <ul class=md-nav__list data-md-scrollfix> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_7_4_1> <label class=md-nav__link for=__nav_7_4_1 id=__nav_7_4_1_label tabindex=0> <span class=md-ellipsis> 一层 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=3 aria-labelledby=__nav_7_4_1_label aria-expanded=false> <label class=md-nav__title for=__nav_7_4_1> <span class="md-nav__icon md-icon"></span> 一层 </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../note/84-villa-00-01/ class=md-nav__link> <span class=md-ellipsis> 别墅【00-01】 </span> </a> </li> <li class=md-nav__item> <a href=../../note/84-villa-00-02/ class=md-nav__link> <span class=md-ellipsis> 别墅【00-02】 </span> </a> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_7_4_2> <label class=md-nav__link for=__nav_7_4_2 id=__nav_7_4_2_label tabindex=0> <span class=md-ellipsis> 二层 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=3 aria-labelledby=__nav_7_4_2_label aria-expanded=false> <label class=md-nav__title for=__nav_7_4_2> <span class="md-nav__icon md-icon"></span> 二层 </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../note/84-villa-00-70/ class=md-nav__link> <span class=md-ellipsis> 别墅【00-70】 </span> </a> </li> <li class=md-nav__item> <a href=../../note/84-villa-34-80/ class=md-nav__link> <span class=md-ellipsis> 别墅【34-80】 </span> </a> </li> <li class=md-nav__item> <a href=../../note/84-villa-82-90/ class=md-nav__link> <span class=md-ellipsis> 别墅【82-90】 </span> </a> </li> </ul> </nav> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_7_5> <label class=md-nav__link for=__nav_7_5 id=__nav_7_5_label tabindex=0> <span class=md-ellipsis> 【工具集锦】 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=2 aria-labelledby=__nav_7_5_label aria-expanded=false> <label class=md-nav__title for=__nav_7_5> <span class="md-nav__icon md-icon"></span> 【工具集锦】 </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../note/90-hls-repair/ class=md-nav__link> <span class=md-ellipsis> 海信电视 </span> </a> </li> <li class=md-nav__item> <a href=../../note/91-qywx/ class=md-nav__link> <span class=md-ellipsis> 企业微信 </span> </a> </li> <li class=md-nav__item> <a href=../../note/92-bt/ class=md-nav__link> <span class=md-ellipsis> BT </span> </a> </li> <li class=md-nav__item> <a href=../../note/93-vmware-funsion/ class=md-nav__link> <span class=md-ellipsis> vmware fusion </span> </a> </li> </ul> </nav> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle " type=checkbox id=__nav_8> <label class=md-nav__link for=__nav_8 id=__nav_8_label tabindex=0> <span class=md-ellipsis> 关于我 </span> <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav data-md-level=1 aria-labelledby=__nav_8_label aria-expanded=false> <label class=md-nav__title for=__nav_8> <span class="md-nav__icon md-icon"></span> 关于我 </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../about/ class=md-nav__link> <span class=md-ellipsis> 关于我 </span> </a> </li> </ul> </nav> </li> </ul> </nav> </div> </div> </div> <div class="md-sidebar md-sidebar--secondary" data-md-component=sidebar data-md-type=toc> <div class=md-sidebar__scrollwrap> <div class=md-sidebar__inner> <nav class="md-nav md-nav--secondary" aria-label=目录> <label class=md-nav__title for=__toc> <span class="md-nav__icon md-icon"></span> 目录 </label> <ul class=md-nav__list data-md-component=toc data-md-scrollfix> <li class=md-nav__item> <a href=#_1 class=md-nav__link> <span class=md-ellipsis> 一、配置 </span> </a> </li> <li class=md-nav__item> <a href=#_2 class=md-nav__link> <span class=md-ellipsis> 二、压测 </span> </a> <nav class=md-nav aria-label=二、压测> <ul class=md-nav__list> <li class=md-nav__item> <a href=#21 class=md-nav__link> <span class=md-ellipsis> 2.1 安装 </span> </a> </li> <li class=md-nav__item> <a href=#22-help class=md-nav__link> <span class=md-ellipsis> 2.2 HELP </span> </a> </li> <li class=md-nav__item> <a href=#23 class=md-nav__link> <span class=md-ellipsis> 2.3 使用 </span> </a> </li> </ul> </nav> </li> </ul> </nav> </div> </div> </div> <div class=md-content data-md-component=content> <article class="md-content__inner md-typeset"> <h1 id=dnsmasq>dnsmasq<a class=headerlink href=#dnsmasq title="Permanent link">&para;</a></h1> <h2 id=_1>一、配置<a class=headerlink href=#_1 title="Permanent link">&para;</a></h2> <p><strong>dnsmasq经常修改的比较重要参数说明</strong></p> <table> <thead> <tr> <th>具体参数</th> <th>参数说明</th> </tr> </thead> <tbody> <tr> <td>resolv-file</td> <td>定义dnsmasq从哪里获取上游DNS服务器的地址， 默认从/etc/resolv.conf获取。</td> </tr> <tr> <td>strict-order</td> <td>表示严格按照resolv-file文件中的顺序从上到下进行DNS解析，直到第一个解析成功为止。</td> </tr> <tr> <td>listen-address</td> <td>定义dnsmasq监听的地址，默认是监控本机的所有网卡上。</td> </tr> <tr> <td>address</td> <td>启用泛域名解析，即自定义解析a记录，例如：address=/long.com/192.168.115.10 访问long.com时的所有域名都会被解析成192.168.115.10</td> </tr> <tr> <td>bogus-nxdomain</td> <td>对于任何被解析到此 IP 的域名，将响应 NXDOMAIN 使其解析失效，可以多次指定 通常用于对于访问不存在的域名，禁止其跳转到运营商的广告站点</td> </tr> <tr> <td>server</td> <td>指定使用哪个DNS服务器进行解析，对于不同的网站可以使用不同的域名对应解析。 例如：server=/google.com/8.8.8.8 #表示对于google的服务，使用谷歌的DNS解析。</td> </tr> </tbody> </table> <blockquote> <p>cat /etc/dnsmasq.conf <a href=http://en.wikipedia.org/wiki/Dnsmasq>http://en.wikipedia.org/wiki/Dnsmasq</a> </p> </blockquote> <div class=highlight><pre><span></span><code>resolv-file<span class=o>=</span>/etc/resolv.conf<span class=w> </span>
+strict-order<span class=w> </span>
+listen-address<span class=o>=</span><span class=m>10</span>.10.10.82<span class=w> </span>
+addn-hosts<span class=o>=</span>/etc/hosts<span class=w> </span>
+dns-forward-max<span class=o>=</span><span class=m>500</span><span class=w> </span>
+cache-size<span class=o>=</span><span class=m>2000</span><span class=w> </span>
+neg-ttl<span class=o>=</span><span class=m>3600</span><span class=w> </span>
+max-ttl<span class=o>=</span><span class=m>3600</span><span class=w> </span>
+max-cache-ttl<span class=o>=</span><span class=m>3600</span><span class=w> </span>
+auth-ttl<span class=o>=</span><span class=m>3600</span>
+</code></pre></div> <p><strong>它可以提供如下几个实用的功能：</strong></p> <ol> <li>提供dns服务</li> <li>优先使用本地自定义dns</li> <li>提供dhcp服务</li> </ol> <p>一般情况下，我们可以用bind解决dns的问题，dhcpd解决dhcp的问题，另外，还可以用ypbind解决自定义hostname解析的ip（当然还有用户的功能），它都解决了！很实用吧？这真的很吸引人，况且它一直在更新维护，最新版本是6月份的。</p> <p>安装过程很简单：</p> <p>编辑dnsmasq的配置文件 vim /etc/dnsmasq.conf </p> <p>找到下面这一项 #resolv-file=</p> <p>用下面的一条语句替换 resolv-file=/etc/resolv.dnsmasq.conf</p> <p>将原dns配置复制至resolv.dnsmasq.conf 确保你没有更改过/etc/resolv.conf文件，如果改过，恢复原状</p> <p>cp /etc/resolv.conf /etc/resolv.dnsmasq.conf </p> <p>编辑resolv.conf</p> <p>vim /etc/resolv.conf </p> <p>将其中的域名服务器全部去掉，加入以下这行 nameserver 127.0.0.1</p> <p>保存，退出 dnsmasq可以用hosts文件来设置域名： 例：test.sudone.com是不存在的域名，我在dnsmasq中指向到一个ip里： echo "64.233.189.99 test.sudone.com" &gt; /etc/dnsmasq.hosts </p> <p><strong>改完要重启：</strong> pkill -9 dnsmasp &amp;&amp; /usr/local/sbin/dnsmasq -h或/etc/init.d/dnsmasq restart </p> <hr> <blockquote> <p>/etc/dnsmasq.conf</p> </blockquote> <div class=highlight><pre><span></span><code># 不加载本地的 /etc/hosts 文件
+#no-hosts
+# 添加读取额外的 hosts 文件路径，可以多次指定。如果指定为目录，则读取目录中的所有文件。
+#addn-hosts=/etc/dnsmasq.hosts.d
+# 读取目录中的所有文件，文件更新将自动读取
+#hostsdir=/etc/dnsmasq.hosts.d
+# 例如，/etc/hosts中的os01将扩展成os01.example.com
+#expand-hosts
+
+##############################################################################
+# 缓存时间设置，一般不需要设置
+# 本地 hosts 文件的缓存时间，通常不要求缓存本地，这样更改hosts文件后就即时生效。
+#local-ttl=3600
+# 同 local-ttl 仅影响 DHCP 租约
+#dhcp-ttl=&lt;time&gt;
+# 对于上游返回的值没有ttl时，dnsmasq给一个默认的ttl，一般不需要设置，
+#neg-ttl=&lt;time&gt;
+# 指定返回给客户端的ttl时间，一般不需要设置
+#max-ttl=&lt;time&gt;
+# 设置在缓存中的条目的最大 TTL。
+#max-cache-ttl=&lt;time&gt;
+# 不需要设置，除非你知道你在做什么。
+#min-cache-ttl=&lt;time&gt;
+# 一般不需要设置
+#auth-ttl=&lt;time&gt;
+##############################################################################
+# 记录dns查询日志，如果指定 log-queries=extra 那么在每行开始处都有额外的日志信息。
+#log-queries
+# 设置日志记录器，&#39;-&#39; 为 stderr，也可以是文件路径。默认为：DAEMON，调试时使用 LOCAL0。
+#log-facility=&lt;facility&gt;
+#log-facility=/var/log/dnsmasq/dnsmasq.log
+# 异步log，缓解阻塞，提高性能。默认为5，最大100。
+#log-async[=&lt;lines&gt;]
+#log-async=50
+
+##############################################################################
+# 指定用户和组
+#user=nobody
+#group=nobody
+
+##############################################################################
+# 指定DNS的端口，默认53，设置 port=0 将完全禁用 DNS 功能，仅使用 DHCP/TFTP
+#port=53
+# 指定 EDNS.0 UDP 包的最大尺寸，默认为 RFC5625 推荐的 edns-packet-max=4096
+#edns-packet-max=&lt;size&gt;
+# 指定向上游查询的 UDP 端口，默认是随机端口，指定后降低安全性、加快速度、减少资源消耗。
+# 设置为 &#39;0&#39; 由操作系统分配。
+#query-port=53535
+# 指定向上游查询的 UDP 端口范围，方便防火墙设置。
+#min-port=&lt;port&gt;
+#max-port=&lt;port&gt;
+# 指定接口，指定后同时附加 lo 接口，可以使用&#39;*&#39;通配符。
+# 不能使用接口别名（例如：&quot;eth1:0&quot;），请用 listen-address 选项替代。
+#interface=wlp2s0
+# 指定排除的接口，排除优先级高，可以使用&#39;*&#39;通配符
+#except-interface=
+# 仅接受同一子网的 DNS 请求。
+# 仅在未指定 interface、except-interface、listen-address 或者 auth-server 时有效。
+#local-service
+# 指定不提供 DHCP 或 TFTP 服务的接口，仅提供 DNS 服务。
+#no-dhcp-interface=enp3s0
+# 指定IP地址，可以多次指定。
+# interface 选项和 listen-address 选项可以同时使用。
+# 下面两行与指定 interface 选项的作用类似。
+listen-address=192.168.10.17
+#listen-address=127.0.0.1
+# 通常情况下即使设置了 interface 选项（例如：interface=wlp2s0 ）
+# 将仍然绑定到通配符地址（例如：*:53 ）。
+# 开启此项将仅监听指定的接口。
+# 适用于在同一主机的不同接口或 IP 地址上运行多个 dns 服务器。
+bind-interfaces
+# 对于新添加的接口不进行绑定。仅 Linux 系统支持，其他系统等同于 bind-interfaces 选项。
+#bind-dynamic
+
+##############################################################################
+# 如果 hosts 中的主机有多个 IP 地址，仅返回对应子网的 IP 地址。
+localise-queries
+# 如果反向查找的是私有地址例如192.168.X.X，仅从 hosts 文件查找，不再转发到上游服务器
+#bogus-priv
+# 对于任何被解析到此 IP 的域名，将响应 NXDOMAIN 使其解析失效，可以多次指定
+# 通常用于对于访问不存在的域名，禁止其跳转到运营商的广告站点。
+#bogus-nxdomain=64.94.110.11
+# 忽略包含指定地址的 A 记录查询的回复。
+# 例如上游有台 dns 服务器伪造 www.baidu.com 的 IP 为 1.1.1.1 并且响应速度非常快。
+# 指定 ignore-address=1.1.1.1 可以忽略它的响应信息，
+# 从而等待 www.baidu.com 正确的查询结果。
+#ignore-address=&lt;ipaddr&gt;
+filterwin2k
+
+##############################################################################
+# 指定 resolv-file 文件路径，默认/etc/resolv.conf
+#resolv-file=/etc/resolv.conf
+# 不读取 resolv-file 来确定上游服务器
+#no-resolv
+# 在编译时需要启用 DBus 支持。
+#enable-dbus[=&lt;service-name&gt;]
+# 严格按照resolv.conf中的顺序进行查找
+#strict-order
+# 向所有上游服务器发送查询，而不是一个。
+all-servers
+# 启用转发循环检测
+#dns-loop-detect
+
+##############################################################################
+# 这项安全设置是拒绝解析包含私有 IP 地址的域名，
+# 这些IP地址包括如下私有地址范围：10.0.0.0/8、172.16.0.0/12、192.168.0.0/16。
+# 其初衷是要防止类似上游DNS服务器故意将某些域名解析成特定私有内网IP而劫持用户这样的安全***。
+# 直接在配置文件中注销 stop-dns-rebind 配置项从而禁用该功能。
+# 这个方法确实可以一劳永逸的解决解析内网 IP 地址的问题，
+# 但是我们也失去了这项安全保护的特性，所以在这里我不推荐这个办法。
+# 使用 rebind-domain-ok 进行特定配置，顾名思义该配置项可以有选择的忽略域名的 rebind 行为
+stop-dns-rebind
+rebind-localhost-ok
+#rebind-domain-ok=[&lt;domain&gt;]|[[/&lt;domain&gt;/[&lt;domain&gt;/]
+rebind-domain-ok=/.test.com/
+
+##############################################################################
+# 也不要检测 /etc/resolv.conf 的变化
+#no-poll
+# 重启后清空缓存
+clear-on-reload
+# 完整的域名才向上游服务器查找，如果仅仅是主机名仅查找hosts文件
+domain-needed
+
+##############################################################################
+# IP地址转换
+#alias=[&lt;old-ip&gt;]|[&lt;start-ip&gt;-&lt;end-ip&gt;],&lt;new-ip&gt;[,&lt;mask&gt;]
+##############################################################################
+#local=[/[&lt;domain&gt;]/[domain/]][&lt;ipaddr&gt;[#&lt;port&gt;][@&lt;source-ip&gt;|&lt;interface&gt;[#&lt;port&gt;]]
+#server=[/[&lt;domain&gt;]/[domain/]][&lt;ipaddr&gt;[#&lt;port&gt;][@&lt;source-ip&gt;|&lt;interface&gt;[#&lt;port&gt;]]
+server=/test.com/192.168.10.117
+server=/10.168.192.in-addr.arpa/192.168.10.117
+#rev-server=&lt;ip-address&gt;/&lt;prefix-len&gt;,&lt;ipaddr&gt;[#&lt;port&gt;][@&lt;source-ip&gt;|&lt;interface&gt;[#&lt;port&gt;]]
+# 将任何属于 &lt;domain&gt; 域名解析成指定的 &lt;ipaddr&gt; 地址。
+# 也就是将 &lt;domain&gt; 及其所有子域名解析成指定的 &lt;ipaddr&gt; IPv4 或者 IPv6 地址，通常用于屏蔽特定的域名。
+# 一次只能指定一个 IPv4 或者 IPv6 地址，要同时返回 IPv4 和IPv6 地址，请多次指定 address= 选项。
+# 注意： /etc/hosts 以及 DHCP 租约将覆盖此项设置。
+#address=/&lt;domain&gt;/[domain/][&lt;ipaddr&gt;]
+#ipset=/&lt;domain&gt;/[domain/]&lt;ipset&gt;[,&lt;ipset&gt;]
+#mx-host=&lt;mx name&gt;[[,&lt;hostname&gt;],&lt;preference&gt;]
+#mx-target=&lt;hostname&gt;
+
+# SRV 记录
+#srv-host=&lt;_service&gt;.&lt;_prot&gt;.[&lt;domain&gt;],[&lt;target&gt;[,&lt;port&gt;[,&lt;priority&gt;[,&lt;weight&gt;]]]]
+# A, AAAA 和 PTR 记录 
+#host-record=&lt;name&gt;[,&lt;name&gt;....],[&lt;IPv4-address&gt;],[&lt;IPv6-address&gt;][,&lt;TTL&gt;]
+
+# TXT 记录
+#txt-record=&lt;name&gt;[[,&lt;text&gt;],&lt;text&gt;]
+# PTR 记录 
+#ptr-record=&lt;name&gt;[,&lt;target&gt;]
+#naptr-record=&lt;name&gt;,&lt;order&gt;,&lt;preference&gt;,&lt;flags&gt;,&lt;service&gt;,&lt;regexp&gt;[,&lt;replacement&gt;]
+
+# CNAME 别名记录
+#cname=&lt;cname&gt;,&lt;target&gt;[,&lt;TTL&gt;]
+#dns-rr=&lt;name&gt;,&lt;RR-number&gt;,[&lt;hex data&gt;]
+#interface-name=&lt;name&gt;,&lt;interface&gt;[/4|/6]
+#synth-domain=&lt;domain&gt;,&lt;address range&gt;[,&lt;prefix&gt;]
+#add-mac[=base64|text]
+#add-cpe-id=&lt;string&gt;
+#add-subnet[[=[&lt;IPv4 address&gt;/]&lt;IPv4 prefix length&gt;][,[&lt;IPv6 address&gt;/]&lt;IPv6 prefix length&gt;]]
+
+#############################################################################
+# 缓存条数，默认为150条，cache-size=0 禁用缓存。
+cache-size=1000
+# 不缓存未知域名缓存，默认情况下dnsmasq缓存未知域名并直接返回为客户端。
+no-negcache
+# 指定DNS同属查询转发数量
+dns-forward-max=1000
+
+##############################################################################
+#dnssec
+#trust-anchor=[&lt;class&gt;],&lt;domain&gt;,&lt;key-tag&gt;,&lt;algorithm&gt;,&lt;digest-type&gt;,&lt;digest&gt;
+#dnssec-check-unsigned
+#dnssec-no-timecheck
+#dnssec-timestamp=&lt;path&gt;
+#proxy-dnssec
+#dnssec-debug
+
+#############################################################################
+#auth-server=&lt;domain&gt;,&lt;interface&gt;|&lt;ip-address&gt;
+#auth-zone=&lt;domain&gt;[,&lt;subnet&gt;[/&lt;prefix length&gt;][,&lt;subnet&gt;[/&lt;prefix length&gt;].....]]
+#auth-zone=&lt;domain&gt;[,&lt;interface name&gt;[/6|/4][,&lt;interface name&gt;[/6|/4].....]]
+#auth-soa=&lt;serial&gt;[,&lt;hostmaster&gt;[,&lt;refresh&gt;[,&lt;retry&gt;[,&lt;expiry&gt;]]]]
+#auth-sec-servers=&lt;domain&gt;[,&lt;domain&gt;[,&lt;domain&gt;...]]
+#auth-peer=&lt;ip-address&gt;[,&lt;ip-address&gt;[,&lt;ip-address&gt;...]]
+# 启用连接跟踪，读取 Linux 入栈 DNS 查询请求的连接跟踪标记，
+# 并且将上游返回的响应信息设置同样的标记。
+# 用于带宽控制和防火墙部署。
+# 此选项必须在编译时启用 conntrack 支持，并且内核正确配置并加载 conntrack。
+# 此选项不能与 query-port 同时使用。
+#conntrack
+
+##############################################################################
+#
+#        DHCP 选项
+#
+##############################################################################
+# 设置 DHCP 地址池，同时启用 DHCP 功能。
+# IPv4 &lt;mode&gt; 可指定为 static|proxy ，当 &lt;mode&gt; 指定为 static 时，
+# 需用 dhcp-host 手动分配地址池中的 IP 地址。
+# 当 &lt;mode&gt; 指定为 proxy 时，为指定的地址池提供 DHCP 代理。
+#dhcp-range=[tag:&lt;tag&gt;[,tag:&lt;tag&gt;],][set:&lt;tag&gt;,]&lt;start-addr&gt;[,&lt;end-addr&gt;][,&lt;mode&gt;][,&lt;netmask&gt;[,&lt;broadcast&gt;]][,&lt;lease time&gt;]
+#dhcp-range=172.16.0.2,172.16.0.250,255.255.255.0,1h
+#dhcp-range=192.168.10.150,192.168.10.180,static,255.255.255.0,1h
+# 根据 MAC 地址或 id 固定分配客户端的 IP 地址、主机名、租期。
+# IPv4 下指定 id:* 将忽略 DHCP 客户端的 ID ，仅根据 MAC 来进行 IP 地址分配。
+# 在读取 /etc/hosts 的情况，也可以根据 /etc/hosts 中的主机名分配对应 IP 地址。
+# 指定 ignore 将忽略指定客户端得 DHCP 请求。
+#dhcp-host=[&lt;hwaddr&gt;],id:&lt;client_id&gt;|*][,set:&lt;tag&gt;][,&lt;ipaddr&gt;][,&lt;hostname&gt;][,&lt;lease_time&gt;][,ignore]
+#dhcp-hostsfile=&lt;path&gt;
+#dhcp-hostsdir=&lt;path&gt;
+# 读取 /etc/ethers 文件 与使用 dhcp-host 的作用相同。IPv6 无效。
+#read-ethers
+# 指定给 DHCP 客户端的选项信息，
+# 默认情况下 dnsmasq 将发送：子网掩码、广播地址、DNS 服务器地址、网关地址、域等信息。
+# 指定此选项也可覆盖这些默认值并且设置其他选项值。
+# 重要：可以使用 option:&lt;option-name&gt;或者 option号 来指定。
+# &lt;option-name&gt; 和 option号的对应关系可使用命令：
+# dnsmasq --help dhcp 以及 dnsmasq --help dhcp6 查看，这点很重要。
+# 例如设置网关参数，既可以使用 dhcp-option=3,192.168.4.4 也可以使用 dhcp-option = option:router,192.168.4.4。
+# 0.0.0.0 意味着当前运行 dnsmasq 的主机地址。
+# 如果指定了多个 tag:&lt;tag&gt; 必须同时匹配才行。
+# [encap:&lt;opt&gt;,][vi-encap:&lt;enterprise&gt;,][vendor:[&lt;vendor-class&gt;],] 有待继续研究。
+#dhcp-option=[tag:&lt;tag&gt;,[tag:&lt;tag&gt;,]][encap:&lt;opt&gt;,][vi-encap:&lt;enterprise&gt;,][vendor:[&lt;vendor-class&gt;],][&lt;opt&gt;|option:&lt;opt-name&gt;|option6:&lt;opt&gt;|option6:&lt;opt-name&gt;],[&lt;value&gt;[,&lt;value&gt;]]
+#dhcp-option-force=[tag:&lt;tag&gt;,[tag:&lt;tag&gt;,]][encap:&lt;opt&gt;,][vi-encap:&lt;enterprise&gt;,][vendor:[&lt;vendor-class&gt;],]&lt;opt&gt;,[&lt;value&gt;[,&lt;value&gt;]]
+#dhcp-optsfile=&lt;path&gt;
+#dhcp-optsdir=&lt;path&gt;
+#dhcp-option=3,1.2.3.4
+#dhcp-option=option:router,1.2.3.4
+#dhcp-option=option:router,192.168.10.254
+#dhcp-option=option:dns-server,192.168.10.254,221.12.1.227,221.12.33.227
+
+##############################################################################
+# (IPv4 only) 禁用重用服务器名称和文件字段作为额外的 dhcp-option 选项。
+# 一般情况下 dnsmasq 从 dhcp-boot 移出启动服务器和文件信息到 dhcp-option 选项中。
+# 这使得在 dhcp-option 选项封包中有额外的选项空间可用，但是会使老的客户端混淆。
+# 此选项将强制使用简单并安全的方式来避免此类情况。可以认为是一个兼容性选项。
+#dhcp-no-override
+
+##############################################################################
+# 配置 DHCP 中继。
+# &lt;local address&gt; 是运行 dnsmasq 的接口的 IP 地址。
+# 所有在 &lt;local address&gt; 接口上接收到的 DHCP 请求将中继到 &lt;server address&gt; 指定的远程 DHCP 服器。
+# 可以多次配置此选项，使用同一个 &lt;local address&gt; 转发到多个不同的 &lt;server address&gt; 指定的远程 DHCP服务器。
+# &lt;server address&gt; 仅允许使用 IP 地址，不能使用域名等其他格式。
+# 如果是 DHCPv6，&lt;server address&gt; 可以是 ALL_SERVERS 的多播地址 ff05::1:3 。
+# 在这种情况下必须指定接口 &lt;interface&gt; ，不能使用通配符，用于直接多播到对应的 DHCP 服务器所在的接口。
+# &lt;interface&gt; 指定了仅允许接收从 &lt;interface&gt; 接口的 DHCP 服务器相应信息。
+#dhcp-relay=&lt;local address&gt;,&lt;server address&gt;[,&lt;interface&gt;]
+
+##############################################################################
+# 设置标签
+#dhcp-vendorclass=set:&lt;tag&gt;,[enterprise:&lt;IANA-enterprise number&gt;,]&lt;vendor-class&gt;
+#dhcp-userclass=set:&lt;tag&gt;,&lt;user-class&gt;
+#dhcp-mac=set:&lt;tag&gt;,&lt;MAC address&gt;
+#dhcp-circuitid=set:&lt;tag&gt;,&lt;circuit-id&gt;
+#dhcp-remoteid=set:&lt;tag&gt;,&lt;remote-id&gt;
+#dhcp-subscrid=set:&lt;tag&gt;,&lt;subscriber-id&gt;
+#dhcp-match=set:&lt;tag&gt;,&lt;option number&gt;|option:&lt;option name&gt;|vi-encap:&lt;enterprise&gt;[,&lt;value&gt;]
+#tag-if=set:&lt;tag&gt;[,set:&lt;tag&gt;[,tag:&lt;tag&gt;[,tag:&lt;tag&gt;]]]
+#dhcp-proxy[=&lt;ip addr&gt;]......
+
+##############################################################################
+# 不分配匹配这些 tag:&lt;tag&gt; 的 DHCP 请求。
+#dhcp-ignore=tag:&lt;tag&gt;[,tag:&lt;tag&gt;]
+#dhcp-ignore-names[=tag:&lt;tag&gt;[,tag:&lt;tag&gt;]]
+#dhcp-generate-names=tag:&lt;tag&gt;[,tag:&lt;tag&gt;]
+# IPv4 only 使用广播与匹配 tag:&lt;tag&gt; 的客户端通信。一般用于兼容老的 BOOT 客户端。
+#dhcp-broadcast[=tag:&lt;tag&gt;[,tag:&lt;tag&gt;]] 
+
+##############################################################################
+# IPv4 only 设置 DHCP 服务器返回的 BOOTP 选项，
+# &lt;servername&gt; &lt;server address&gt; 可选，
+# 如果未设置服务器名称将设为空，服务器地址设为 dnsmasq 的 IP 地址。
+# 如果指定了多个 tag:&lt;tag&gt; 必须同时匹配才行。
+# 如果指定 &lt;tftp_servername&gt; 将按照 /etc/hosts 中对应的 IP 地址进行轮询负载均衡。  
+#dhcp-boot=[tag:&lt;tag&gt;,]&lt;filename&gt;,[&lt;servername&gt;[,&lt;server address&gt;|&lt;tftp_servername&gt;]]
+# 根据不同的类型使用不同的选项。
+# 使用示例：
+#        dhcp-match=set:EFI_x86-64,option:client-arch,9
+#        dhcp-boot=tag:EFI_x86-64,uefi/grubx64.efi
+#        #dhcp-match=set:EFI_Xscale,option:client-arch,8
+#        #dhcp-boot=tag:EFI_Xscale,uefi/grubx64.efi
+#        #dhcp-match=set:EFI_BC,option:client-arch,7
+#        #dhcp-boot=tag:EFI_BC,uefi/grubx64.efi
+#        #dhcp-match=set:EFI_IA32,option:client-arch,6
+#        #dhcp-boot=tag:EFI_IA32,uefi/grubx64.efi
+#        #dhcp-match=set:Intel_Lean_Client,option:client-arch,5
+#        #dhcp-boot=tag:Intel_Lean_Client,uefi/grubx64.efi
+#        #dhcp-match=set:Arc_x86,option:client-arch,4
+#        #dhcp-boot=tag:Arc_x86,uefi/grubx64.efi
+#        #dhcp-match=set:DEC_Alpha,option:client-arch,3
+#        #dhcp-boot=tag:DEC_Alpha,uefi/grubx64.efi
+#        #dhcp-match=set:EFI_Itanium,option:client-arch,2
+#        #dhcp-boot=tag:EFI_Itanium,uefi/grubx64.efi
+#        #dhcp-match=set:NEC/PC98,option:client-arch,1
+#        #dhcp-boot=tag:NEC/PC98,uefi/grubx64.efi
+#        dhcp-match=set:Intel_x86PC,option:client-arch,0
+#        dhcp-boot=tag:Intel_x86PC,pxelinux.0
+
+##############################################################################
+# DHCP 使用客户端的 MAC 地址的哈希值为客户端分配 IP 地址，
+# 通常情况下即使客户端使自己的租约到期，客户端的 IP 地址仍将长期保持稳定。
+# 在默认模式下，IP 地址是随机分配的。
+# 启用 dhcp-sequential-ip 选项将按顺序分配 IP 地址。
+# 在顺序分配模式下，客户端使租约到期更像是仅仅移动一下 IP 地址。
+# 在通常情况下不建议使用这种方式。
+#dhcp-sequential-ip
+
+##############################################################################
+# 多数情况下我们使用 PXE，只是简单的允许 PXE 客户端获取 IP 地址，
+# 然后 PXE 客户端下载 dhcp-boot 选项指定的文件并执行，也就是 BOOTP 的方式。
+# 然而在有适当配置的 DHCP 服务器支持的情况下，PXE 系统能够实现更复杂的功能。
+# pxe-service 选项可指定 PXE 环境的启动菜单。
+# 为不同的类型系统设定不同的启动菜单，并且覆盖 dhcp-boot 选项。
+# &lt;CSA&gt; 为客户端系统类型：x86PC, PC98, IA64_EFI, Alpha, Arc_x86, Intel_Lean_Client, 
+# IA32_EFI, X86-64_EFI, Xscale_EFI, BC_EFI, ARM32_EFI 和 ARM64_EFI，其他类型可能为一个整数。
+# &lt;basename&gt; 引导 PXE 客户端使用 tftp 从 &lt;server address&gt; 或者 &lt;server_name&gt; 下载文件。
+#     注意：&quot;layer&quot; 后缀 (通常是 &quot;.0&quot;) 由 PXE 提供，也就是 PXE 客户端默认在文件名附加 .0 后缀。
+#     示例：pxe-service=x86PC, &quot;Install Linux&quot;, pxelinux         （读取 pxelinux.0 文件并执行）
+#           pxe-service=x86PC, &quot;Install Linux&quot;, pxelinux, 1.2.3.4（不适用于老的PXE）
+#     &lt;bootservicetype&gt; 整数，PXE 客户端将通过广播或者通过 &lt;server address&gt; 
+#           或者 &lt;server_name&gt; 搜索对应类型的适合的启动服务。。
+#     示例：pxe-service=x86PC, &quot;Install windows from RIS server&quot;, 1
+#           pxe-service=x86PC, &quot;Install windows from RIS server&quot;, 1, 1.2.3.4
+#     未指定 &lt;basename&gt;、&lt;bootservicetype&gt; 或者 &lt;bootservicetype&gt; 为 “0”，将从本地启动。
+#     示例：pxe-service=x86PC, &quot;Boot from local disk&quot;
+#           pxe-service=x86PC, &quot;Boot from local disk&quot;, 0
+# 如果指定 &lt;server_name&gt; 将按照 /etc/hosts 中对应的 IP 地址进行轮询负载均衡。  
+#pxe-service=[tag:&lt;tag&gt;,]&lt;CSA&gt;,&lt;menu text&gt;[,&lt;basename&gt;|&lt;bootservicetype&gt;][,&lt;server address&gt;|&lt;server_name&gt;]
+# 在 PXE 启动后弹出提示，&lt;prompt&gt; 为提示内容，&lt;timeout&gt; 为超时时间，为 0 则立即执行。
+# 如果未指定此选项，在有多个启动选项的情况下等待用户选择，不会超时。
+#pxe-prompt=[tag:&lt;tag&gt;,]&lt;prompt&gt;[,&lt;timeout&gt;]
+# 根据不同的类型使用不同的菜单，使用示例：
+#        #pxe-prompt=&quot;What system shall I netboot?&quot;, 120
+#        # or with timeout before first available action is taken:
+#        pxe-prompt=&quot;Press F8 or Enter key for menu.&quot;, 60
+#        pxe-service=x86PC, &quot;Now in x86PC (BIOS mode), boot from local&quot;, 0
+#        pxe-service=x86PC, &quot;Now in x86PC (BIOS mode)&quot;, pxelinux
+#        pxe-service=PC98, &quot;Now in PC98 mode&quot;, PC98
+#        pxe-service=IA64_EFI, &quot;Now in IA64_EFI mode&quot;, IA64_EFI
+#        pxe-service=Alpha, &quot;Now in Alpha mode&quot;, Alpha
+#        pxe-service=Arc_x86, &quot;Now in Arc_x86 mode&quot;, Arc_x86
+#        pxe-service=Intel_Lean_Client, &quot;Now in Intel_Lean_Client mode&quot;, Intel_Lean_Client
+#        pxe-service=IA32_EFI, &quot;Now in IA32_EFI mode&quot;, IA32_EFI
+#        pxe-service=X86-64_EFI, &quot;Now in X86-64_EFI (UEFI mode), boot from local&quot;, 0
+#        pxe-service=X86-64_EFI, &quot;Now in X86-64_EFI (UEFI mode)&quot;, grub/grub-x86_64.efi
+#        pxe-service=Xscale_EFI, &quot;Now in Xscale_EFI mode&quot;, Xscale_EFI
+#        pxe-service=BC_EFI, &quot;Now in BC_EFI mode&quot;, BC_EFI
+#        # CentOS7 系统不支持下列两个选项
+#        #pxe-service=ARM32_EFI,&quot;Now in ARM32_EFI mode&quot;,ARM32_EFI
+#        #pxe-service=ARM64_EFI,&quot;Now in ARM64_EFI mode&quot;,ARM64_EFI
+
+##############################################################################
+# 默认为150，即最多分配150个ip地址出去，最大1000个ip
+#dhcp-lease-max=150
+# (IPv4 only) 指定DHCP端口，默认为67和68。如果不指定则为1067和1068，单指定一个，第二个加1
+#dhcp-alternate-port[=&lt;server port&gt;[,&lt;client port&gt;]]
+# 谨慎使用此选项，避免 IP 地址浪费。(IPv4 only) 允许动态分配 IP 地址给 BOOTP 客户端。
+# 注意：BOOTP 客户端获取的 IP 地址是永久的，将无法再次分配给其他客户端。
+#bootp-dynamic[=&lt;network-id&gt;[,&lt;network-id&gt;]]
+# 谨慎使用此选项。
+# 默认情况下 DHCP 服务器使用 ping 的方式进行确保 IP 未被使用的情况下将 IP 地址分配出去。# 启用此选项将不使用 ping 进行确认。
+#no-ping
+
+##############################################################################
+# 记录额外的 dhcp 日志，记录所有发送给 DHCP 客户端的选项（option）以及标签（tag）信息
+#log-dhcp
+# 禁止记录日常操作日志，错误日志仍然记录。启用 log-dhcp 将覆盖下列选项。
+#quiet-dhcp
+#quiet-dhcp6
+#quiet-ra
+# 修改 DHCP 默认租约文件路径，默认情况下无需修改
+#dhcp-leasefile=/var/lib/dnsmasq/dnsmasq.leases
+# (IPv6 only)
+#dhcp-duid=&lt;enterprise-id&gt;,&lt;uid&gt;
+
+##############################################################################
+#dhcp-script=&lt;path&gt;
+#dhcp-luascript=&lt;path&gt;
+#dhcp-scriptuser=root
+#script-arp
+#leasefile-ro
+#bridge-interface=&lt;interface&gt;,&lt;alias&gt;[,&lt;alias&gt;]
+
+##############################################################################
+# 给 DHCP 服务器指定 domain 域名信息，也可以给对应的 IP 地址池指定域名
+#     直接指定域名
+#     示例：domain=thekelleys.org.uk
+#     子网对应的域名
+#     示例：domain=wireless.thekelleys.org.uk,192.168.2.0/24
+#     ip范围对应的域名
+#     示例：domain=reserved.thekelleys.org.uk,192.68.3.100,192.168.3.200
+#domain=&lt;domain&gt;[,&lt;address range&gt;[,local]]
+# 在默认情况下 dnsmasq 插入普通的客户端主机名到 DNS 中。
+# 在这种情况下主机名必须唯一，即使两个客户端具有不同的域名后缀。
+# 如果第二个客户端使用了相同的主机名，DNS 查询将自动更新为第二个客户端的 IP 地址。
+# 如果设置了 dhcp-fqdn 选项，普通的主机名将不再插入到 DNS 中去，
+# 仅允许合格的具有域名后缀的主机名插入到 DNS 服务器中。
+# 指定此选项需同时指定不含 &lt;address range&gt; 地址范围的 domain 选项。
+#dhcp-fqdn
+# 通常情况下分配 DHCP 租约后，dnsmasq 设置 FQDN 选项告诉客户端不要尝试 DDNS 更新主机名与 IP 地址。
+# 这是因为  name-IP 已自动添加到 dnsmasq 的 DNS 视图中的。
+# 设置此选项将允许客户端 DDNS 更新，
+# 在 windows 下允许客户端更新 windows AD 服务器是非常有用的。
+# 参看  RFC 4702 。
+#dhcp-client-update
+#enable-ra
+#ra-param=&lt;interface&gt;,[high|low],[[&lt;ra-interval&gt;],&lt;router lifetime&gt;]
+
+##############################################################################
+#
+#        TFTP 选项
+#
+##############################################################################
+# 对于绝大多数的配置，仅需指定 enable-tftp 和 tftp-root 选项即可。
+# 是否启用内置的 tftp 服务器，可以指定多个逗分隔的网络接口
+#enable-tftp[=&lt;interface&gt;[,&lt;interface&gt;]]
+#enable-tftp
+#enable-tftp=enp3s0,lo
+# 指定 tftp 的根目录，也就是寻找传输文件时使用的相对路径，可以附加接口，
+#tftp-root=&lt;directory&gt;[,&lt;interface&gt;]
+#tftp-root=/var/lib/tftpboot/
+# 如果取消注释，那么即使指定的 tftp-root 无法访问，仍然启动 tftp 服务。
+#tftp-no-fail
+# 附加客户端的 IP 地址作为文件路径。此选项仅在正确设置了 tftp-root 的情况下可用，
+# 示例：如果 tftp-root=/tftp，客户端为 192.168.1.15 请求 myfile.txt 文件时，
+# 将优先请求 /tftp/192.168.1.15/myfile.txt 文件， 其次是 /tftp/myfile.txt 文件。
+# 感觉没什么用。
+#tftp-unique-root
+# 启用安全模式，启用此选项，仅允许 tftp 进程访问属主为自己的文件。
+# 不启用此选项，允许访问所有 tftp 进程属主可读取的文件。
+# 如果 dnsmasq 是以 root 用户运行，tftp-secure 选项将允许访问全局可读的文件。
+# 一般情况下不推荐以 root 用户运行 dnsmasq。
+# 在指定了 tftp-root 的情况下并不是很重要。
+#tftp-secure
+# 将所有文件请求转换为小写。对于 Windows 客户端来说非常有用，建议开启此项。
+# 注意：dnsmasq 的 TFTP 服务器总是将文件路径中的“\”转换为“/”。
+#tftp-lowercase
+# 允许最大的连接数，默认为 50 。
+# 如果将连接数设置的很大，需注意每个进程的最大文件描述符限制，详见文档手册。
+#tftp-max=&lt;connections&gt;
+#tftp-max=50
+# 设置传输时的 MTU 值，建议不设置或按需设置。
+# 如果设定的值大于网络接口的 MTU 值，将按照网络接口的 MTU 值自动分片传输（不推荐）。
+#tftp-mtu=&lt;mtu size&gt;
+# 停止 tftp 服务器与客户端协商 &quot;blocksize&quot; 选项。启用后，防止一些古怪的客户端出问题。
+#tftp-no-blocksize
+# 指定 tftp 的连接端口的范围，方便防火墙部署。
+# tftp 侦听在 69/udp ，连接端口默认是由系统自动分配的，
+# 非 root 用户运行时指定的连接端口号需大于 1025 最大 65535。
+#tftp-port-range=&lt;start&gt;,&lt;end&gt;
+
+###############################################################################
+#conf-dir=&lt;directory&gt;[,&lt;file-extension&gt;......]
+#conf-file=/etc/dnsmasq.more.conf
+conf-dir=/etc/dnsmasq.d
+#servers-file=&lt;file&gt;
+</code></pre></div> <h2 id=_2>二、压测<a class=headerlink href=#_2 title="Permanent link">&para;</a></h2> <h3 id=21>2.1 安装<a class=headerlink href=#21 title="Permanent link">&para;</a></h3> <div class=highlight><pre><span></span><code>git<span class=w> </span>clone<span class=w> </span>https://gitlab.isc.org/isc-projects/queryperf.git
+<span class=nb>cd</span><span class=w> </span>queryperf
+./configure
+make
+cp<span class=w> </span>queryperf<span class=w> </span>~/bin/
+</code></pre></div> <h3 id=22-help>2.2 HELP<a class=headerlink href=#22-help title="Permanent link">&para;</a></h3> <div class=highlight><pre><span></span><code><span class=w> </span>queryperf<span class=w> </span>--help
+
+DNS<span class=w> </span>Query<span class=w> </span>Performance<span class=w> </span>Testing<span class=w> </span>Tool
+Version:<span class=w> </span><span class=nv>$Id</span>:<span class=w> </span>queryperf.c,v<span class=w> </span><span class=m>1</span>.12<span class=w> </span><span class=m>2007</span>/09/05<span class=w> </span><span class=m>07</span>:36:04<span class=w> </span>marka<span class=w> </span>Exp<span class=w> </span>$
+
+queryperf:<span class=w> </span>invalid<span class=w> </span>option<span class=w> </span>--<span class=w> </span><span class=s1>&#39;-&#39;</span>
+Invalid<span class=w> </span>option:<span class=w> </span>--
+
+Usage:<span class=w> </span>queryperf<span class=w> </span><span class=o>[</span>-d<span class=w> </span>datafile<span class=o>]</span><span class=w> </span><span class=o>[</span>-s<span class=w> </span>server_addr<span class=o>]</span><span class=w> </span><span class=o>[</span>-p<span class=w> </span>port<span class=o>]</span><span class=w> </span><span class=o>[</span>-q<span class=w> </span>num_queries<span class=o>]</span>
+<span class=w>                 </span><span class=o>[</span>-b<span class=w> </span>bufsize<span class=o>]</span><span class=w> </span><span class=o>[</span>-t<span class=w> </span>timeout<span class=o>]</span><span class=w> </span><span class=o>[</span>-n<span class=o>]</span><span class=w> </span><span class=o>[</span>-l<span class=w> </span>limit<span class=o>]</span><span class=w> </span><span class=o>[</span>-f<span class=w> </span>family<span class=o>]</span><span class=w> </span><span class=o>[</span>-1<span class=o>]</span>
+<span class=w>                 </span><span class=o>[</span>-i<span class=w> </span>interval<span class=o>]</span><span class=w> </span><span class=o>[</span>-r<span class=w> </span>arraysize<span class=o>]</span><span class=w> </span><span class=o>[</span>-u<span class=w> </span>unit<span class=o>]</span><span class=w> </span><span class=o>[</span>-H<span class=w> </span>histfile<span class=o>]</span>
+<span class=w>                 </span><span class=o>[</span>-T<span class=w> </span>qps<span class=o>]</span><span class=w> </span><span class=o>[</span>-e<span class=o>]</span><span class=w> </span><span class=o>[</span>-D<span class=o>]</span><span class=w> </span><span class=o>[</span>-R<span class=o>]</span><span class=w> </span><span class=o>[</span>-c<span class=o>]</span><span class=w> </span><span class=o>[</span>-v<span class=o>]</span><span class=w> </span><span class=o>[</span>-h<span class=o>]</span>
+<span class=w>  </span>-d<span class=w> </span>specifies<span class=w> </span>the<span class=w> </span>input<span class=w> </span>data<span class=w> </span>file<span class=w> </span><span class=o>(</span>default:<span class=w> </span>stdin<span class=o>)</span>
+<span class=w>  </span>-s<span class=w> </span>sets<span class=w> </span>the<span class=w> </span>server<span class=w> </span>to<span class=w> </span>query<span class=w> </span><span class=o>(</span>default:<span class=w> </span><span class=m>127</span>.0.0.1<span class=o>)</span>
+<span class=w>  </span>-p<span class=w> </span>sets<span class=w> </span>the<span class=w> </span>port<span class=w> </span>on<span class=w> </span>which<span class=w> </span>to<span class=w> </span>query<span class=w> </span>the<span class=w> </span>server<span class=w> </span><span class=o>(</span>default:<span class=w> </span><span class=m>53</span><span class=o>)</span>
+<span class=w>  </span>-q<span class=w> </span>specifies<span class=w> </span>the<span class=w> </span>maximum<span class=w> </span>number<span class=w> </span>of<span class=w> </span>queries<span class=w> </span>outstanding<span class=w> </span><span class=o>(</span>default:<span class=w> </span><span class=m>20</span><span class=o>)</span>
+<span class=w>  </span>-t<span class=w> </span>specifies<span class=w> </span>the<span class=w> </span>timeout<span class=w> </span><span class=k>for</span><span class=w> </span>query<span class=w> </span>completion<span class=w> </span><span class=k>in</span><span class=w> </span>seconds<span class=w> </span><span class=o>(</span>default:<span class=w> </span><span class=m>5</span><span class=o>)</span>
+<span class=w>  </span>-n<span class=w> </span>causes<span class=w> </span>configuration<span class=w> </span>changes<span class=w> </span>to<span class=w> </span>be<span class=w> </span>ignored
+<span class=w>  </span>-l<span class=w> </span>specifies<span class=w> </span>how<span class=w> </span>a<span class=w> </span>limit<span class=w> </span><span class=k>for</span><span class=w> </span>how<span class=w> </span>long<span class=w> </span>to<span class=w> </span>run<span class=w> </span>tests<span class=w> </span><span class=k>in</span><span class=w> </span>seconds<span class=w> </span><span class=o>(</span>no<span class=w> </span>default<span class=o>)</span>
+<span class=w>  </span>-1<span class=w> </span>run<span class=w> </span>through<span class=w> </span>input<span class=w> </span>only<span class=w> </span>once<span class=w> </span><span class=o>(</span>default:<span class=w> </span>multiple<span class=w> </span>iff<span class=w> </span>limit<span class=w> </span>given<span class=o>)</span>
+<span class=w>  </span>-b<span class=w> </span><span class=nb>set</span><span class=w> </span>input/output<span class=w> </span>buffer<span class=w> </span>size<span class=w> </span><span class=k>in</span><span class=w> </span>kilobytes<span class=w> </span><span class=o>(</span>default:<span class=w> </span><span class=m>32</span><span class=w> </span>k<span class=o>)</span>
+<span class=w>  </span>-i<span class=w> </span>specifies<span class=w> </span>interval<span class=w> </span>of<span class=w> </span>intermediate<span class=w> </span>outputs<span class=w> </span><span class=k>in</span><span class=w> </span>seconds<span class=w> </span><span class=o>(</span>default:<span class=w> </span><span class=nv>0</span><span class=o>=</span>none<span class=o>)</span>
+<span class=w>  </span>-f<span class=w> </span>specify<span class=w> </span>address<span class=w> </span>family<span class=w> </span>of<span class=w> </span>DNS<span class=w> </span>transport,<span class=w> </span>inet<span class=w> </span>or<span class=w> </span>inet6<span class=w> </span><span class=o>(</span>default:<span class=w> </span>any<span class=o>)</span>
+<span class=w>  </span>-r<span class=w> </span><span class=nb>set</span><span class=w> </span>RTT<span class=w> </span>statistics<span class=w> </span>array<span class=w> </span>size<span class=w> </span><span class=o>(</span>default:<span class=w> </span><span class=m>50000</span><span class=o>)</span>
+<span class=w>  </span>-u<span class=w> </span><span class=nb>set</span><span class=w> </span>RTT<span class=w> </span>statistics<span class=w> </span><span class=nb>time</span><span class=w> </span>unit<span class=w> </span><span class=k>in</span><span class=w> </span>usec<span class=w> </span><span class=o>(</span>default:<span class=w> </span><span class=m>100</span><span class=o>)</span>
+<span class=w>  </span>-H<span class=w> </span>specifies<span class=w> </span>RTT<span class=w> </span>histogram<span class=w> </span>data<span class=w> </span>file<span class=w> </span><span class=o>(</span>default:<span class=w> </span>none<span class=o>)</span>
+<span class=w>  </span>-T<span class=w> </span>specify<span class=w> </span>the<span class=w> </span>target<span class=w> </span>qps<span class=w> </span><span class=o>(</span>default:<span class=w> </span><span class=nv>0</span><span class=o>=</span>unspecified<span class=o>)</span>
+<span class=w>  </span>-e<span class=w> </span><span class=nb>enable</span><span class=w> </span>EDNS<span class=w> </span><span class=m>0</span>
+<span class=w>  </span>-D<span class=w> </span><span class=nb>set</span><span class=w> </span>the<span class=w> </span>DNSSEC<span class=w> </span>OK<span class=w> </span>bit<span class=w> </span><span class=o>(</span>implies<span class=w> </span>EDNS<span class=o>)</span>
+<span class=w>  </span>-R<span class=w> </span>disable<span class=w> </span>recursion
+<span class=w>  </span>-c<span class=w> </span>print<span class=w> </span>the<span class=w> </span>number<span class=w> </span>of<span class=w> </span>packets<span class=w> </span>with<span class=w> </span>each<span class=w> </span>rcode
+<span class=w>  </span>-v<span class=w> </span>verbose:<span class=w> </span>report<span class=w> </span>the<span class=w> </span>RCODE<span class=w> </span>of<span class=w> </span>each<span class=w> </span>response<span class=w> </span>on<span class=w> </span>stdout
+<span class=w>  </span>-h<span class=w> </span>print<span class=w> </span>this<span class=w> </span>usage
+</code></pre></div> <h3 id=23>2.3 使用<a class=headerlink href=#23 title="Permanent link">&para;</a></h3> <div class=highlight><pre><span></span><code><span class=k>for</span><span class=w> </span>i<span class=w> </span><span class=k>in</span><span class=w> </span><span class=o>{</span>a..z<span class=o>}</span><span class=p>;</span><span class=k>do</span><span class=w> </span><span class=nb>echo</span><span class=w> </span><span class=s2>&quot;</span><span class=nv>$i</span><span class=s2>.8ops.top A&quot;</span><span class=w> </span>&gt;&gt;<span class=w> </span>datafile<span class=p>;</span><span class=k>done</span>
+
+~#<span class=w> </span>queryperf<span class=w> </span>-d<span class=w> </span>datafile<span class=w> </span>-s<span class=w> </span><span class=m>10</span>.101.11.105
+DNS<span class=w> </span>Query<span class=w> </span>Performance<span class=w> </span>Testing<span class=w> </span>Tool
+Version:<span class=w> </span><span class=nv>$Id</span>:<span class=w> </span>queryperf.c,v<span class=w> </span><span class=m>1</span>.12<span class=w> </span><span class=m>2007</span>/09/05<span class=w> </span><span class=m>07</span>:36:04<span class=w> </span>marka<span class=w> </span>Exp<span class=w> </span>$
+
+<span class=o>[</span>Status<span class=o>]</span><span class=w> </span>Processing<span class=w> </span>input<span class=w> </span>data
+<span class=o>[</span>Status<span class=o>]</span><span class=w> </span>Sending<span class=w> </span>queries<span class=w> </span><span class=o>(</span>beginning<span class=w> </span>with<span class=w> </span><span class=m>10</span>.101.11.105<span class=o>)</span>
+<span class=o>[</span>Status<span class=o>]</span><span class=w> </span>Testing<span class=w> </span><span class=nb>complete</span>
+
+Statistics:
+
+<span class=w>  </span>Parse<span class=w> </span>input<span class=w> </span>file:<span class=w>     </span>once
+<span class=w>  </span>Ended<span class=w> </span>due<span class=w> </span>to:<span class=w>         </span>reaching<span class=w> </span>end<span class=w> </span>of<span class=w> </span>file
+
+<span class=w>  </span>Queries<span class=w> </span>sent:<span class=w>         </span><span class=m>10026</span><span class=w> </span>queries
+<span class=w>  </span>Queries<span class=w> </span>completed:<span class=w>    </span><span class=m>10026</span><span class=w> </span>queries
+<span class=w>  </span>Queries<span class=w> </span>lost:<span class=w>         </span><span class=m>0</span><span class=w> </span>queries
+<span class=w>  </span>Queries<span class=w> </span>delayed<span class=o>(</span>?<span class=o>)</span>:<span class=w>   </span><span class=m>0</span><span class=w> </span>queries
+
+<span class=w>  </span>RTT<span class=w> </span>max:<span class=w>          </span><span class=m>16</span>.616721<span class=w> </span>sec
+<span class=w>  </span>RTT<span class=w> </span>min:<span class=w>              </span><span class=m>0</span>.000185<span class=w> </span>sec
+<span class=w>  </span>RTT<span class=w> </span>average:<span class=w>          </span><span class=m>0</span>.063880<span class=w> </span>sec
+<span class=w>  </span>RTT<span class=w> </span>std<span class=w> </span>deviation:<span class=w>    </span><span class=m>0</span>.096947<span class=w> </span>sec
+<span class=w>  </span>RTT<span class=w> </span>out<span class=w> </span>of<span class=w> </span>range:<span class=w>     </span><span class=m>16</span><span class=w> </span>queries
+
+<span class=w>  </span>Percentage<span class=w> </span>completed:<span class=w> </span><span class=m>100</span>.00%
+<span class=w>  </span>Percentage<span class=w> </span>lost:<span class=w>        </span><span class=m>0</span>.00%
+
+<span class=w>  </span>Started<span class=w> </span>at:<span class=w>           </span>Fri<span class=w> </span>Jan<span class=w>  </span><span class=m>6</span><span class=w> </span><span class=m>17</span>:16:29<span class=w> </span><span class=m>2023</span>
+<span class=w>  </span>Finished<span class=w> </span>at:<span class=w>          </span>Fri<span class=w> </span>Jan<span class=w>  </span><span class=m>6</span><span class=w> </span><span class=m>17</span>:17:18<span class=w> </span><span class=m>2023</span>
+<span class=w>  </span>Ran<span class=w> </span><span class=k>for</span>:<span class=w>              </span><span class=m>49</span>.019564<span class=w> </span>seconds
+
+<span class=w>  </span>Queries<span class=w> </span>per<span class=w> </span>second:<span class=w>   </span><span class=m>204</span>.530583<span class=w> </span>qps
+</code></pre></div> </article> </div> <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script> </div> <button type=button class="md-top md-icon" data-md-component=top hidden> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg> 回到页面顶部 </button> </main> <footer class=md-footer> <nav class="md-footer__inner md-grid" aria-label=页脚> <a href=../40-haproxy/ class="md-footer__link md-footer__link--prev" aria-label="上一页: haproxy"> <div class="md-footer__button md-icon"> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg> </div> <div class=md-footer__title> <span class=md-footer__direction> 上一页 </span> <div class=md-ellipsis> haproxy </div> </div> </a> <a href=../42-kvm/ class="md-footer__link md-footer__link--next" aria-label="下一页: kvm"> <div class=md-footer__title> <span class=md-footer__direction> 下一页 </span> <div class=md-ellipsis> kvm </div> </div> <div class="md-footer__button md-icon"> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg> </div> </a> </nav> <div class="md-footer-meta md-typeset"> <div class="md-footer-meta__inner md-grid"> <div class=md-copyright> <div class=md-copyright__highlight> <a href=https://books.8ops.top/ target=_blank>爱运维</a> &nbsp; <a target=_blank href=/sitemap.xml>XML</a><br> <a href=http://beian.miit.gov.cn/ target=_blank>沪ICP备18030892号</a><br> <a target=_blank href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=31011502401428"><img src=/images/wa.png style=float:left;height:20px;>沪公网安备31011502401428号</a><br> <a target=_blank href="https://www.upyun.com/?utm_source=lianmeng&utm_medium=referral"><img src=/images/upyun.png style=float:left;height:20px;>提供CDN加速/云存储服务</a><br> Copyright &copy; 2017 - 2027 8OPS </div> Made with <a href=https://squidfunk.github.io/mkdocs-material/ target=_blank rel=noopener> Material for MkDocs </a> </div> </div> </div> </footer> </div> <div class=md-dialog data-md-component=dialog> <div class="md-dialog__inner md-typeset"></div> </div> <script id=__config type=application/json>{"base": "../..", "features": ["content.action.edit", "content.action.view", "content.code.annotate", "content.code.copy", "content.tooltips", "navigation.footer", "navigation.indexes", "navigation.sections", "navigation.tabs", "navigation.top", "navigation.tracking", "search.highlight", "search.share", "search.suggest", "toc.follow"], "search": "../../assets/javascripts/workers/search.f8cc74c7.min.js", "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}}</script> <script src=../../assets/javascripts/bundle.f1b6f286.min.js></script> <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML"></script> </body> </html>

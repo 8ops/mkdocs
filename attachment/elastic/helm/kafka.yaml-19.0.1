@@ -1,0 +1,87 @@
+
+image:
+  registry: hub.8ops.top
+  repository: bitnami/kafka
+  tag: 3.3.1-debian-11-r1
+
+replicaCount: 3
+
+resources:
+  requests:
+    cpu: "1"
+    memory: "2Gi"
+  limits:
+    cpu: "1"
+    memory: "2Gi"
+
+# persistence:
+#   enabled: false
+#   storageClass: "kafka-cluster"
+#   size: 8Gi
+
+metrics:
+  kafka:
+    enabled: true
+
+    image:
+      registry: hub.8ops.top
+      repository: bitnami/kafka-exporter
+      tag: 1.6.0-debian-11-r17
+
+    resources:
+      requests:
+        cpu: "50m"
+        memory: "64Mi"
+      limits:
+        cpu: "50m"
+        memory: "64Mi"
+
+    initContainers: 
+    - name: init
+      image: hub.8ops.top/third/busybox:1.28.0
+      args:
+      - /bin/sh
+      - -c 
+      - sleep 30
+
+#   jmx:
+#     enabled: true
+#  
+#     image:
+#       registry: hub.8ops.top
+#       repository: bitnami/jmx-exporter
+#       tag: 0.17.2-debian-11-r6
+#  
+#     resources:
+#       requests:
+#         cpu: "50m"
+#         memory: "64Mi"
+#       limits:
+#         cpu: "50m"
+#         memory: "64Mi"
+
+zookeeper:
+  enabled: true
+  replicaCount: 3
+
+  image:
+    registry: hub.8ops.top
+    repository: bitnami/zookeeper
+    tag: 3.8.0-debian-11-r36
+
+  persistence:
+    enabled: false
+#     enabled: true
+#     storageClass: ""
+#     accessModes:
+#       - ReadWriteOnce
+#     size: 8Gi
+
+  resources:
+    requests:
+      cpu: "200m"
+      memory: "512Mi"
+    limits:
+      cpu: "200m"
+      memory: "512Mi"
+

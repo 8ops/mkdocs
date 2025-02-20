@@ -1,0 +1,23 @@
+
+groupName: 8ops.top
+
+secrets:
+  apiID: "xx"
+  apiToken: "xx"
+
+clusterIssuer:
+  enabled: true
+  email: "m@8ops.top"
+
+image:
+  repository: hub.8ops.top/third/cert-manager-webhook-dnspod
+  tag: qqshfox
+
+resources: 
+  limits:
+   cpu: 100m
+   memory: 128Mi
+  requests:
+   cpu: 100m
+   memory: 128Mi
+

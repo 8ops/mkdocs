@@ -1,0 +1,71 @@
+
+installCRDs: true
+
+image:
+  repository: hub.8ops.top/quay/cert-manager-controller
+  tag: v1.11.0
+
+# extraArgs:
+#  - --dns01-recursive-nameservers-only
+#  - --dns01-recursive-nameservers=119.29.29.29:53,223.6.6.6:53
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 10m
+    memory: 32Mi
+
+webhook:
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 10m
+      memory: 32Mi
+
+  image:
+    repository: hub.8ops.top/quay/cert-manager-webhook
+    tag: v1.11.0
+
+cainjector:
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 10m
+      memory: 32Mi
+
+  image:
+    repository: hub.8ops.top/quay/cert-manager-cainjector
+    tag: v1.11.0
+
+acmesolver:
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 10m
+      memory: 32Mi
+
+  image:
+    repository: hub.8ops.top/quay/cert-manager-acmesolver
+    tag: v1.11.0
+
+startupapicheck:
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 10m
+      memory: 32Mi
+
+  image:
+    repository: hub.8ops.top/quay/cert-manager-ctl
+    tag: v1.11.0
+
