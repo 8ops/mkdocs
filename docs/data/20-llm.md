@@ -56,7 +56,7 @@ docker run -d -p 19090:8080 \
     ghcr.io/open-webui/open-webui:main
 ```
 
-
+v0.5.14 解决文档上传失败的BUG。
 
 
 
