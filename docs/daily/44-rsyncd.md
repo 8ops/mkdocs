@@ -13,23 +13,29 @@ cat > /etc/rsyncd.conf <<EOF
 
 # configuration example:
 
-uid = 0
-gid = 0
+uid = nobody
+gid = nobody
 use chroot = yes
 max connections = 10
 pid file = /var/run/rsyncd.pid
 # exclude = lost+found/
 # transfer logging = yes
-# timeout = 900
+timeout = 900
 # ignore nonreadable = yes
-# dont compress   = *.gz *.tgz *.zip *.z *.Z *.rpm *.deb *.bz2
+dont compress   = *.gz *.tgz *.zip *.z *.Z *.rpm *.deb *.bz2
 read only = yes
 
-[filestorage]
-       path = /data1/filestorage
-       auth users = sync
-       secrets file = /etc/rsyncd/rsyncd.secrets
-       comment = filestorage dir
+[backup]
+    path = /data/backup
+    uid = nobody
+    gid = nobody
+    use chroot = no
+    read only = no
+    auth users = sync
+    secrets file = /etc/rsyncd/rsyncd.secrets
+    hosts allow = 192.168.1.0/24,192.168.2.0/24
+    hosts deny = *
+    comment = finclip backup
 
 EOF
 
@@ -39,9 +45,9 @@ EOF
 chmod 600 /etc/rsyncd/rsyncd.secrets
 
 systemctl daemon-reload
-systemctl enable rsync
-systemctl start  rsync
-systemctl status rsync
+systemctl enable rsyncd
+systemctl start  rsyncd
+systemctl status rsyncd
 ```
 
 
@@ -147,5 +153,11 @@ rsync -av --list-only --password-file=sync.password share/ sync@10.101.11.236::s
 # 为 rsync -rtlv source/ sync@addr::target/
 # 是因为 -a 拥有归档功能
 # 另需要修复target目录的权限，此前操作会将权限变更
+#
+# OR
+#
+# rsync -av --no-o --no-g source/ sync@addr::target/
+
+
 ```
 

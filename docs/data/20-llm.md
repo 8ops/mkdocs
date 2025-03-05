@@ -1,5 +1,27 @@
 # LLM
 
+私有化使用，需求量越来越大，一般出于
+
+- 个性化交互形式
+- 私有知识库，拒绝互联网的安全隐患
+
+
+
+**一般体现形式**
+
+- ollama server + desktop 交互
+- ollama server + browser 交互
+
+
+
+**私有化处理环节**
+
+- chat model，用于语义化理解聊天内容，模拟与人交互
+- 向量数据库，用于预处理私有知识库内容
+- embedding model，处理私有知识库内容的模型
+
+
+
 ## 一、模型容器
 
 [ollama](https://ollama.com/)
@@ -10,8 +32,6 @@
 # 加速下载
 wget https://github.moeyy.xyz/https://github.com/ollama/ollama/releases/download/v0.5.7/ollama-linux-amd64
 ```
-
-
 
 
 
@@ -62,6 +82,10 @@ v0.5.14 解决文档上传失败的BUG。
 
 ## 二、下载模型
 
+```bash
+ollama pull deepseek-r1:1.5b
+```
+
 
 
 
@@ -101,6 +125,8 @@ docker
 
 ### 3.3 anythingllm
 
+[anythingllm desktop](https://anythingllm.com/desktop)
+
 [env.example](https://github.com/Mintplex-Labs/anything-llm/blob/bffdfffe81bcae39b62218a897ca2732c5168937/server/.env.example)
 
 ```bash
@@ -129,6 +155,15 @@ docker run -d -p 19091:3001 \
     -v ${STORAGE_LOCATION}/.env:/app/server/.env \
     -e STORAGE_DIR="/app/server/storage" \
     mintplexlabs/anythingllm:1.4
+```
+
+
+
+### 3.4 ragflow
+
+[Reference](https://github.com/infiniflow/ragflow)
+
+```bash
 ```
 
 
