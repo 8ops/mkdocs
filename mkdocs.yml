@@ -163,6 +163,7 @@ nav:
       - daily/53-ntp.md
       - daily/54-cloudstack.md
       - daily/55-highon-coffee.md
+      - daily/56-proxyswitch.md
   - Kubernetes:
     - 【快速搭建】: 
       - kubernetes/01-cluster-init.md

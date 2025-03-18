@@ -370,6 +370,9 @@ gitlab-rails runner "Notify.test_email('your-email@domain.com', 'Test Email', 'T
 - 16.11.10
 - 17.3.3
 - 17.4.0
+- 17.5.5
+- 17.8.4
+- 17.9.1
 
 
 
