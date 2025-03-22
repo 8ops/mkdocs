@@ -363,16 +363,8 @@ gitlab-rails runner "Notify.test_email('your-email@domain.com', 'Test Email', 'T
 
 跨版本升级记录
 
-- 15.6.2-jh
-- 15.11.13
-- 16.3.8
-- 16.7.9
-- 16.11.10
-- 17.3.3
-- 17.4.0
-- 17.5.5
-- 17.8.4
-- 17.9.1
+- 17.8.5
+- 17.9.2
 
 
 
