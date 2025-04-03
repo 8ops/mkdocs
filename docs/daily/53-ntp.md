@@ -165,3 +165,24 @@ timedatectl status
 timedatectl timesync-status
 ```
 
+
+
+## 时区设置
+
+```bash
+timedatectl
+
+timedatectl list-timezones | grep -i shanghai
+
+sudo timedatectl set-timezone Asia/Shanghai
+
+sudo timedatectl set-ntp true  # 确保时间自动同步
+
+sudo hwclock --systohc  # 将系统时间写入硬件时钟
+
+sudo systemctl status systemd-timesyncd
+
+# 一键设置上海时区并启用NTP
+sudo timedatectl set-timezone Asia/Shanghai && sudo timedatectl set-ntp true
+```
+
