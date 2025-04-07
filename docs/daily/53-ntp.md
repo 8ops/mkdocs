@@ -144,6 +144,8 @@ chronyc activity
 
 ## systemd-timesyncd
 
+ubuntu
+
 ```bash
 # /etc/systemd/timesyncd.conf
 
@@ -164,6 +166,28 @@ systemctl status systemd-timesyncd
 timedatectl status
 timedatectl timesync-status
 ```
+
+## systemd-timedated
+
+centos
+
+```bash
+# /etc/systemd/timesyncd.conf
+
+[Time]
+NTP=ntp.8ops.top
+```
+
+
+
+```bash
+# 操作集锦
+systemctl status systemd-timedated.service
+
+timedatectl status
+```
+
+
 
 
 
