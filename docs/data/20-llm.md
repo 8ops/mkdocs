@@ -18,7 +18,7 @@
 
 - chat model，用于语义化理解聊天内容，模拟与人交互
 - 向量数据库，用于预处理私有知识库内容
-- embedding model，处理私有知识库内容的模型
+- embedding model，处理私有知识库内容的模型 [nomic-embed-text](https://ollama.com/library/nomic-embed-text)
 
 
 
@@ -88,6 +88,30 @@ ollama pull deepseek-r1:1.5b
 
 
 
+> ollama.services
+
+```bash
+[Unit]
+Description=OLLAMA AI Service
+After=network-online.target
+
+[Service]
+ExecStart=/usr/local/bin/ollama serve
+User=ollama
+Group=ollama
+Restart=always
+RestartSec=3
+Environment="PATH=/data/anaconda3/condabin:/usr/local/anaconda3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/usr/local/cuda/bin:/root/go/bin:/root/bin"
+Environment="OLLAMA_HOST=0.0.0.0:19090"
+Environment="OLLAMA_GPU_LAYER=cuda"
+Environment="CUDA_VISIBLE_DEVICES=1" #use gpu
+
+[Install]
+WantedBy=default.target
+```
+
+
+
 
 
 
@@ -114,7 +138,9 @@ docker
 ```bash
 # 普通用户打开预设模型
 # 管理员面板 --> 设置 --> 模型 --> 可见性[由 private 变更为 public]
-# 
+# OR
+# 建立用户角色再将模型加入角色，将用户加入角色，普通用户登录后可见模型
+
 ```
 
 

@@ -80,7 +80,9 @@ kubectl -n ${NAMESPACE} create role user-op-for-${USER} \
   --verb=* \
   --resource=* 
 
-    namespace: kube-app
+# 指定命名空间
+#    namespace: kube-app
+
 # 更多权限
 #- apiGroups: ["", "extensions", "apps"]
 #  verbs: ["create", "delete", "get", "list", "patch", "update", "watch"]
@@ -88,6 +90,11 @@ kubectl -n ${NAMESPACE} create role user-op-for-${USER} \
 
 # 全部权限
 # verbs: ["create", "delete", "get", "list", "patch", "update", "watch"]
+
+# top 权限
+- apiGroups: ["metrics.k8s.io"]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
 
 # 命名空间部分资源只读权限
 kubectl -n ${NAMESPACE} edit role user-op-for-${USER}
