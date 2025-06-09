@@ -233,7 +233,29 @@ https://github.com/acmesh-official/acme.sh/wiki/Server
 
 ## 四、格式转换
 
-`TODO`
+letsencrypt 签发时会有3部分
+
+|     文件名      |           内容            |               用途               |   是否需公开部署   |
+| :-------------: | :-----------------------: | :------------------------------: | :----------------: |
+|  `domain.cer`   |  服务端证书（公钥+域名）  |      直接用于服务器身份验证      |         是         |
+|    `ca.cer`     |   中间证书（公钥+签名）   | 构建信任链，验证服务端证书合法性 | 否（内置在客户端） |
+| `fullchain.cer` | 完整证书链（服务端+中间） |   简化配置，确保客户端验证通过   |         是         |
+
+### 4.1 pfx
+
+```bash
+# generate
+openssl pkcs12 -export \
+  -inkey your_domain.key \
+  -in your_domain.crt \
+  -certfile ca_bundle.crt \
+  -out your_domain.pfx
+  
+# info
+openssl pkcs12 -info -in your_domain.pfx
+```
+
+
 
 
 
@@ -313,6 +335,15 @@ diff cert_pubkey.pem private_pubkey.pem
 openssl pkey -in privateKey.key -pubout -outform pem | sha256sum
 openssl x509 -in certificate.crt -pubkey -noout -outform pem | sha256sum
 openssl req -in CSR.csr -pubkey -noout -outform pem | sha256sum
+
+# hash
+openssl x509 -in certificate.crt -pubkey -noout | openssl pkey -pubin -outform der | openssl dgst -sha256
+openssl rsa -in privateKey.key -pubout -outform der | openssl dgst -sha256
+
+# modulus（模数比对）
+openssl x509 -in domain.crt -modulus -noout | openssl md5
+openssl rsa -in private.key -modulus -noout | openssl md5
+
 
 ```
 
