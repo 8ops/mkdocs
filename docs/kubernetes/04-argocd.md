@@ -352,17 +352,26 @@ argocd repo add https://git.8ops.top/ops/argocd-example-apps.git \
     --project argo-example-proj \
     --username gitlab-read \
     --password xx \
-    --insecure-skip-server-verification
+    --insecure-skip-server-verification 
 argocd repo get https://git.8ops.top/ops/argocd-example-apps.git
 
 # ---
-
 argocd repo add https://git.8ops.top/ops/control-plane-ops.git \
     --name control-plane-repo \
     --project control-plane-proj \
     --username gitlab-read \
     --password xx \
-    --insecure-skip-server-verification    
+    --insecure-skip-server-verification 
+    
+# 涉及过期问题（通过gitlab 开启 Personal access tokens - PAT 仅开启 read_repository Scope）
+argocd repo add https://git.8ops.top/ops/control-plane-ops.git \
+    --name control-plane-repo \
+    --project control-plane-proj \
+    --username gitlab-read \
+    --password xx \
+    --insecure-skip-server-verification \
+    --upsert # 开启强制刷新
+
 ```
 
 
