@@ -52,7 +52,45 @@ curl -s -o /dev/null -w "\n
 
 
 
-### 1.5 curl 升级
+### 1.5 快速检测
+
+```bash
+# 1
+cat > curl-format.txt <<EOF
+    time_namelookup:  %{time_namelookup}\n
+       time_connect:  %{time_connect}\n
+    time_appconnect:  %{time_appconnect}\n
+      time_redirect:  %{time_redirect}\n
+   time_pretransfer:  %{time_pretransfer}\n
+ time_starttransfer:  %{time_starttransfer}\n
+         --------------------\n
+         time_total:  %{time_total}\n\n
+EOF
+
+# 2
+cat > curl-format.txt <<EOF
+          http_code:  %{http_code}\n
+       http_connect:  %{http_connect}s\n
+       content_type:  %{content_type}\n
+    time_namelookup:  %{time_namelookup}s\n
+      time_redirect:  %{time_redirect}s\n
+   time_pretransfer:  %{time_pretransfer}s\n
+    time_appconnect:  %{time_appconnect}s\n
+       time_connect:  %{time_connect}s\n
+ time_starttransfer:  %{time_starttransfer}s\n
+         --------------------\n
+         time_total:  %{time_total}s\n
+     speed_download:  %{speed_download}KB/s\n\n
+EOF
+
+curl -w "@curl-format.txt" -o /dev/null -s -L -k https://books.8ops.top
+```
+
+
+
+
+
+### 1.6 curl 升级
 
 ```bash
 CURL_VERSION=8.8.0
