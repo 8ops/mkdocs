@@ -251,6 +251,7 @@ kubectl -n kube-server get secret dashboard-${USER}-secret \
 限定在单个命名空间的 dashboard 的 token
 
 ```bash
+# 方式一
 USER=guest
 NAMESPACE=kube-app
 kubectl -n ${NAMESPACE} create serviceaccount dashboard-${USER} 
@@ -269,6 +270,34 @@ kubectl -n ${NAMESPACE} create rolebinding dashboard-${USER} \
 
 kubectl describe secrets \
   -n ${NAMESPACE} $(kubectl -n ${NAMESPACE} get secret | awk '/dashboard-${USER}/{print $1}')
+  
+# 方式二
+USER=guest
+NAMESPACE=kube-app
+kubectl -n ${NAMESPACE} create serviceaccount ${USER} 
+kubectl -n ${NAMESPACE} create role ${USER} --verb=* --resource=* 
+kubectl -n ${NAMESPACE} create rolebinding ${USER} --role=${USER} --serviceaccount=${NAMESPACE}:${USER}
+kubectl describe secrets -n ${NAMESPACE} $(kubectl -n ${NAMESPACE} get secret | awk '/${USER}/{print $1}')
+
+kubectl -n ${NAMESPACE} edit role ${USER} 
+rules:
+  - apiGroups: ["", "apps", "extensions"] # 普通管理
+    resources: ["*"]
+    verbs: ["*"]
+  - apiGroups: ["rbac.authorization.k8s.io"] # role管理
+    resources: ["roles", "rolebindings"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]    
+    
+## RBAC样例
+#  - apiGroups: [""]
+#    resources: ["pods", "services", "configmaps", "secrets"]
+#    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+#  - apiGroups: ["apps"]
+#    resources: ["deployments", "replicasets", "statefulsets"]
+#    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+#  - apiGroups: ["rbac.authorization.k8s.io"]
+#    resources: ["roles", "rolebindings"]
+#    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]    
 ```
 
 
