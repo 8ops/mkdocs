@@ -288,12 +288,39 @@ kubectl run redis-client --restart='Never' \
 argocd cluster list
 argocd cluster rm 11-dev-ofc
 
-# cluster add
-argocd cluster add 11-dev-ofc-insecure  --name=11-dev-ofc  --grpc-web
-argocd cluster add 12-test-ali-insecure --name=12-test-ali --grpc-web
-argocd cluster add 13-stage-sh-insecure --name=13-stage-sh --grpc-web
-argocd cluster add 14-prod-sh-insecure  --name=14-prod-sh  --grpc-web
+# cluster add（通过本地kubeconfig中的contexts）
+argocd cluster add 11-dev-ofc-tls  --name=11-dev-ofc  --grpc-web
+argocd cluster add 12-test-ali-tls --name=12-test-ali --grpc-web
+argocd cluster add 13-stage-sh-tls --name=13-stage-sh --grpc-web
+argocd cluster add 14-prod-sh-tls  --name=14-prod-sh  --grpc-web
+
+# 强制添加
+argocd cluster add \
+    11-dev-ofc-tls \
+    --name=11-dev-ofc \
+    --namespace=kube-app \         # 目标集群命名空间
+    --grpc-web \
+    --system-namespace=kube-app \  # 生成role所在命名空间
+    --in-cluster=false \           # 与argo不在同一个集群
+    --upsert                       # 强制覆盖
 ```
+
+[目标集群授权](31-kubeconfig.md)
+
+```bash
+# 临时授权，用于创建role
+kubectl create clusterrolebinding user-op-for-argocd-admin \
+  --clusterrole=cluster-admin \
+  --serviceaccount=kube-app:user-op-for-argocd
+
+# 添加集群
+argocd cluster add 
+
+# 回收授权，安全考虑
+kubectl delete clusterrolebinding user-op-for-argocd-admin 
+```
+
+
 
 
 
