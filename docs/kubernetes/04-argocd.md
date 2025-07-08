@@ -288,13 +288,23 @@ kubectl run redis-client --restart='Never' \
 argocd cluster list
 argocd cluster rm 11-dev-ofc
 
-# cluster add（通过本地kubeconfig中的contexts）
+# cluster add（通过本地kubeconfig中的contexts，关联生成sa会在kube-system）
 argocd cluster add 11-dev-ofc-tls  --name=11-dev-ofc  --grpc-web
 argocd cluster add 12-test-ali-tls --name=12-test-ali --grpc-web
 argocd cluster add 13-stage-sh-tls --name=13-stage-sh --grpc-web
 argocd cluster add 14-prod-sh-tls  --name=14-prod-sh  --grpc-web
 
-# 强制添加
+# cluster add（通过本地kubeconfig中的contexts，关联生成sa会在kube-app）【推荐】
+argocd cluster add 11-dev-ofc-tls  --name=11-dev-ofc  \
+    --namespace=kube-app --grpc-web --system-namespace=kube-app --in-cluster=false
+argocd cluster add 12-test-ali-tls --name=12-test-ali \
+    --namespace=kube-app --grpc-web --system-namespace=kube-app --in-cluster=false
+argocd cluster add 13-stage-sh-tls --name=13-stage-sh \
+    --namespace=kube-app --grpc-web --system-namespace=kube-app --in-cluster=false
+argocd cluster add 14-prod-sh-tls  --name=14-prod-sh  \
+    --namespace=kube-app --grpc-web --system-namespace=kube-app --in-cluster=false
+
+# 强制添加（根据api-server地址来区分唯一性）
 argocd cluster add \
     11-dev-ofc-tls \
     --name=11-dev-ofc \
@@ -409,6 +419,7 @@ argocd repo add https://git.8ops.top/ops/control-plane-ops.git \
 argocd app list
     
 # Create a directory app
+argocd app delete guestbook --cascade=false # 仅删除argo应用不删除k8s资源
 argocd app delete guestbook
 argocd app create guestbook \
     --repo https://git.8ops.top/ops/argocd-example-apps.git \

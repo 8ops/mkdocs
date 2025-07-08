@@ -281,14 +281,21 @@ kubectl describe secrets -n ${NAMESPACE} $(kubectl -n ${NAMESPACE} get secret | 
 
 kubectl -n ${NAMESPACE} edit role ${USER} 
 rules:
-  - apiGroups: ["", "apps", "extensions"] # 普通管理
+  - apiGroups: ["*"]
     resources: ["*"]
     verbs: ["*"]
-  - apiGroups: ["rbac.authorization.k8s.io"] # role管理
-    resources: ["roles", "rolebindings"]
-    verbs: ["get", "list", "watch", "create", "update", "patch"]    
+
+# ## 精简权限
+# rules:
+#   - apiGroups: ["", "apps", "extensions"] # 普通管理
+#     resources: ["*"]
+#     verbs: ["*"]
+#   - apiGroups: ["rbac.authorization.k8s.io"] # role管理
+#     resources: ["roles", "rolebindings"]
+#     verbs: ["get", "list", "watch", "create", "update", "patch"]    
     
-## RBAC样例
+# ## RBAC样例
+# rules:
 #  - apiGroups: [""]
 #    resources: ["pods", "services", "configmaps", "secrets"]
 #    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
