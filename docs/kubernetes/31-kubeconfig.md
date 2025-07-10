@@ -279,6 +279,19 @@ kubectl -n ${NAMESPACE} create role ${USER} --verb=* --resource=*
 kubectl -n ${NAMESPACE} create rolebinding ${USER} --role=${USER} --serviceaccount=${NAMESPACE}:${USER}
 kubectl describe secrets -n ${NAMESPACE} $(kubectl -n ${NAMESPACE} get secret | awk '/${USER}/{print $1}')
 
+# create token
+# kubernetes v1.24.0+ newst 需要主动创建 secret
+kubectl apply -f - <<EOF
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ${USER}-token
+  namespace: ${NAMESPACE}
+  annotations:
+    kubernetes.io/service-account.name: ${USER}
+type: kubernetes.io/service-account-token
+EOF
+
 kubectl -n ${NAMESPACE} edit role ${USER} 
 rules:
   - apiGroups: ["*"]
