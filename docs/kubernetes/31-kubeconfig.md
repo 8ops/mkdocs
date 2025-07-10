@@ -287,24 +287,30 @@ rules:
 
 # ## 精简权限
 # rules:
-#   - apiGroups: ["", "apps", "extensions"] # 普通管理
-#     resources: ["*"]
-#     verbs: ["*"]
-#   - apiGroups: ["rbac.authorization.k8s.io"] # role管理
-#     resources: ["roles", "rolebindings"]
-#     verbs: ["get", "list", "watch", "create", "update", "patch"]    
+# - apiGroups: ["", "apps", "extensions"] # 普通管理
+#   resources: ["*"]
+#   verbs: ["*"]
+# - apiGroups: ["rbac.authorization.k8s.io"] # role管理
+#   resources: ["roles", "rolebindings"]
+#   verbs: ["get", "list", "watch", "create", "update", "patch"]    
     
 # ## RBAC样例
 # rules:
-#  - apiGroups: [""]
-#    resources: ["pods", "services", "configmaps", "secrets"]
-#    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
-#  - apiGroups: ["apps"]
-#    resources: ["deployments", "replicasets", "statefulsets"]
-#    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
-#  - apiGroups: ["rbac.authorization.k8s.io"]
-#    resources: ["roles", "rolebindings"]
-#    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]    
+# - apiGroups: [""]
+#   resources: ["pods", "services", "configmaps", "secrets"]
+#   verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+# - apiGroups: ["apps"]
+#   resources: ["deployments", "replicasets", "statefulsets"]
+#   verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+# - apiGroups: ["autoscaling"]
+#   resources: ["horizontalpodautoscalers"]
+#   verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+# - apiGroups: ["networking.k8s.io"]
+#   resources: ["ingresses"]
+#   verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+# - apiGroups: ["rbac.authorization.k8s.io"]
+#   resources: ["roles", "rolebindings"]
+#   verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]  
 ```
 
 
