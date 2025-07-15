@@ -252,7 +252,7 @@ kubectl -n kube-server get secret dashboard-${USER}-secret \
 
 ```bash
 # 方式一
-USER=guest
+USER=guest # default: dashboard-guest
 NAMESPACE=kube-app
 kubectl -n ${NAMESPACE} create serviceaccount dashboard-${USER} 
 
@@ -268,16 +268,18 @@ kubectl -n ${NAMESPACE} create rolebinding dashboard-${USER} \
   --role=dashboard-${USER} \
   --serviceaccount=kube-app:dashboard-${USER}
 
-kubectl describe secrets \
-  -n ${NAMESPACE} $(kubectl -n ${NAMESPACE} get secret | awk '/dashboard-${USER}/{print $1}')
+kubectl describe secrets -n ${NAMESPACE} \
+  $(kubectl -n ${NAMESPACE} get secret | awk '/dashboard-'${USER}'/{print $1}')
   
 # 方式二
-USER=guest
+USER=guest # default: guest
 NAMESPACE=kube-app
 kubectl -n ${NAMESPACE} create serviceaccount ${USER} 
 kubectl -n ${NAMESPACE} create role ${USER} --verb=* --resource=* 
-kubectl -n ${NAMESPACE} create rolebinding ${USER} --role=${USER} --serviceaccount=${NAMESPACE}:${USER}
-kubectl describe secrets -n ${NAMESPACE} $(kubectl -n ${NAMESPACE} get secret | awk '/${USER}/{print $1}')
+kubectl -n ${NAMESPACE} create rolebinding ${USER} \
+  --role=${USER} --serviceaccount=${NAMESPACE}:${USER}
+kubectl describe secrets -n ${NAMESPACE} \
+  $(kubectl -n ${NAMESPACE} get secret | awk '/'${USER}'/{print $1}')
 
 # create token
 # kubernetes v1.24.0+ newst 需要主动创建 secret
