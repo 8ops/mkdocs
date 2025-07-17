@@ -141,6 +141,13 @@ docker
 # OR
 # 建立用户角色再将模型加入角色，将用户加入角色，普通用户登录后可见模型
 
+docker run -d -p 19090:8080 \
+    -e OLLAMA_BASE_URL=http://ollama-server:11434/ \
+    -v /data1/lib/open-webui:/app/backend/data \
+    --name open-webui \
+    --restart always \
+    ghcr.io/open-webui/open-webui:v0.6.15
+
 ```
 
 
