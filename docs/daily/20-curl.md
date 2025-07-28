@@ -55,6 +55,13 @@ curl -s -o /dev/null -w "\n
 ### 1.5 快速检测
 
 ```bash
+# %{time_namelookup}：DNS 解析时间（秒）
+# %{time_connect}：TCP 连接时间（秒）
+# %{time_appconnect}：SSL/TLS 握手时间（秒）
+# %{time_pretransfer}：请求头发送前的总时间（秒）
+# %{time_starttransfer}：首字节接收前的总时间（秒）
+# %{time_total}：总耗时（秒）
+
 # 1
 cat > curl-format.txt <<EOF
     time_namelookup:  %{time_namelookup}\n
@@ -68,17 +75,18 @@ cat > curl-format.txt <<EOF
 EOF
 
 # 2
-cat > curl-format.txt <<EOF
+cat > curl-format.txt<<EOF
           http_code:  %{http_code}\n
        http_connect:  %{http_connect}s\n
        content_type:  %{content_type}\n
+       ------------------------\n
     time_namelookup:  %{time_namelookup}s\n
       time_redirect:  %{time_redirect}s\n
-   time_pretransfer:  %{time_pretransfer}s\n
-    time_appconnect:  %{time_appconnect}s\n
        time_connect:  %{time_connect}s\n
+    time_appconnect:  %{time_appconnect}s\n
+       ------------------------\n
+   time_pretransfer:  %{time_pretransfer}s\n
  time_starttransfer:  %{time_starttransfer}s\n
-         --------------------\n
          time_total:  %{time_total}s\n
      speed_download:  %{speed_download}KB/s\n\n
 EOF
