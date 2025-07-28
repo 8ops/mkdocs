@@ -1,5 +1,9 @@
 # curl
 
+[Reference](https://www.thebyte.com.cn/http/https-latency.html)
+
+![http-process](../images/http-process.png)
+
 ## 一、简单使用
 
 ### 1.1 打印详情
