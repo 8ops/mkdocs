@@ -115,6 +115,73 @@ image-syncer --auth=auth.json --images=images.json --arch=amd64 --os=linux
 
 
 
+### 2.3 gitlab-runner
+
+基于海外节点通过`.gitlab-ci.yaml`自动下载
+
+```bash
+#!/bin/bash
+
+REGISTRY_BASE_ADDR=git.8ops.top/google_containers
+
+# kubernetes
+# KUBE_VERSION="$(curl -sSL https://dl.k8s.io/release/stable.txt)"
+# KUBE_VERSION=v1.32.9
+KUBE_VERSION=v1.33.5
+# KUBE_VERSION=v1.34.1
+docker pull registry.k8s.io/kube-apiserver:${KUBE_VERSION}
+docker tag  registry.k8s.io/kube-apiserver:${KUBE_VERSION} ${REGISTRY_BASE_ADDR}/kube-apiserver:${KUBE_VERSION}
+docker push ${REGISTRY_BASE_ADDR}/kube-apiserver:${KUBE_VERSION}
+
+docker pull registry.k8s.io/kube-controller-manager:${KUBE_VERSION}
+docker tag  registry.k8s.io/kube-controller-manager:${KUBE_VERSION} ${REGISTRY_BASE_ADDR}/kube-controller-manager:${KUBE_VERSION}
+docker push ${REGISTRY_BASE_ADDR}/kube-controller-manager:${KUBE_VERSION}
+
+docker pull registry.k8s.io/kube-scheduler:${KUBE_VERSION}
+docker tag  registry.k8s.io/kube-scheduler:${KUBE_VERSION} ${REGISTRY_BASE_ADDR}/kube-controller-manager:${KUBE_VERSION}
+docker push ${REGISTRY_BASE_ADDR}/kube-controller-manager:${KUBE_VERSION}
+
+docker pull registry.k8s.io/kube-proxy:${KUBE_VERSION}
+docker tag  registry.k8s.io/kube-proxy:${KUBE_VERSION} ${REGISTRY_BASE_ADDR}/kube-proxy:${KUBE_VERSION}
+docker push ${REGISTRY_BASE_ADDR}/kube-proxy:${KUBE_VERSION}
+
+# coredns
+COREDNS_VERSION=v1.12.1
+docker pull registry.k8s.io/coredns/coredns:${COREDNS_VERSION}
+docker tag  registry.k8s.io/coredns/coredns:${COREDNS_VERSION} ${REGISTRY_BASE_ADDR}/coredns:${COREDNS_VERSION}
+docker push ${REGISTRY_BASE_ADDR}/coredns:${COREDNS_VERSION}
+
+# pause
+PAUSE_VERSION=3.10.1
+docker pull registry.k8s.io/pause:${PAUSE_VERSION}
+docker tag  registry.k8s.io/pause:${PAUSE_VERSION} ${REGISTRY_BASE_ADDR}/pause:${PAUSE_VERSION}
+docker push ${REGISTRY_BASE_ADDR}/pause:${PAUSE_VERSION}
+
+# etcd
+ETCD_VERSION=3.6.4-0
+docker pull registry.k8s.io/etcd:${ETCD_VERSION}
+docker tag  registry.k8s.io/etcd:${ETCD_VERSION} ${REGISTRY_BASE_ADDR}/etcd:${ETCD_VERSION}
+docker push ${REGISTRY_BASE_ADDR}/etcd:${ETCD_VERSION}
+
+# flannel
+FLANNEL_VERSION=v0.27.3
+docker pull ghcr.io/flannel-io/flannel:${FLANNEL_VERSION}
+docker tag  ghcr.io/flannel-io/flannel:${FLANNEL_VERSION} ${REGISTRY_BASE_ADDR}/flannel:${FLANNEL_VERSION}
+docker push ${REGISTRY_BASE_ADDR}/flannel:${FLANNEL_VERSION}
+
+# flannel
+FLANNEL_CNI_PLUGIN_VERSION=v1.7.1-flannel1
+docker pull ghcr.io/flannel-io/flannel-cni-plugin:${FLANNEL_CNI_PLUGIN_VERSION}
+docker tag  ghcr.io/flannel-io/flannel-cni-plugin:${FLANNEL_CNI_PLUGIN_VERSION} ${REGISTRY_BASE_ADDR}/flannel-cni-plugin:${FLANNEL_CNI_PLUGIN_VERSION}
+docker push ${REGISTRY_BASE_ADDR}/flannel-cni-plugin:${FLANNEL_CNI_PLUGIN_VERSION}
+
+
+```
+
+
+
+
+
 ## 三、使用代理通道
 
 原理是网络层面的代理访问。

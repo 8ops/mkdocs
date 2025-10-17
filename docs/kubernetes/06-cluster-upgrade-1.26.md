@@ -148,7 +148,7 @@ systemctl status kubelet
 
 # 重启containerd <当版本有变化>
 sed -i 's/pause:3.8/pause:3.9/' /etc/containerd/config.toml  # v1.25 ~ v1.30
-sed -i 's/pause:3.9/pause:3.10/' /etc/containerd/config.toml # v1.10
+sed -i 's/pause:3.9/pause:3.10/' /etc/containerd/config.toml # v1.31
 systemctl restart containerd
 systemctl status containerd
 
@@ -185,6 +185,61 @@ etcdctl endpoint status -w table \
 ## 三、输出过程
 
 ### 3.1 v1.26
+
+kubeadm.yaml
+
+```yaml
+apiVersion: kubeadm.k8s.io/v1beta3
+bootstrapTokens:
+- groups:
+  - system:bootstrappers:kubeadm:default-node-token
+  token: abcdef.0123456789abcdef
+  ttl: 24h0m0s
+  usages:
+  - signing
+  - authentication
+kind: InitConfiguration
+localAPIEndpoint:
+  advertiseAddress: 10.101.11.240
+  bindPort: 6443
+nodeRegistration:
+  criSocket: unix:///var/run/containerd/containerd.sock
+  imagePullPolicy: IfNotPresent
+  name: K-KUBE-LAB-01
+  taints: null
+---
+apiServer:
+  timeoutForControlPlane: 4m0s
+apiVersion: kubeadm.k8s.io/v1beta3
+certificatesDir: /etc/kubernetes/pki
+clusterName: kubernetes
+controllerManager: {}
+dns:
+  imageRepository: hub.8ops.top/google_containers
+  imageTag: v1.9.3
+etcd:
+  local:
+    dataDir: /var/lib/etcd
+imageRepository: hub.8ops.top/google_containers
+kind: ClusterConfiguration
+kubernetesVersion: 1.26.15
+controlPlaneEndpoint: 10.101.11.110:6443
+networking:
+  dnsDomain: cluster.local
+  podSubnet: 172.19.0.0/16
+  serviceSubnet: 192.168.0.0/16
+scheduler: {}
+---
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
+cgroupDriver: systemd
+---
+apiVersion: kubeproxy.config.k8s.io/v1alpha1
+kind: KubeProxyConfiguration
+mode: ipvs
+```
+
+Output
 
 ```bash
 root@K-KUBE-LAB-01:/opt/kubernetes# kubeadm upgrade plan
@@ -338,6 +393,63 @@ W0920 14:02:59.601766 2006340 common.go:93] WARNING: Usage of the --config flag 
 
 ### 3.2 v1.27
 
+kubeadm.yaml
+
+```bash
+apiVersion: kubeadm.k8s.io/v1beta3
+bootstrapTokens:
+- groups:
+  - system:bootstrappers:kubeadm:default-node-token
+  token: abcdef.0123456789abcdef
+  ttl: 24h0m0s
+  usages:
+  - signing
+  - authentication
+kind: InitConfiguration
+localAPIEndpoint:
+  advertiseAddress: 10.101.11.240
+  bindPort: 6443
+nodeRegistration:
+  criSocket: unix:///var/run/containerd/containerd.sock
+  imagePullPolicy: IfNotPresent
+  name: K-KUBE-LAB-01
+  taints: null
+---
+apiServer:
+  timeoutForControlPlane: 4m0s
+apiVersion: kubeadm.k8s.io/v1beta3
+certificatesDir: /etc/kubernetes/pki
+clusterName: kubernetes
+controllerManager: {}
+dns:
+  imageRepository: hub.8ops.top/google_containers
+  imageTag: v1.10.1
+etcd:
+  local:
+    dataDir: /var/lib/etcd
+imageRepository: hub.8ops.top/google_containers
+kind: ClusterConfiguration
+kubernetesVersion: 1.27.16
+controlPlaneEndpoint: 10.101.11.110:6443
+networking:
+  dnsDomain: cluster.local
+  podSubnet: 172.19.0.0/16
+  serviceSubnet: 192.168.0.0/16
+scheduler: {}
+---
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
+cgroupDriver: systemd
+---
+apiVersion: kubeproxy.config.k8s.io/v1alpha1
+kind: KubeProxyConfiguration
+mode: ipvs
+```
+
+
+
+Output
+
 ```bash
 root@K-KUBE-LAB-01:/opt/kubernetes# kubeadm upgrade plan | tee kubeadm-init.yaml-${KUBE_VERSION}-default
 [upgrade/config] Making sure the configuration is correct:
@@ -476,6 +588,61 @@ W0920 14:47:47.420789 2044537 common.go:93] WARNING: Usage of the --config flag 
 
 ### 3.3 v1.28
 
+kubeadm.yaml
+
+```yaml
+apiVersion: kubeadm.k8s.io/v1beta3
+bootstrapTokens:
+- groups:
+  - system:bootstrappers:kubeadm:default-node-token
+  token: abcdef.0123456789abcdef
+  ttl: 24h0m0s
+  usages:
+  - signing
+  - authentication
+kind: InitConfiguration
+localAPIEndpoint:
+  advertiseAddress: 10.101.11.240
+  bindPort: 6443
+nodeRegistration:
+  criSocket: unix:///var/run/containerd/containerd.sock
+  imagePullPolicy: IfNotPresent
+  name: K-KUBE-LAB-01
+  taints: null
+---
+apiServer:
+  timeoutForControlPlane: 4m0s
+apiVersion: kubeadm.k8s.io/v1beta3
+certificatesDir: /etc/kubernetes/pki
+clusterName: kubernetes
+controllerManager: {}
+dns:
+  imageRepository: hub.8ops.top/google_containers
+  imageTag: v1.10.1
+etcd:
+  local:
+    dataDir: /var/lib/etcd
+imageRepository: hub.8ops.top/google_containers
+kind: ClusterConfiguration
+kubernetesVersion: 1.28.14
+controlPlaneEndpoint: 10.101.11.110:6443
+networking:
+  dnsDomain: cluster.local
+  podSubnet: 172.19.0.0/16
+  serviceSubnet: 192.168.0.0/16
+scheduler: {}
+---
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
+cgroupDriver: systemd
+---
+apiVersion: kubeproxy.config.k8s.io/v1alpha1
+kind: KubeProxyConfiguration
+mode: ipvs
+```
+
+Output
+
 ```bash
 root@K-KUBE-LAB-01:/opt/kubernetes# kubeadm config images list
 I0920 16:52:09.054877 2142217 version.go:256] remote version is much newer: v1.31.0; falling back to: stable-1.28
@@ -559,6 +726,61 @@ W0920 17:03:46.551837 2153542 common.go:94] WARNING: Usage of the --config flag 
 
 
 ### 3.4 v1.29
+
+kubeadm.yaml
+
+```yaml
+apiVersion: kubeadm.k8s.io/v1beta3
+bootstrapTokens:
+- groups:
+  - system:bootstrappers:kubeadm:default-node-token
+  token: abcdef.0123456789abcdef
+  ttl: 24h0m0s
+  usages:
+  - signing
+  - authentication
+kind: InitConfiguration
+localAPIEndpoint:
+  advertiseAddress: 10.101.11.240
+  bindPort: 6443
+nodeRegistration:
+  criSocket: unix:///var/run/containerd/containerd.sock
+  imagePullPolicy: IfNotPresent
+  name: K-KUBE-LAB-01
+  taints: null
+---
+apiServer:
+  timeoutForControlPlane: 4m0s
+apiVersion: kubeadm.k8s.io/v1beta3
+certificatesDir: /etc/kubernetes/pki
+clusterName: kubernetes
+controllerManager: {}
+dns:
+  imageRepository: hub.8ops.top/google_containers
+  imageTag: v1.11.1
+etcd:
+  local:
+    dataDir: /var/lib/etcd
+imageRepository: hub.8ops.top/google_containers
+kind: ClusterConfiguration
+kubernetesVersion: 1.29.9
+controlPlaneEndpoint: 10.101.11.110:6443
+networking:
+  dnsDomain: cluster.local
+  podSubnet: 172.19.0.0/16
+  serviceSubnet: 192.168.0.0/16
+scheduler: {}
+---
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
+cgroupDriver: systemd
+---
+apiVersion: kubeproxy.config.k8s.io/v1alpha1
+kind: KubeProxyConfiguration
+mode: ipvs
+```
+
+Output
 
 ```bash
 root@K-KUBE-LAB-01:/opt/kubernetes# kubeadm config images list
@@ -652,6 +874,61 @@ W0920 17:41:12.008711 2187038 common.go:94] WARNING: Usage of the --config flag 
 
 
 ### 3.5 v1.30
+
+kubeadm.yaml
+
+```bash
+apiVersion: kubeadm.k8s.io/v1beta3
+bootstrapTokens:
+- groups:
+  - system:bootstrappers:kubeadm:default-node-token
+  token: abcdef.0123456789abcdef
+  ttl: 24h0m0s
+  usages:
+  - signing
+  - authentication
+kind: InitConfiguration
+localAPIEndpoint:
+  advertiseAddress: 10.101.11.240
+  bindPort: 6443
+nodeRegistration:
+  criSocket: unix:///var/run/containerd/containerd.sock
+  imagePullPolicy: IfNotPresent
+  name: K-KUBE-LAB-01
+  taints: null
+---
+apiServer:
+  timeoutForControlPlane: 4m0s
+apiVersion: kubeadm.k8s.io/v1beta3
+certificatesDir: /etc/kubernetes/pki
+clusterName: kubernetes
+controllerManager: {}
+dns:
+  imageRepository: hub.8ops.top/google_containers
+  imageTag: v1.11.3
+etcd:
+  local:
+    dataDir: /var/lib/etcd
+imageRepository: hub.8ops.top/google_containers
+kind: ClusterConfiguration
+kubernetesVersion: 1.30.5
+controlPlaneEndpoint: 10.101.11.110:6443
+networking:
+  dnsDomain: cluster.local
+  podSubnet: 172.19.0.0/16
+  serviceSubnet: 192.168.0.0/16
+scheduler: {}
+---
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
+cgroupDriver: systemd
+---
+apiVersion: kubeproxy.config.k8s.io/v1alpha1
+kind: KubeProxyConfiguration
+mode: ipvs
+```
+
+Output
 
 ```bash
 
@@ -797,6 +1074,76 @@ W0923 10:31:34.300321  855740 upgradeconfiguration.go:135] [config] WARNING: YAM
 
 
 ### 3.6 v1.31
+
+kubeadm.yaml
+
+```yaml
+apiVersion: kubeadm.k8s.io/v1beta4
+bootstrapTokens:
+- groups:
+  - system:bootstrappers:kubeadm:default-node-token
+  token: abcdef.0123456789abcdef
+  ttl: 24h0m0s
+  usages:
+  - signing
+  - authentication
+kind: InitConfiguration
+localAPIEndpoint:
+  advertiseAddress: 10.101.11.240
+  bindPort: 6443
+nodeRegistration:
+  criSocket: unix:///var/run/containerd/containerd.sock
+  imagePullPolicy: IfNotPresent
+  imagePullSerial: true
+  name: K-KUBE-LAB-01
+  taints: null
+timeouts:
+  controlPlaneComponentHealthCheck: 4m0s
+  discovery: 5m0s
+  etcdAPICall: 2m0s
+  kubeletHealthCheck: 4m0s
+  kubernetesAPICall: 1m0s
+  tlsBootstrap: 5m0s
+  upgradeManifests: 5m0s
+---
+apiServer: {}
+apiVersion: kubeadm.k8s.io/v1beta4
+caCertificateValidityPeriod: 87600h0m0s
+certificateValidityPeriod: 8760h0m0s
+certificatesDir: /etc/kubernetes/pki
+clusterName: kubernetes
+controllerManager: {}
+dns:
+  imageRepository: hub.8ops.top/google_containers
+  imageTag: v1.11.3
+encryptionAlgorithm: RSA-2048
+etcd:
+  local:
+    dataDir: /var/lib/etcd
+imageRepository: hub.8ops.top/google_containers
+kind: ClusterConfiguration
+kubernetesVersion: 1.31.1
+controlPlaneEndpoint: 10.101.11.110:6443
+networking:
+  dnsDomain: cluster.local
+  podSubnet: 172.19.0.0/16
+  serviceSubnet: 192.168.0.0/16
+proxy: {}
+scheduler: {}
+---
+apiVersion: kubeproxy.config.k8s.io/v1alpha1
+kind: KubeProxyConfiguration
+mode: "ipvs"
+ipvs:
+  minSyncPeriod: 5s
+  syncPeriod: 5s
+  scheduler: "rr"
+  strictARP: true
+featureGates:
+  SupportIPVSProxyMode: true
+```
+
+Output
 
 ```bash
 root@K-KUBE-LAB-01:/opt/kubernetes# kubeadm upgrade plan

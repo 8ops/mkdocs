@@ -362,6 +362,21 @@ $ kubectl get node,pod
 Unable to connect to the server: x509: certificate has expired or is not yet valid: current time 2023-01-31T16:55:27+08:00 is after 2023-01-16T04:47:34Z
 ```
 
+补救措施（验证有效）
+
+```bash
+# 续签
+kubeadm certs renew all
+
+# 依次终止（不要mv manifests）
+crictl ps | awk '/kube-apiserver|kube-controller-manager|kube-scheduler|kube-proxy|etcd/{print $1}'
+crictl stop CONTAINERID
+
+# 坐等恢复
+```
+
+
+
 急救包
 
 ```bash

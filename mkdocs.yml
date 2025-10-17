@@ -179,6 +179,7 @@ nav:
       - kubernetes/06-cluster-upgrade-1.24.md
       - kubernetes/06-cluster-upgrade-1.25.md
       - kubernetes/06-cluster-upgrade-1.26.md
+      - kubernetes/06-cluster-upgrade-1.32.md
       - kubernetes/06-cluster-upgrade-qa.md
       - kubernetes/07-app-migrate.md
       - kubernetes/08-docker.md
