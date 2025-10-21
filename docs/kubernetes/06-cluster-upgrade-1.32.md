@@ -145,11 +145,13 @@ kubeadm upgrade apply ${KUBE_VERSION} --config kubeadm-upgrade.yaml-${KUBE_VERSI
 # 重启 kubelet <当版本有变化配置未随 kubernetes 升级>
 # 重启后可以通过 kubectl get no 查看节点版本发生了变化
 sed -i 's/pause:3.10/pause:3.10/' /var/lib/kubelet/kubeadm-flags.env # v1.32
+sed -i 's/pause:3.10/pause:3.10.1/' /var/lib/kubelet/kubeadm-flags.env # v1.34
 systemctl restart kubelet
 systemctl status kubelet
 
 # 重启containerd <当版本有变化>
 sed -i 's/pause:3.10/pause:3.10/' /etc/containerd/config.toml # v1.32
+sed -i 's/pause:3.10/pause:3.10.1/' /etc/containerd/config.toml # v1.34
 systemctl restart containerd
 systemctl status containerd
 
@@ -1119,7 +1121,23 @@ metadata:
   uid: d479c592-d763-404e-9e46-283df09bfd22
 ```
 
-需要再次 `kubeadm upgrade apply`
+依次尝试
+
+```bash
+# 1 apply
+kubeadm upgrade apply
+
+# 2 upgrade
+kubeadm upgrade node phase addon coredns --kubeconfig /etc/kubernetes/admin.conf --dry-run
+kubeadm upgrade node phase addon coredns --kubeconfig /etc/kubernetes/admin.conf
+
+# 3 patch
+kubectl -n kube-system patch deployment coredns --type='json' -p="[{'op':'replace','path':'/spec/template/spec/containers/0/image','value':'hub.8ops.top/google_containers/coredns:v1.12.1'}]"
+
+
+```
+
+
 
 
 
