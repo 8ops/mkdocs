@@ -79,7 +79,7 @@ ls -l /var/lib/{containerd,etcd,kubelet}
 
 ## 二、升级集群
 
-```yaml
+```bash
 systemctl restart containerd
 
 # 查看升级计划

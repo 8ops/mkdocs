@@ -212,6 +212,7 @@ nav:
       - kubernetes/39-etcd.md
       - kubernetes/44-jsonpath.md
       - kubernetes/45-taint-and-toleration.md
+      - kubernetes/46-metrics-server.md
     - 【存储】: 
       - kubernetes/51-minio.md
       - kubernetes/52-nfs-provider.md
