@@ -7,6 +7,8 @@
 ```bash
 # 经测试支持以下版本
 1.32.9-1.1
+1.33.5-1.1
+1.34.1-1.1
 ```
 
 
@@ -788,6 +790,8 @@ W1021 17:12:34.221411 1036588 postupgrade.go:116] Using temporary directory /etc
 	[WARNING SystemVerification]: cgroups v1 support is in maintenance mode, please migrate to cgroups v2
 ```
 
+建议通过升级操作（实际升级kernel>5.10.0）ubuntu 24.04还解决此问题。以下方法可能存在兼容性不足。
+
 修复（一键脚本）
 
 ```bash
@@ -1075,7 +1079,47 @@ journalctl -u kubelet -n 200 --no-pager
 
 ```
 
+### 4.2 coredns 未自动升级
 
+```bash
+root@K-KUBE-LAB-01:/opt/kubernetes# kubectl -n kube-system get cm kubeadm-config -o yaml
+apiVersion: v1
+data:
+  ClusterConfiguration: |
+    apiServer: {}
+    apiVersion: kubeadm.k8s.io/v1beta4
+    caCertificateValidityPeriod: 87600h0m0s
+    certificateValidityPeriod: 8760h0m0s
+    certificatesDir: /etc/kubernetes/pki
+    clusterName: kubernetes
+    controlPlaneEndpoint: 10.101.11.110:6443
+    controllerManager: {}
+    dns:
+      imageRepository: hub.8ops.top/google_containers
+      imageTag: v1.11.3 # 之前某一版本时在kubeadm-config.yaml中固定过
+    encryptionAlgorithm: RSA-2048
+    etcd:
+      local:
+        dataDir: /var/lib/etcd
+    imageRepository: hub.8ops.top/google_containers
+    kind: ClusterConfiguration
+    kubernetesVersion: v1.34.1
+    networking:
+      dnsDomain: cluster.local
+      podSubnet: 172.19.0.0/16
+      serviceSubnet: 192.168.0.0/16
+    proxy: {}
+    scheduler: {}
+kind: ConfigMap
+metadata:
+  creationTimestamp: "2024-10-16T07:32:06Z"
+  name: kubeadm-config
+  namespace: kube-system
+  resourceVersion: "74880322"
+  uid: d479c592-d763-404e-9e46-283df09bfd22
+```
+
+需要再次 `kubeadm upgrade apply`
 
 
 
