@@ -60,7 +60,8 @@ helm repo update ingress-nginx
 
 helm search repo ingress-nginx
 
-helm show values ingress-nginx/ingress-nginx --version 4.2.5 > ingress-nginx.yaml-default
+helm show values ingress-nginx/ingress-nginx \
+  --version 4.2.5 > ingress-nginx.yaml-4.2.5-default
 
 # Example
 #   https://books.8ops.top/attachment/kubernetes/helm/ingress-nginx-external.yaml-v4.2.5
@@ -75,19 +76,21 @@ helm show values ingress-nginx/ingress-nginx --version 4.2.5 > ingress-nginx.yam
 # kubectl label no k-kube-lab-11 edge=external
 # kubectl cordon k-kube-lab-11 
 
-helm install ingress-nginx-external-controller ingress-nginx/ingress-nginx \
-    -f ingress-nginx-external.yaml-v4.2.5 \
-    -n kube-server \
-    --create-namespace \
-    --version 4.2.5 --debug
+helm install ingress-nginx-external-controller \
+  ingress-nginx/ingress-nginx \
+  -f ingress-nginx-external.yaml-4.2.5 \
+  -n kube-server \
+  --create-namespace \
+  --version 4.2.5 --debug
 
 helm list -A
 
 # upgrade
-helm upgrade ingress-nginx-external-controller ingress-nginx/ingress-nginx \
-    -f ingress-nginx-external.yaml \
-    -n kube-server \
-    --version 4.2.5 --debug
+helm upgrade --install ingress-nginx-external-controller \
+  ingress-nginx/ingress-nginx \
+  -f ingress-nginx-external.yaml \
+  -n kube-server \
+  --version 4.2.5 --debug
 
 # uninstall     
 helm -n kube-server uninstall ingress-nginx-external-controller
@@ -209,7 +212,8 @@ helm repo update kubernetes-dashboard
 
 helm search repo kubernetes-dashboard
 
-helm show values kubernetes-dashboard/kubernetes-dashboard --version 5.10.0  > kubernetes-dashboard.yaml-v5.10.0-default
+helm show values kubernetes-dashboard/kubernetes-dashboard \
+  --version 5.10.0  > kubernetes-dashboard.yaml-5.10.0-default
 
 # vim kubernetes-dashboard.yaml
 
@@ -217,16 +221,18 @@ helm show values kubernetes-dashboard/kubernetes-dashboard --version 5.10.0  > k
 # 若不FW需要变更 ~/.cache/helm/repository/kubernetes-dashboard-index.yaml 从私有文件站下载
 ## sed -i 's#kubernetes-dashboard-5.0.4.tgz#http://d.8ops.top/ops/helm/kubernetes-dashboard-5.0.4.tgz#' ~/.cache/helm/repository/kubernetes-dashboard-index.yaml
 
-helm install kubernetes-dashboard kubernetes-dashboard/kubernetes-dashboard \
-    -f kubernetes-dashboard.yaml-v5.10.0 \
-    -n kube-server \
-    --create-namespace \
-    --version 5.10.0 --debug
+helm install kubernetes-dashboard \
+  kubernetes-dashboard/kubernetes-dashboard \
+  -f kubernetes-dashboard.yaml-v5.10.0 \
+  -n kube-server \
+  --create-namespace \
+  --version 5.10.0 --debug
 
-helm upgrade kubernetes-dashboard kubernetes-dashboard/kubernetes-dashboard \
-    -f kubernetes-dashboard.yaml \
-    -n kube-server \
-    --version 5.10.0 --debug
+helm upgrade --install kubernetes-dashboard \
+  kubernetes-dashboard/kubernetes-dashboard \
+  -f kubernetes-dashboard.yaml \
+  -n kube-server \
+  --version 5.10.0 --debug
 
 #-----------------------------------------------------------
 # create sa for guest
@@ -255,7 +261,7 @@ kubectl create clusterrolebinding dashboard-ops \
   --clusterrole=cluster-admin \
   --serviceaccount=kube-server:dashboard-ops
 
-# create token （从kubernetes v1.24.0开始需要手动创建secrets）
+# create token （从 kubernetes v1.24.0+ 开始需要手动创建secrets）
 kubectl apply -f - <<EOF
 apiVersion: v1
 kind: Secret
@@ -268,6 +274,7 @@ type: kubernetes.io/service-account-token
 EOF
 
 # output token
+kubectl describe secrets dashboard-ops-secret # v1.24.0+
 kubectl describe secrets \
   -n kube-server $(kubectl -n kube-server get secret | awk '/dashboard-ops/{print $1}')
 ```
@@ -362,45 +369,48 @@ helm repo update elastic
 
 # logstash
 helm search repo logstash
-helm show values elastic/logstash > elastic_logstash.yaml-default
+helm show values elastic/logstash \
+  --version 7.17.3 > elastic_logstash.yaml-7.17.3-default
 
 helm install logstash elastic/logstash \
-    -f elastic_logstash.yaml \
-    -n kube-server \
-    --create-namespace \
-    --version 7.16.2 --debug
+  -f elastic_logstash.yaml-7.17.3 \
+  -n kube-server \
+  --create-namespace \
+  --version 7.17.3 --debug
 
 helm upgrade logstash elastic/logstash \
-    -f elastic_logstash.yaml \
-    -n kube-server \
-    --version 7.16.2 --debug
+  -f elastic_logstash.yaml-7.17.3 \
+  -n kube-server \
+  --version 7.17.3 --debug
 
 # elastic [failure]
 helm search repo elastic
-helm show values elastic/elasticsearch > elasticsearch.yaml-default
+helm show values elastic/elasticsearch \
+  --version 7.17.3 > elasticsearch.yaml-7.17.3-default
 
 helm install elasticsearch-ops elastic/elasticsearch \
-        -f elasticsearch.yaml \
-        -n kube-server \
-        --create-namespace \
-        --version 7.17.3 --debug
+  -f elasticsearch.yaml-7.17.3 \
+  -n kube-server \
+  --create-namespace \
+  --version 7.17.3 --debug
 
 helm -n kube-server uninstall elasticsearch-ops        
 
 # elastic_eck
-helm show values elastic/eck-operator > elastic_eck.yaml-default
+helm show values elastic/eck-operator \
+  --version 1.9.1 > elastic_eck.yaml-1.9.1-default
 
 helm install elastic-operator elastic/eck-operator \
-        -f elastic_eck.yaml \
-        -n kube-server \
-        --create-namespace \
-        --version 1.9.1 --debug
+  -f elastic_eck.yaml-1.9.1 \
+  -n kube-server \
+  --create-namespace \
+  --version 1.9.1 --debug
 
-helm upgrade elastic-operator elastic/eck-operator \
-        -f elastic_eck.yaml \
-        -n kube-server \
-        --create-namespace \
-        --version 1.9.1 --debug
+helm upgrade --install elastic-operator elastic/eck-operator \
+  -f elastic_eck.yaml-1.9.1 \
+  -n kube-server \
+  --create-namespace \
+  --version 1.9.1 --debug
 
 # origin
 kubectl create -f https://download.elastic.co/downloads/eck/1.9.1/crds.yaml
@@ -417,13 +427,14 @@ helm repo update prometheus-community
 helm search repo prometheus
 
 # prometheus
-helm show values prometheus-community/prometheus > prometheus.yaml-default
+helm show values prometheus-community/prometheus \
+  --version 15.8.0 > prometheus.yaml-15.8.0-default
 
 helm upgrade --install prometheus prometheus-community/prometheus \
-    -f prometheus.yaml \
-    -n kube-server \
-    --create-namespace \
-    --version 15.8.0 --debug
+  -f prometheus.yaml-15.8.0 \
+  -n kube-server \
+  --create-namespace \
+  --version 15.8.0 --debug
 ```
 
 
@@ -446,19 +457,19 @@ helm show values jetstack/cert-manager --version=v1.11.0 > cert-manager.yaml-v1.
 #   
 
 helm upgrade --install cert-manager jetstack/cert-manager \
-    -f cert-manager.yaml-v1.9.1 \
-    -n cert-manager \
-    --create-namespace \
-    --version v1.9.1 --debug
+  -f cert-manager.yaml-v1.9.1 \
+  -n cert-manager \
+  --create-namespace \
+  --version v1.9.1 --debug
     
 helm upgrade --install cert-manager jetstack/cert-manager \
-    -f cert-manager.yaml-v1.11.0 \
-    -n cert-manager \
-    --create-namespace \
-    --version v1.11.0 --debug
+  -f cert-manager.yaml-v1.11.0 \
+  -n cert-manager \
+  --create-namespace \
+  --version v1.11.0 --debug
 
-    --set 'extraArgs={--dns01-recursive-nameservers-only,--dns01-recursive-nameservers=119.29.29.29:53\,114.114.114.114:53}' \
-    
+#  --set 'extraArgs={--dns01-recursive-nameservers-only,--dns01-recursive-nameservers=119.29.29.29:53\,114.114.114.114:53}' \
+
 helm -n cert-manager uninstall cert-manager
 ```
 

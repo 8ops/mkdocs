@@ -776,9 +776,80 @@ W1021 17:12:34.221411 1036588 postupgrade.go:116] Using temporary directory /etc
 
 
 
-## 四、常见问题
+## 四、addons
 
-### 4.1 cgroup版本迭代
+参考[Helm](05-helm.md)
+
+### 4.1 Ingress-nginx
+
+```bash
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+helm repo update ingress-nginx
+
+helm search repo ingress-nginx
+
+helm show values ingress-nginx/ingress-nginx \
+  --version 4.13.3 > ingress-nginx.yaml-4.13.3-default
+
+# # Containers Images
+# registry.k8s.io/ingress-nginx/controller:v1.13.3
+# registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.6.3
+
+# # 不经过Haproxy protocol，走metalLB时禁用
+# #   use-proxy-protocol: "true"
+
+# # 支持XFF传递
+#     use-forwarded-headers: "true"
+#     compute-full-forwarded-for: "true"
+#     forwarded-for-header: "X-Forwarded-For"
+#     real-ip-header: "X-Forwarded-For"
+#     set-real-ip-from: "0.0.0.0/0"
+
+helm upgrade --install ingress-nginx-external-controller \
+  ingress-nginx/ingress-nginx \
+  -f ingress-nginx.yaml-4.13.3 \
+  -n kube-server \
+  --version 4.13.3 --debug
+
+
+
+```
+
+
+
+### 4.2 kubernetes-dashboard
+
+```bash
+helm repo add kubernetes-dashboard https://kubernetes.github.io/dashboard/
+helm repo update kubernetes-dashboard
+
+helm search repo kubernetes-dashboard
+
+helm show values kubernetes-dashboard/kubernetes-dashboard \
+  --version 7.13.0  > kubernetes-dashboard.yaml-v7.13.0-default
+
+# # Containers Images
+# docker.io/kubernetesui/dashboard-auth:1.3.0
+# docker.io/kubernetesui/dashboard-api:1.13.0
+# docker.io/kubernetesui/dashboard-web:1.7.0
+# docker.io/kubernetesui/dashboard-metrics-scraper:1.2.2
+# registry.k8s.io/metrics-server/metrics-server:v0.7.2
+# kong:3.8
+
+helm upgrade --install kubernetes-dashboard \
+  kubernetes-dashboard/kubernetes-dashboard \
+  -f kubernetes-dashboard.yaml-7.13.0 \
+  -n kube-server \
+  --create-namespace \
+  --version 7.13.0 --debug
+
+```
+
+
+
+## 五、常见问题
+
+### 5.1 cgroup版本迭代
 
 现象
 
@@ -1081,7 +1152,7 @@ journalctl -u kubelet -n 200 --no-pager
 
 ```
 
-### 4.2 coredns 未自动升级
+### 5.2 coredns 未自动升级
 
 ```bash
 root@K-KUBE-LAB-01:/opt/kubernetes# kubectl -n kube-system get cm kubeadm-config -o yaml
