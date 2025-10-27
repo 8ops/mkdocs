@@ -780,12 +780,35 @@ W1021 17:12:34.221411 1036588 postupgrade.go:116] Using temporary directory /etc
 
 参考[Helm](05-helm.md)
 
-### 4.1 Ingress-nginx
+
+
+### 4.1 metallb
+
+```bash
+helm repo add metallb https://metallb.github.io/metallb
+helm repo update metallb
+helm search repo metallb
+
+helm show values metallb/metallb \
+  --version 0.15.2 > metallb.yaml-0.15.2-default
+
+helm upgrade --install metallb metallb/metallb \
+  -f metallb.yaml-0.15.2 \
+  --namespace=kube-server \
+  --create-namespace \
+  --version 0.15.2 --debug
+
+```
+
+
+
+
+
+### 4.2 Ingress-nginx
 
 ```bash
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 helm repo update ingress-nginx
-
 helm search repo ingress-nginx
 
 helm show values ingress-nginx/ingress-nginx \
@@ -811,18 +834,15 @@ helm upgrade --install ingress-nginx-external-controller \
   -n kube-server \
   --version 4.13.3 --debug
 
-
-
 ```
 
 
 
-### 4.2 kubernetes-dashboard
+### 4.3 kubernetes-dashboard
 
 ```bash
 helm repo add kubernetes-dashboard https://kubernetes.github.io/dashboard/
 helm repo update kubernetes-dashboard
-
 helm search repo kubernetes-dashboard
 
 helm show values kubernetes-dashboard/kubernetes-dashboard \
@@ -844,6 +864,15 @@ helm upgrade --install kubernetes-dashboard \
   --version 7.13.0 --debug
 
 ```
+
+
+
+### 4.4 argo-cd
+
+```bash
+```
+
+
 
 
 
