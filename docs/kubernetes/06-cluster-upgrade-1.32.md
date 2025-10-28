@@ -92,6 +92,8 @@ ls -l /var/lib/{containerd,etcd,kubelet}
 
 ## 二、升级集群
 
+### 2.1 cluster
+
 ```bash
 etcdctl member list -w table \
   --endpoints=https://127.0.0.1:2379 \
@@ -181,6 +183,31 @@ etcdctl endpoint status -w table \
   --cert=/etc/kubernetes/pki/etcd/server.crt \
   --key=/etc/kubernetes/pki/etcd/server.key
 ```
+
+
+
+### 2.2 calico
+
+```bash
+CALICO_VERSION=v3.31.0
+curl -s -k -o 01-calico.yaml-${CALICO_VERSION}.yaml-default \
+  https://raw.githubusercontent.com/projectcalico/calico/${CALICO_VERSION}/manifests/calico.yaml
+
+# edit image and namespace
+vim 01-calico.yaml-${CALICO_VERSION}.yaml
+
+# # Containers Images
+# image: quay.io/calico/cni:v3.31.0
+# image: quay.io/calico/cni:v3.31.0
+# image: quay.io/calico/node:v3.31.0
+# image: quay.io/calico/node:v3.31.0
+# image: quay.io/calico/kube-controllers:v3.31.0
+
+kubectl apply -f 01-calico.yaml-${CALICO_VERSION}.yaml
+
+```
+
+
 
 
 
@@ -870,6 +897,22 @@ helm upgrade --install kubernetes-dashboard \
 ### 4.4 argo-cd
 
 ```bash
+helm repo add argoproj https://argoproj.github.io/argo-helm
+helm repo update argoproj
+helm search repo argo-cd
+
+helm show values argoproj/argo-cd \
+  --version 9.0.5 > argo-cd.yaml-9.0.5-default
+
+# # Containers Images
+# quay.io/argoproj/argocd:v3.1.9
+# ghcr.io/dexidp/dex:v2.44.0
+
+helm upgrade --install argo-cd argoproj/argo-cd \
+  -n kube-server \
+  -f argo-cd.yaml-9.0.5 \
+  --version 9.0.5 --debug
+
 ```
 
 

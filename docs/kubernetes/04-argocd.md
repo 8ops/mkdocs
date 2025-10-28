@@ -5,6 +5,8 @@
 ## 一、安装
 
 ```bash
+# https://artifacthub.io/packages/helm/argo/argo-cd
+
 helm repo add argoproj https://argoproj.github.io/argo-helm
 helm repo update argoproj
 helm search repo argo-cd
