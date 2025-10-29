@@ -209,8 +209,6 @@ kubectl apply -f 01-calico.yaml-${CALICO_VERSION}.yaml
 
 
 
-
-
 ## 三、输出过程
 
 ### 3.1 v1.32

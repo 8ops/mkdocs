@@ -365,6 +365,10 @@ gitlab-rails runner "Notify.test_email('your-email@domain.com', 'Test Email', 'T
 
 - 17.8.5
 - 17.9.2
+- 17.10.0
+- 17.11.7
+- 18.2.8
+- 18.5.1
 
 
 
@@ -503,16 +507,53 @@ chown -R git:git /var/opt/gitlab
 chown -R gitlab-www:gitlab-www /var/log/gitlab
 
 # 强制升级
-gitlab-ctl upgrade
+docker exec gitlab gitlab-ctl upgrade
 
 # 回滚
-gitlab-ctl stop
-gitlab-rake gitlab:backup:restore BACKUP=<备份文件名>
-gitlab-ctl restart
+docker exec gitlab gitlab-ctl stop
+docker exec gitlab gitlab-rake gitlab:backup:restore BACKUP=<备份文件名>
+docker exec gitlab gitlab-ctl restart
 
+# 重启服务（用于重新加载证书）
+docker exec gitlab gitlab-ctl reconfigure
 ```
 
+#### docker-compose
 
+```bash
+services:
+  gitlab:
+    image: 'hub.8ops.top/build/gitlab-ce:18.5.1-ce.0'
+    restart: always
+    container_name: gitlab
+    hostname: 'git.8ops.top'
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'https://git.8ops.top'
+        gitlab_rails['smtp_pool'] = true
+        gitlab_rails['smtp_enable'] = true
+        gitlab_rails['smtp_address'] = "smtp.exmail.qq.com"
+        gitlab_rails['smtp_port'] = 465
+        gitlab_rails['smtp_user_name'] = "m@8osp.top"
+        gitlab_rails['smtp_password'] = "f2gtWcAxNhEH7GsV"
+        gitlab_rails['smtp_domain'] = "exmail.qq.com"
+        gitlab_rails['smtp_authentication'] = "login"
+        gitlab_rails['smtp_enable_starttls_auto'] = false
+        gitlab_rails['smtp_tls'] = true
+        gitlab_rails['gitlab_email_enabled'] = true
+        gitlab_rails['gitlab_email_from'] = "m@8osp.top"
+        gitlab_rails['gitlab_email_display_name'] = "GitLab"
+        gitlab_rails['gitlab_email_reply_to'] = "noreply@8ops.top"
+    ports:
+      - '443:443'
+      - '80:80'
+      - '22:22'
+    volumes:
+      - '/opt/lib/gitlab/config:/etc/gitlab'
+      - '/opt/lib/gitlab/logs:/var/log/gitlab'
+      - '/opt/lib/gitlab/data:/var/opt/gitlab'
+    shm_size: '4g'
+```
 
 
 
@@ -607,7 +648,7 @@ cd /opt/lib/gitlab-runner
 cat > docker-compose.yaml <<EOF
 services:
   gitlab:
-    image: hub.8ops.top/build/gitlab-runner:ubuntu-v17.4.0
+    image: hub.8ops.top/build/gitlab-runner:ubuntu-v18.5.0
     container_name: "gitlab-runner-01"
     restart: always
     environment:
@@ -619,6 +660,9 @@ services:
       - "/opt/lib/gitlab-runner/npm:/root/.npm"
 EOF  
 
+# 编辑配置（变更镜像地址：gitlab-runner-helper）
+vim /opt/lib/gitlab-runner/config/config.toml
+
 # 第二步，进入gitlab console 注册实例并获取注册命令 （Admin Area -> Runners）
 gitlab-runner register  --url https://git.8ops.top  --token glrt-zvyQjQV7FDszMetH1Yxu
 
@@ -626,6 +670,70 @@ gitlab-runner register  --url https://git.8ops.top  --token glrt-zvyQjQV7FDszMet
 docker exec -it gitlab-runner bash
 
 root@gitlab-runner:/# gitlab-runner register  --url https://git.8ops.top  --token glrt-Kdv9Ad4PHqJGyoyKQCp5
+```
+
+
+
+`docker-compose.yaml`
+
+```bash
+services:
+  gitlab-runner:
+    image: 'hub.8ops.top/build/gitlab-runner:ubuntu-v18.5.0'
+    restart: always
+    hostname: 'gitlab-runner'
+    container_name: 'gitlab-runner'
+    environment:
+      CA_CERTIFICATES_PATH: '/etc/gitlab-runner/certs/ca.crt'
+    volumes:
+      - '/usr/bin/docker:/usr/bin/docker'
+      - '/var/run/docker.sock:/var/run/docker.sock'
+      - '/opt/lib/gitlab-runner/config:/etc/gitlab-runner'
+      - '/opt/lib/gitlab-runner/cache:/cache'
+      - '/opt/lib/gitlab-runner/npm:/root/.npm'
+    shm_size: '1g
+```
+
+
+
+
+
+`config.toml`
+
+```bash
+concurrent = 1
+check_interval = 0
+connection_max_age = "15m0s"
+shutdown_timeout = 0
+
+[session_server]
+  session_timeout = 1800
+
+[[runners]]
+  name = "gitlab-runner"
+  url = "https://git-ops.wuxingdev.cn"
+  id = 18
+  token = "glrt-Kdv9Ad4PHqJGyoyKQCp5"
+  token_obtained_at = 2024-09-26T03:24:18Z
+  token_expires_at = 0001-01-01T00:00:00Z
+  executor = "docker"
+  [runners.custom_build_dir]
+  [runners.cache]
+    MaxUploadedArchiveSize = 0
+    [runners.cache.s3]
+    [runners.cache.gcs]
+    [runners.cache.azure]
+  [runners.docker]
+    helper_image = "hub.8ops.top/build/gitlab-runner-helper:x86_64-v18.5.0"
+    tls_verify = false
+    image = "registry.wuxingdev.cn/base/alpine:3"
+    privileged = true
+    disable_entrypoint_overwrite = false
+    oom_kill_disable = false
+    disable_cache = false
+    volumes = ["/var/run/docker.sock:/var/run/docker.sock", "/opt/lib/gitlab-runner/cache:/cache" ,"/opt/lib/gitlab-runner/npm:/root/.npm"]
+    shm_size = 0
+    network_mtu = 0
 ```
 
 
