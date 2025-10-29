@@ -711,7 +711,7 @@ shutdown_timeout = 0
 
 [[runners]]
   name = "gitlab-runner"
-  url = "https://git-ops.wuxingdev.cn"
+  url = "https://git.8ops.top"
   id = 18
   token = "glrt-Kdv9Ad4PHqJGyoyKQCp5"
   token_obtained_at = 2024-09-26T03:24:18Z
@@ -726,7 +726,7 @@ shutdown_timeout = 0
   [runners.docker]
     helper_image = "hub.8ops.top/build/gitlab-runner-helper:x86_64-v18.5.0"
     tls_verify = false
-    image = "registry.wuxingdev.cn/base/alpine:3"
+    image = "hub.8ops.top/base/alpine:3"
     privileged = true
     disable_entrypoint_overwrite = false
     oom_kill_disable = false
