@@ -189,7 +189,8 @@ etcdctl endpoint status -w table \
 ### 2.2 calico
 
 ```bash
-CALICO_VERSION=v3.31.0
+CALICO_VERSION=v3.30.4
+# CALICO_VERSION=v3.31.0 # 未在 Kubernetes v1.34.1 上面应用成功https://github.com/projectcalico/calico/blob/release-v3.31/release-notes/v3.31.0-release-notes.md
 curl -s -k -o 01-calico.yaml-${CALICO_VERSION}.yaml-default \
   https://raw.githubusercontent.com/projectcalico/calico/${CALICO_VERSION}/manifests/calico.yaml
 
