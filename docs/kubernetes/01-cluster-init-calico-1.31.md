@@ -102,14 +102,15 @@ wget https://raw.githubusercontent.com/projectcalico/calico/v3.28.2/manifests/ca
 helm repo add metallb https://metallb.github.io/metallb
 helm repo update metallb
 helm search repo metallb
-helm show values metallb/metallb --version 0.14.8 > metallb.yaml-0.14.8-default
+helm show values metallb/metallb \
+  --version 0.14.8 > metallb.yaml-0.14.8-default
 
 helm upgrade --install metallb metallb/metallb \
-    -f metallb.yaml-0.14.8 \
-    --namespace=kube-server \
-    --create-namespace \
-    --version 0.14.8 \
-    --debug 2>&1 | tee metallb.yaml-0.14.8.out
+  -f metallb.yaml-0.14.8 \
+  --namespace=kube-server \
+  --create-namespace \
+  --version 0.14.8 \
+  --debug
 
 helm -n kube-server uninstall metallb
 ```
@@ -126,10 +127,10 @@ helm search repo ingress-nginx
 helm show values ingress-nginx/ingress-nginx --version 4.11.3 > ingress-nginx.yaml-4.11.3-default
 
 helm upgrade --install ingress-nginx-external-controller ingress-nginx/ingress-nginx \
-    -f ingress-nginx.yaml-4.11.3 \
-    -n kube-server \
-    --version 4.11.3 \
-    --debug 2>&1 | tee ingress-nginx.yaml-4.11.3.out
+  -f ingress-nginx.yaml-4.11.3 \
+  -n kube-server \
+  --version 4.11.3 \
+  --debug
 
 helm -n kube-server uninstall ingress-nginx-external-controller
 
@@ -152,11 +153,11 @@ helm search repo kubernetes-dashboard
 helm show values kubernetes-dashboard/kubernetes-dashboard --version 7.8.0 > kubernetes-dashboard.yaml-7.8.0-default
 
 helm upgrade --install kubernetes-dashboard kubernetes-dashboard/kubernetes-dashboard \
-    -f kubernetes-dashboard.yaml-7.8.0 \
-    -n kube-server \
-    --create-namespace \
-    --version 7.8.0 \
-    --debug 2>&1 | tee kubernetes-dashboard.yaml-7.8.0.out
+  -f kubernetes-dashboard.yaml-7.8.0 \
+  -n kube-server \
+  --create-namespace \
+  --version 7.8.0 \
+  --debug
 
 kubectl -n kube-server create secret tls tls-8ops.top \
   --cert=8ops.top.crt \
@@ -195,15 +196,15 @@ helm search repo argo-cd
 helm show values argoproj/argo-cd --version 7.6.8 > argo-cd.yaml-7.6.8-default
 
 helm upgrade --install argo-cd argoproj/argo-cd \
-    -n kube-server \
-    -f argo-cd.yaml-7.6.8 \
-    --version 7.6.8 \
-    --debug 2>&1 | tee argo-cd.yaml-7.6.8.out
+  -n kube-server \
+  -f argo-cd.yaml-7.6.8 \
+  --version 7.6.8 \
+  --debug
 
 helm -n kube-server uninstall argo-cd
 
 kubectl -n kube-server get secret argocd-initial-admin-secret \
-    -o jsonpath="{.data.password}" | base64 -D; echo 
+  -o jsonpath="{.data.password}" | base64 -D; echo 
     
 # account    
 argocd login argo-cd.8ops.top --username=admin --password=xx --grpc-web
@@ -224,29 +225,27 @@ argocd proj list
 
 # repo
 argocd repo add https://git.8ops.top/ops/control-plane-ops.git \
-    --name control-plane-ops \
-    --project control-plane-ops \
-    --username gitlab-read \
-    --password xx \
-    --insecure-skip-server-verification
+  --name control-plane-ops \
+  --project control-plane-ops \
+  --username gitlab-read \
+  --password xx \
+  --insecure-skip-server-verification
 argocd repo get https://git.8ops.top/ops/control-plane-ops.git
 argocd repo list
 
 # app
 argocd app create toolkit \
-    --repo https://git.8ops.top/ops/control-plane-ops.git \
-    --path toolkit \
-    --project control-plane-ops \
-    --directory-recurse \
-    --dest-namespace default \
-    --dest-server https://kubernetes.default.svc \
-    --revision master \
-    --sync-policy automated \
-    --label author=jesse \
-    --label tier=helm 
+  --repo https://git.8ops.top/ops/control-plane-ops.git \
+  --path toolkit \
+  --project control-plane-ops \
+  --directory-recurse \
+  --dest-namespace default \
+  --dest-server https://kubernetes.default.svc \
+  --revision master \
+  --sync-policy automated \
+  --label author=jesse \
+  --label tier=helm 
 ```
-
-
 
 
 

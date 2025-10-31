@@ -190,7 +190,7 @@ etcdctl endpoint status -w table \
 
 ```bash
 CALICO_VERSION=v3.30.4
-# CALICO_VERSION=v3.31.0 # 未在 Kubernetes v1.34.1 上面应用成功https://github.com/projectcalico/calico/blob/release-v3.31/release-notes/v3.31.0-release-notes.md
+# CALICO_VERSION=v3.31.0 # 未在 Kubernetes v1.34.1 上面应用成功，发布特性发生重大变化 https://github.com/projectcalico/calico/blob/release-v3.31/release-notes/v3.31.0-release-notes.md
 curl -s -k -o 01-calico.yaml-${CALICO_VERSION}.yaml-default \
   https://raw.githubusercontent.com/projectcalico/calico/${CALICO_VERSION}/manifests/calico.yaml
 
@@ -207,6 +207,159 @@ vim 01-calico.yaml-${CALICO_VERSION}.yaml
 kubectl apply -f 01-calico.yaml-${CALICO_VERSION}.yaml
 
 ```
+
+
+
+#### 2.2.1 calicoctl
+
+```bash
+# download calicoctl
+CALICO_VERSION=v3.30.4
+curl -sL -o ~/bin/calicoctl \
+  https://github.com/projectcalico/calico/releases/download/${CALICO_VERSION}/calicoctl-linux-amd64
+
+root@K-KUBE-LAB-01:~# calicoctl node status
+Calico process is running.
+
+IPv4 BGP status
++---------------+-------------------+-------+------------+-------------+
+| PEER ADDRESS  |     PEER TYPE     | STATE |   SINCE    |    INFO     |
++---------------+-------------------+-------+------------+-------------+
+| 10.101.11.114 | node-to-node mesh | up    | 2025-10-30 | Established |
+| 10.101.11.154 | node-to-node mesh | up    | 2025-10-30 | Established |
+| 10.101.11.196 | node-to-node mesh | up    | 2025-10-30 | Established |
+| 10.101.11.157 | node-to-node mesh | up    | 2025-10-30 | Established |
+| 10.101.11.250 | node-to-node mesh | up    | 2025-10-30 | Established |
++---------------+-------------------+-------+------------+-------------+
+
+IPv6 BGP status
+No IPv6 peers found.
+
+root@K-KUBE-LAB-01:~# calicoctl node checksystem
+Checking kernel version...
+		5.4.0-80-generic    					OK
+Checking kernel modules...
+		xt_rpfilter         					OK
+		xt_bpf              					OK
+		nf_conntrack_netlink					OK
+		xt_conntrack        					OK
+		xt_icmp             					OK
+		xt_multiport        					OK
+		ip6_tables          					OK
+		ipt_ipvs            					OK
+		ipt_rpfilter        					OK
+		xt_set              					OK
+		ip_set              					OK
+		ipt_REJECT          					OK
+		ipt_set             					OK
+		xt_addrtype         					OK
+		xt_icmp6            					OK
+		xt_mark             					OK
+		xt_u32              					OK
+		ip_tables           					OK
+		vfio-pci            					OK
+System meets minimum system requirements to run Calico!
+
+root@K-KUBE-LAB-01:~# calicoctl ipam check
+Checking IPAM for inconsistencies...
+
+Loading all IPAM blocks...
+Found 6 IPAM blocks.
+ IPAM block 172.19.156.192/26 affinity=host:k-kube-lab-03:
+ IPAM block 172.19.179.128/26 affinity=host:k-kube-lab-02:
+ IPAM block 172.19.196.192/26 affinity=host:k-kube-lab-08:
+ IPAM block 172.19.218.64/26 affinity=host:k-kube-lab-11:
+ IPAM block 172.19.26.0/26 affinity=host:k-kube-lab-12:
+ IPAM block 172.19.36.64/26 affinity=host:k-kube-lab-01:
+IPAM blocks record 29 allocations.
+
+Loading all IPAM pools...
+  172.19.0.0/16
+Found 1 active IP pools.
+
+Loading all nodes.
+Found 6 node tunnel IPs.
+
+Loading all service load balancer IPs.
+No configuration for LoadBalancer kubecontroller found, skipping service check
+
+Loading all workload endpoints.
+Found 23 workload IPs.
+Workloads and nodes are using 29 IPs.
+
+Loading all handles
+Looking for top (up to 20) nodes by allocations...
+  k-kube-lab-11 has 16 allocations
+  k-kube-lab-08 has 5 allocations
+  k-kube-lab-12 has 5 allocations
+  k-kube-lab-03 has 1 allocations
+  k-kube-lab-02 has 1 allocations
+  k-kube-lab-01 has 1 allocations
+Node with most allocations has 16; median is 1
+
+Scanning for IPs that are allocated but not actually in use...
+Found 0 IPs that are allocated in IPAM but not actually in use.
+Scanning for IPs that are in use by a workload or node but not allocated in IPAM...
+Found 0 in-use IPs that are not in active IP pools.
+Found 0 in-use IPs that are in active IP pools but have no corresponding IPAM allocation.
+
+Scanning for IPAM handles with no matching IPs...
+Found 0 handles with no matching IPs (and 29 handles with matches).
+Scanning for IPs with missing handle...
+Found 0 handles mentioned in blocks with no matching handle resource.
+Check complete; found 0 problems.
+root@K-KUBE-LAB-01:~# calicoctl ipam show
++----------+---------------+-----------+------------+--------------+
+| GROUPING |     CIDR      | IPS TOTAL | IPS IN USE |   IPS FREE   |
++----------+---------------+-----------+------------+--------------+
+| IP Pool  | 172.19.0.0/16 |     65536 | 29 (0%)    | 65507 (100%) |
++----------+---------------+-----------+------------+--------------+
+
+```
+
+
+
+#### 2.2.2 calico-cloud
+
+<u>未成功</u>
+
+```bash
+# free: https://www.calicocloud.io/start-free
+
+
+# 1 
+# 安装 Calico Cloud 连接组件（示例 Helm 安装）
+helm repo add tigera https://docs.tigera.io/charts
+helm repo update
+helm install calico-cloud tigera/tigera-secure-ee \
+  --namespace kube-system --create-namespace \
+  --set installation.variant=CalicoCloud \
+  --set calicoCloud.organizationToken="<YOUR_TOKEN>" \
+  --set calicoCloud.clusterName="<YOUR_CLUSTER_NAME>" \
+  --set calicoCloud.global.imageRepository="hub.8ops.top/google_containers" \
+  --set flowLogs.enabled=true \
+  --set observability.enabled=true
+
+# 4. 验证 Calico Cloud 连接
+kubectl -n kube-system get pods
+kubectl -n kube-system logs deployment/calico-cloud-operator
+
+# 2
+# https://docs.tigera.io/calico-cloud/free/quickstart
+kubectl apply -f 01-tigera-operator-v3.30.4.yaml
+kubectl apply -f 01-custom-resources-v3.30.4.yaml
+
+$ kubectl get tigerastatus
+NAME                            AVAILABLE   PROGRESSING   DEGRADED   SINCE
+apiserver                       True        False         False      67s
+calico                                                    True
+goldmane                        False       True          False      117s
+ippools                                                   True
+management-cluster-connection   True        False         False      72s
+whisker                         False       True          False      117s
+```
+
+
 
 
 

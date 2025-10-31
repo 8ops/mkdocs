@@ -256,7 +256,7 @@ kubectl -n kube-system edit cm kube-proxy
 
 
 
-## 三、应用 Calico
+## 三、Install Calico
 
 ### 3.1 Helm
 
@@ -269,16 +269,16 @@ helm search repo tigera-operator
 helm show values projectcalico/tigera-operator > calico-tigera-operator.yaml-v3.24.1-default
 
 helm install calico projectcalico/tigera-operator \
-    -f calico-tigera-operator.yaml-v3.24.1 \
-    -n kube-system \
-    --create-namespace \
-    --version v3.24.1
+  -f calico-tigera-operator.yaml-v3.24.1 \
+  -n kube-system \
+  --create-namespace \
+  --version v3.24.1
 
 helm upgrade --install calico projectcalico/tigera-operator \
-    -f calico-tigera-operator.yaml-v3.24.1 \
-    -n kube-system \
-    --create-namespace \
-    --version v3.24.1
+  -f calico-tigera-operator.yaml-v3.24.1 \
+  -n kube-system \
+  --create-namespace \
+  --version v3.24.1
 ```
 
 > 编辑配置
@@ -306,11 +306,13 @@ calicoctl:
 <u>遗留问题</u>
 
 1. calico 命名空间 `calico-apiserver` & `calico-system` 不能替换
-2. calico 依赖镜像 `calico/cni` 等5个无法替换成内部地址
+2. calico 依赖镜像 `calico/cni/controllers` 等5个无法替换成内部地址
 
 
 
 ### 3.2 原生
+
+`建议`
 
 [Reference](https://projectcalico.docs.tigera.io/getting-started/kubernetes/quickstart)
 
@@ -333,11 +335,11 @@ kubectl apply -f calico.yaml-v3.24.1
 ……
 
 # 镜像替换
-          image: hub.8ops.top/google_containers/calico-cni:v3.24.1
-          image: hub.8ops.top/google_containers/calico-cni:v3.24.1
-          image: hub.8ops.top/google_containers/calico-node:v3.24.1
-          image: hub.8ops.top/google_containers/calico-node:v3.24.1
-          image: hub.8ops.top/google_containers/calico-kube-controllers:v3.24.1
+          image: hub.8ops.top/quay/calico-cni:v3.24.1
+          image: hub.8ops.top/quay/calico-cni:v3.24.1
+          image: hub.8ops.top/quay/calico-node:v3.24.1
+          image: hub.8ops.top/quay/calico-node:v3.24.1
+          image: hub.8ops.top/quay/calico-kube-controllers:v3.24.1
 ```
 
 

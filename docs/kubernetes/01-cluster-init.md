@@ -672,6 +672,13 @@ kubectl get cs
 ><optional> etcd运行信息
 
 ```bash
+# download etcdctl
+ETCDCTL_VERSION=v3.4.20
+curl -sL -o \
+  https://github.com/etcd-io/etcd/releases/download/${ETCDCTL_VERSION}/etcd-${ETCDCTL_VERSION}-linux-amd64.tar.gz
+tar xzf etcd-${ETCDCTL_VERSION}-linux-amd64.tar.gz
+cp etcd-${ETCDCTL_VERSION}-linux-amd64/etcdctl ~/bin/etcdctl
+
 etcdctl member list \
 	--endpoints=https://10.101.11.240:2379 \
 	--cacert=/etc/kubernetes/pki/etcd/ca.crt \
