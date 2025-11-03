@@ -361,6 +361,170 @@ whisker                         False       True          False      117s
 
 
 
+### 2.3 cilium
+
+```bash
+# 待验证可实施性
+helm repo add cilium https://helm.cilium.io/
+helm repo update cilium
+helm search repo cilium
+helm show values cilium/cilium \
+  --version 1.18.3 > cilium.yaml-1.18.3-default
+
+# # Containers Images
+# quay.io/cilium/cilium:v1.18.3
+# quay.io/cilium/certgen:v0.2.4
+# quay.io/cilium/hubble-relay:v1.18.3
+# quay.io/cilium/hubble-ui-backend:v0.13.3
+# quay.io/cilium/hubble-ui:v0.13.3
+# quay.io/cilium/cilium-envoy:v1.34.10-1761014632-c360e8557eb41011dfb5210f8fb53fed6c0b3222
+# quay.io/cilium/operator:v1.18.3
+# 
+# # no use
+# quay.io/cilium/startup-script:1755531540-60ee83e
+# quay.io/cilium/clustermesh-apiserver:v1.18.3
+# ghcr.io/spiffe/spire-agent:1.12.4
+# ghcr.io/spiffe/spire-server:1.12.4
+        
+helm upgrade --install cilium cilium/cilium \
+  -f cilium.yaml-1.18.3 \
+  --namespace=kube-system \
+  --version 1.18.3 --debug
+
+
+# CILIUM CLI
+CILIUM_CLI_VERSION=v0.18.8
+curl -sL --remote-name-all https://github.com/cilium/cilium-cli/releases/download/${CILIUM_CLI_VERSION}/cilium-linux-amd64.tar.gz{,.sha256sum}
+sha256sum --check cilium-linux-amd64.tar.gz.sha256sum
+tar xzvfC cilium-linux-amd64.tar.gz ~/bin
+
+# HUBBLE
+HUBBLE_VERSION=v1.18.3
+curl -sL --remote-name-all https://github.com/cilium/hubble/releases/download/${HUBBLE_VERSION}/hubble-linux-amd64.tar.gz{,.sha256sum}
+sha256sum --check hubble-linux-amd64.tar.gz.sha256sum
+
+```
+
+
+
+> cilium
+
+```yaml
+image:
+  repository: "hub.8ops.top/quay/cilium"
+  tag: "v1.12.1"
+  useDigest: false
+
+resources:
+  limits:
+    cpu: 4
+    memory: 4Gi
+  requests:
+    cpu: 100m
+    memory: 512Mi
+
+certgen:
+  image:
+    repository: "hub.8ops.top/quay/certgen"
+    tag: "v0.1.8"
+    useDigest: false
+
+hubble:
+  enabled: true
+  relay:
+    enabled: true
+    image:
+      repository: "hub.8ops.top/quay/hubble-relay"
+      tag: "v1.12.1"
+      useDigest: false
+
+    resources:
+      limits:
+        cpu: 2
+        memory: 2Gi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+
+    prometheus:
+      enabled: true
+      port: 9966
+
+  ui:
+    enabled: true
+    standalone:
+      enabled: true
+
+    backend:
+      image:
+        repository: "hub.8ops.top/quay/hubble-ui-backend"
+        tag: "v0.9.1"
+        useDigest: false
+
+      resources:
+        limits:
+          cpu: 1
+          memory: 1Gi
+        requests:
+          cpu: 100m
+          memory: 64Mi
+
+    frontend:
+      image:
+        repository: "hub.8ops.top/quay/hubble-ui"
+        tag: "v0.9.1"
+        useDigest: false
+
+      resources:
+        limits:
+          cpu: 1
+          memory: 1Gi
+        requests:
+          cpu: 100m
+          memory: 64Mi
+
+    ingress:
+      enabled: true
+      className: "external"
+      hosts:
+        - hubble.8ops.top
+      tls:
+        - secretName: tls-8ops.top
+          hosts:
+            - hubble.8ops.top
+
+ipam:
+  mode: "cluster-pool"
+  operator:
+    clusterPoolIPv4PodCIDR: "172.20.0.0/16"
+    clusterPoolIPv4MaskSize: 24
+
+prometheus:
+  enabled: true
+  port: 9962
+
+operator:
+  enabled: true
+  image:
+    repository: "hub.8ops.top/quay/cilium-operator"
+    tag: "v1.12.1"
+    useDigest: false
+
+  resources:
+    limits:
+      cpu: 1
+      memory: 1Gi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+  prometheus:
+    enabled: true
+    port: 9963
+```
+
+
+
 
 
 ## 三、输出过程
@@ -1433,6 +1597,24 @@ kubectl -n kube-system patch deployment coredns --type='json' -p="[{'op':'replac
 ```
 
 
+
+### 5.3  metrics 
+
+```bash
+# error 
+error: Metrics API not available
+
+# # solution
+# 检查 APIService 是否可用（全局配置，会引用到 kubernetes-dashboard-metrics-server）
+kubectl get apiservices v1beta1.metrics.k8s.io -o wide
+kubectl describe apiservice v1beta1.metrics.k8s.io
+
+# 检查 metrics-server 资源状态：具体取决于metrics-server
+
+# 认证受权过期
+
+# 检查网络联通性：更换CNI期间会受影响
+```
 
 
 

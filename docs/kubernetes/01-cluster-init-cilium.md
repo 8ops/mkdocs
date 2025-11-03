@@ -247,15 +247,16 @@ mode: ipvs
 export PATH=~/bin:$PATH
 echo 'export PATH=~/bin:$PATH' >> ~/.bashrc
 
-# CILIUM
+# CILIUM CLI
 # https://raw.githubusercontent.com/cilium/cilium-cli/master/stable.txt
-CILIUM_VERSION=v0.12.2
-curl -sL --remote-name-all https://github.com/cilium/cilium-cli/releases/download/${CILIUM_VERSION}/cilium-linux-amd64.tar.gz{,.sha256sum}
+CILIUM_CLI_VERSION=v0.12.2
+curl -sL --remote-name-all https://github.com/cilium/cilium-cli/releases/download/${CILIUM_CLI_VERSION}/cilium-linux-amd64.tar.gz{,.sha256sum}
 sha256sum --check cilium-linux-amd64.tar.gz.sha256sum
 tar xzvfC cilium-linux-amd64.tar.gz ~/bin
 
 # 安装 cilium，等同于
-#    helm template --namespace kube-system cilium cilium/cilium --version 1.12.2 --set cluster.id=0,cluster.name=kubernetes,encryption.nodeEncryption=false,ipam.mode=cluster-pool,kubeProxyReplacement=disabled,operator.replicas=1,serviceAccounts.cilium.name=cilium,serviceAccounts.operator.name=cilium-operator
+# helm template --namespace kube-system cilium cilium/cilium --version 1.12.2 \
+#   --set cluster.id=0,cluster.name=kubernetes,encryption.nodeEncryption=false,ipam.mode=cluster-pool,kubeProxyReplacement=disabled,operator.replicas=1,serviceAccounts.cilium.name=cilium,serviceAccounts.ope# rator.name=cilium-operator
 cilium install
 
 # 查看 cilium 状态
@@ -382,14 +383,15 @@ replicaset.apps/hubble-ui-64d4995d57         1         1         1       136m
 helm repo add cilium https://helm.cilium.io/
 helm repo update cilium
 helm search repo cilium
-helm show values cilium/cilium > cilium.yaml-v1.12.1-default
+helm show values cilium/cilium \
+  --version 1.12.1 > cilium.yaml-v1.12.1-default
 
 #
 # e.g. https://books.8ops.top/attachment/kubernetes/helm/cilium.yaml-v1.12.1
 #
 
 # vim cilium.yaml
-helm install cilium cilium/cilium \
+helm upgrade --install cilium cilium/cilium \
   -f cilium.yaml-v1.12.1 \
   --namespace=kube-system \
   --version 1.12.1 \
