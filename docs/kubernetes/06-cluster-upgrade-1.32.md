@@ -326,7 +326,6 @@ root@K-KUBE-LAB-01:~# calicoctl ipam show
 ```bash
 # free: https://www.calicocloud.io/start-free
 
-
 # 1 
 # 安装 Calico Cloud 连接组件（示例 Helm 安装）
 helm repo add tigera https://docs.tigera.io/charts
@@ -363,6 +362,45 @@ whisker                         False       True          False      117s
 
 ### 2.3 cilium
 
+#### 2.3.1 释放calico
+
+```bash
+# 删除calico资源
+kubectl apply -f 01-calico.yaml-${CALICO_VERSION}.yaml
+
+kubectl delete crd bgppeers.crd.projectcalico.org bgpconfigurations.crd.projectcalico.org \
+ippools.crd.projectcalico.org felixconfigurations.crd.projectcalico.org \
+clusterinformations.crd.projectcalico.org blockaffinities.crd.projectcalico.org \
+hostendpoints.crd.projectcalico.org ipamblocks.crd.projectcalico.org ipamhandles.crd.projectcalico.org \
+networkpolicies.crd.projectcalico.org globalnetworkpolicies.crd.projectcalico.org
+
+
+# 每个节点上
+mv /etc/cni/net.d{,-$(date +%Y%m%d)}
+
+# 删除iptables链表
+ip link | awk '/cali/{print $2}' | sed 's/://' | xargs -I{} sudo ip link delete {}
+iptables-save | grep -i cali
+iptables -F
+iptables -t nat -F
+iptables -X
+iptables -t nat -X
+iptables-save
+
+# 删除路由
+ip route show | awk '/cali/{printf("ip route del %s\n", $1)}' | sh
+ip route show | grep cali
+
+# 删除虚拟网卡
+ip link | awk '/cali/{printf("ip link delete %s \n", $2)}' | sed 's/@.*$//' | sh
+ip link | grep cali
+
+```
+
+
+
+#### 2.3.2 应用
+
 ```bash
 # 待验证可实施性
 helm repo add cilium https://helm.cilium.io/
@@ -385,7 +423,12 @@ helm show values cilium/cilium \
 # quay.io/cilium/clustermesh-apiserver:v1.18.3
 # ghcr.io/spiffe/spire-agent:1.12.4
 # ghcr.io/spiffe/spire-server:1.12.4
-        
+
+helm install cilium cilium/cilium \
+  -f cilium.yaml-1.18.3 \
+  --namespace=kube-system \
+  --version 1.18.3
+
 helm upgrade --install cilium cilium/cilium \
   -f cilium.yaml-1.18.3 \
   --namespace=kube-system \
@@ -403,30 +446,29 @@ HUBBLE_VERSION=v1.18.3
 curl -sL --remote-name-all https://github.com/cilium/hubble/releases/download/${HUBBLE_VERSION}/hubble-linux-amd64.tar.gz{,.sha256sum}
 sha256sum --check hubble-linux-amd64.tar.gz.sha256sum
 
+# reset cni
+systemctl restart kubelet && sleep 5 && systemctl restart containerd
 ```
 
 
 
-> cilium
+> cilium.yaml-1.18.3
 
 ```yaml
 image:
   repository: "hub.8ops.top/quay/cilium"
-  tag: "v1.12.1"
+  tag: v1.18.3
   useDigest: false
 
 resources:
   limits:
-    cpu: 4
-    memory: 4Gi
-  requests:
-    cpu: 100m
-    memory: 512Mi
+    cpu: 1
+    memory: 2Gi
 
 certgen:
   image:
-    repository: "hub.8ops.top/quay/certgen"
-    tag: "v0.1.8"
+    repository: "hub.8ops.top/quay/cilium-certgen"
+    tag: v0.2.4
     useDigest: false
 
 hubble:
@@ -434,17 +476,14 @@ hubble:
   relay:
     enabled: true
     image:
-      repository: "hub.8ops.top/quay/hubble-relay"
-      tag: "v1.12.1"
+      repository: hub.8ops.top/quay/hubble-relay
+      tag: v1.18.3
       useDigest: false
 
     resources:
       limits:
-        cpu: 2
-        memory: 2Gi
-      requests:
-        cpu: 100m
-        memory: 128Mi
+        cpu: 250m
+        memory: 512Mi
 
     prometheus:
       enabled: true
@@ -457,31 +496,25 @@ hubble:
 
     backend:
       image:
-        repository: "hub.8ops.top/quay/hubble-ui-backend"
-        tag: "v0.9.1"
+        repository: hub.8ops.top/quay/hubble-ui-backend
+        tag: v0.13.3
         useDigest: false
 
       resources:
         limits:
-          cpu: 1
-          memory: 1Gi
-        requests:
-          cpu: 100m
-          memory: 64Mi
+          cpu: 250m
+          memory: 512Mi
 
     frontend:
       image:
-        repository: "hub.8ops.top/quay/hubble-ui"
-        tag: "v0.9.1"
+        repository: hub.8ops.top/quay/hubble-ui
+        tag: v0.13.3
         useDigest: false
 
       resources:
         limits:
-          cpu: 1
-          memory: 1Gi
-        requests:
-          cpu: 100m
-          memory: 64Mi
+          cpu: 250m
+          memory: 512Mi
 
     ingress:
       enabled: true
@@ -496,31 +529,91 @@ hubble:
 ipam:
   mode: "cluster-pool"
   operator:
-    clusterPoolIPv4PodCIDR: "172.20.0.0/16"
+    clusterPoolIPv4PodCIDRList: "172.19.0.0/16"
     clusterPoolIPv4MaskSize: 24
 
 prometheus:
+  metricsService: true
   enabled: true
   port: 9962
+
+envoy:
+  enabled: ~
 
 operator:
   enabled: true
   image:
-    repository: "hub.8ops.top/quay/cilium-operator"
-    tag: "v1.12.1"
+    repository: hub.8ops.top/quay/cilium-operator
+    tag: v1.18.3
     useDigest: false
 
   resources:
     limits:
-      cpu: 1
-      memory: 1Gi
-    requests:
-      cpu: 100m
-      memory: 128Mi
+      cpu: 250m
+      memory: 512Mi
 
   prometheus:
+    metricsService: true
     enabled: true
     port: 9963
+
+envoyConfig:
+  enabled: false
+  secretsNamespace:
+    create: false
+    name: cilium-secrets
+
+ingressController:
+  enabled: false
+  secretsNamespace:
+    create: false
+    name: cilium-secrets
+
+tls:
+  secretsNamespace:
+    create: false
+    name: cilium-secrets
+```
+
+
+
+#### 2.3.3 释放cilium
+
+```bash
+helm -n kube-system uninstall cilium
+
+# 删除crds
+kubectl get crds | awk '/cilium/{printf("kubectl delete crds %s\n", $1)}' | sh
+
+# 删除命名空间（不一定再次遇到）
+kubectl patch namespace cilium-secrets -p '{"metadata":{"finalizers":[]}}' --type=merge
+kubectl delete --force --grace-period=0 ns cilium-secrets
+kubectl get namespace cilium-secrets -o json \
+  | jq 'del(.spec.finalizers)' \
+  | kubectl replace --raw "/api/v1/namespaces/cilium-secrets/finalize" -f -
+
+# 每个节点上
+mv /etc/cni/net.d{,-$(date +%Y%m%d)-2}
+
+# 删除iptables链表
+ip link | awk '/cilium/{print $2}' | sed 's/://' | xargs -I{} sudo ip link delete {}
+iptables-save | grep -i cilium
+iptables -F
+iptables -t nat -F
+iptables -X
+iptables -t nat -X
+iptables-save
+
+# 删除路由
+ip route show | awk '/cilium/{printf("ip route del %s\n", $1)}' | sh
+ip route show | grep cilium
+
+# 删除虚拟网卡
+ip link | awk '/cilium/{printf("ip link delete %s \n", $2)}' | sed 's/@.*$//' | sh
+ip link | grep cilium
+
+# reset cni
+systemctl restart kubelet && sleep 5 && systemctl restart containerd
 ```
 
 

@@ -293,3 +293,183 @@ etcdctl member remove 1bd3101f2cbe0fab \
 
 
 这里举一个例子来说明。假设cluster有三个节点，其中一个节点突然发生故障。这时cluster中还有两个节点健康，依然满足quorum，所以cluster还可以正常提供服务。这时如果先增加一个新节点到cluster中，因为那个down的节点还没有从cluster中移除，所以cluster的节点数量就变成了4。如果一切顺利，新节点正常启动，倒也还好。但是如果发生了意外（比如配置错误），导致新增加的节点启动失败，这时cluster的quorum已经从2变成了3，可是cluster中依然只有两个节点能工作，不符合quorum要求，从而导致cluster无法对外提供服务，而且永远无法自动恢复。这个时候，当你再想从cluster中删除任何节点，都不会成功了，因为删除节点也需要向cluster中发送一个写请求，这时cluster已经因为quorum不达标而无法提供服务了，所以删除节点的操作不会成功。这就尴尬了！
+
+
+
+### 3.3 同时部署多个CNI
+
+不能同时作为主要 CNI 插件使用。
+
+<u>**原因**</u>
+
+1️⃣ 都会向 `/etc/cni/net.d/` 写入配置
+
+Calico 和 Cilium 都会生成 CNI 配置文件，例如：
+
+```
+/etc/cni/net.d/10-calico.conflist
+/etc/cni/net.d/10-cilium.conflist
+```
+
+Kubelet 启动 Pod 时会读取第一个匹配的 `.conf`/`.conflist` 文件。
+ 当存在两个配置时，Pod 的网络命名空间可能被：
+
+- 随机选中的一个插件配置；
+- 或者直接报错（比如找不到网桥、重复分配 IP）。
+
+------
+
+2️⃣ 都会管理同一个网段（Pod CIDR）
+
+- Calico 通常管理 `192.168.0.0/16` 或 `10.244.0.0/16`
+- Cilium 也会接管一个相似的 CIDR（通常自动探测或由 `--cluster-pool-cidr` 指定）
+
+结果是：
+
+- IP 分配冲突；
+- 两个 IPAM（地址管理）同时申请相同地址；
+- Pod 网络路由异常（flannel/calico/cilium 路由表混乱）。
+
+------
+
+3️⃣ 都会创建内核网桥与 veth 对
+
+Calico host-gw / vxlan 与 Cilium eBPF / geneve 机制会同时插入路由：
+
+```
+ip route show table main
+```
+
+结果是：
+
+- Pod 出流量路由到错误设备；
+- eBPF program 与 iptables 规则互相覆盖；
+- `cilium-agent` 和 `calico-felix` 同时修改内核路由策略。
+
+
+
+<u>**解决**</u>
+
+`calico --> cilium`
+
+1️⃣ 检查当前 CNI 配置
+
+```
+kubectl get pods -n kube-system -l k8s-app=calico-node
+kubectl get ds -n kube-system
+ls /etc/cni/net.d/
+```
+
+你应该能看到：
+
+```
+/etc/cni/net.d/10-calico.conflist
+```
+
+并且 kubelet 启动参数里有：
+
+```
+--network-plugin=cni
+--cni-conf-dir=/etc/cni/net.d
+```
+
+------
+
+2️⃣ 备份 Calico 配置
+
+```
+kubectl get all -n kube-system -l k8s-app=calico-node -o yaml > calico-backup.yaml
+kubectl get cm,ds,crd,svc,deploy,secret -n kube-system | grep calico
+```
+
+备份是为了可以在出问题时回滚。
+
+------
+
+3️⃣ 停止新 Pod 调度（可选）
+
+如果是生产环境，建议在迁移期间暂停新调度：
+
+```
+kubectl cordon <node-name>
+kubectl drain <node-name> --ignore-daemonsets
+```
+
+------
+
+卸载 Calico
+
+1️⃣ 删除 Calico 控制组件
+
+```
+kubectl delete -f https://docs.projectcalico.org/manifests/calico.yaml
+```
+
+或者如果你是自定义部署的：
+
+```
+kubectl delete ds,deploy,cm,svc,crd -n kube-system -l k8s-app=calico-node
+```
+
+------
+
+2️⃣ 删除残留的 CRD（如果有）
+
+```
+kubectl delete crd bgppeers.crd.projectcalico.org bgpconfigurations.crd.projectcalico.org \
+ippools.crd.projectcalico.org felixconfigurations.crd.projectcalico.org \
+clusterinformations.crd.projectcalico.org blockaffinities.crd.projectcalico.org \
+hostendpoints.crd.projectcalico.org ipamblocks.crd.projectcalico.org ipamhandles.crd.projectcalico.org \
+networkpolicies.crd.projectcalico.org globalnetworkpolicies.crd.projectcalico.org
+```
+
+------
+
+3️⃣ 删除 CNI 文件（非常关键）
+
+在每个节点上执行：
+
+```
+sudo rm -f /etc/cni/net.d/10-calico.conflist
+sudo rm -f /etc/cni/net.d/calico-kubeconfig
+```
+
+并确保目录下**只保留 loopback 配置**：
+
+```
+ls /etc/cni/net.d/
+```
+
+应该只剩：
+
+```
+00-loopback.conf
+```
+
+------
+
+4️⃣ 清理网络接口与路由
+
+Calico 会创建 `cali*` 接口与 iptables 规则。
+
+执行以下命令：
+
+```
+# 删除所有 cali 接口
+sudo ip link | grep cali | awk '{print $2}' | sed 's/://' | xargs -I{} sudo ip link delete {}
+
+# 清理 iptables 残留
+sudo iptables-save | grep -i cali
+sudo iptables -F
+sudo iptables -t nat -F
+sudo iptables -X
+sudo iptables -t nat -X
+sudo iptables-save
+```
+
+可选：清理路由表中残留 Calico CIDR
+
+```
+sudo ip route show | grep cali
+sudo ip route del <calico-cidr>
+```
