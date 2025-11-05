@@ -415,14 +415,17 @@ grep -E 'CONFIG_BPF|CONFIG_BPF_SYSCALL|CONFIG_CGROUP_BPF' /boot/config-$(uname -
 # 或查看是否包含 helper 名称（次优方案）
 grep bpf_get_current_cgroup_id /proc/kallsyms || true
 
-# 待验证可实施性
+CILIUM_VERSION=1.12.19
+CILIUM_VERSION=1.18.0
+# CILIUM_VERSION=1.18.3 # 报ebpf支持受限内核>4.18，实际kernel=5.4
+
 helm repo add cilium https://helm.cilium.io/
 helm repo update cilium
 helm search repo cilium
 helm show values cilium/cilium \
-  --version 1.18.3 > cilium.yaml-1.18.3-default
+  --version ${CILIUM_VERSION} > cilium.yaml-${CILIUM_VERSION}-default
   
-# # Containers Images
+# # Containers Images: 1.18.3
 # quay.io/cilium/cilium:v1.18.3
 # quay.io/cilium/certgen:v0.2.4
 # quay.io/cilium/hubble-relay:v1.18.3
@@ -438,17 +441,18 @@ helm show values cilium/cilium \
 # ghcr.io/spiffe/spire-server:1.12.4
 
 helm install cilium cilium/cilium \
-  -f cilium.yaml-1.18.3 \
+  -f cilium.yaml-${CILIUM_VERSION} \
   --namespace=kube-system \
-  --version 1.18.3 --debug | tee debug.out
+  --version ${CILIUM_VERSION} --debug
 
 helm upgrade --install cilium cilium/cilium \
-  -f cilium.yaml-1.18.3 \
+  -f cilium.yaml-${CILIUM_VERSION} \
   --namespace=kube-system \
-  --version 1.18.3 --debug
-
+  --version ${CILIUM_VERSION}
+  
 helm -n kube-system uninstall cilium
 
+# --------
 # CILIUM CLI
 CILIUM_CLI_VERSION=v0.18.8
 curl -sL --remote-name-all https://github.com/cilium/cilium-cli/releases/download/${CILIUM_CLI_VERSION}/cilium-linux-amd64.tar.gz{,.sha256sum}
