@@ -1,9 +1,13 @@
 # metrices-server
 
+## 一、查看服务映射
+
+有很多服务在安装时会附带部署 metrices-server
+
 自定义metrices-server时，需要变更全局引用映射关系
 
 ```bash
- kubectl get apiservice v1beta1.metrics.k8s.io  -o yaml
+~ # kubectl get apiservice v1beta1.metrics.k8s.io  -o yaml
 apiVersion: apiregistration.k8s.io/v1
 kind: APIService
 metadata:
@@ -22,10 +26,20 @@ spec:
   group: metrics.k8s.io
   groupPriorityMinimum: 100
   insecureSkipTLSVerify: true
-  service: # 变更这儿的映射关系
-    name: kubernetes-dashboard-metrics-server
+  service:
+    name: kubernetes-dashboard-metrics-server  # 变更这儿的映射关系
     namespace: kube-server
     port: 443
   version: v1beta1
   versionPriority: 100
 ```
+
+
+
+## 二、查看目标服务
+
+```bash
+kubectl -n kube-server get services kubernetes-dashboard-metrics-server
+
+```
+

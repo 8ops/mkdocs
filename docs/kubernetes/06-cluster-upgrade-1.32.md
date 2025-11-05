@@ -374,8 +374,9 @@ clusterinformations.crd.projectcalico.org blockaffinities.crd.projectcalico.org 
 hostendpoints.crd.projectcalico.org ipamblocks.crd.projectcalico.org ipamhandles.crd.projectcalico.org \
 networkpolicies.crd.projectcalico.org globalnetworkpolicies.crd.projectcalico.org
 
-
+# --------
 # 每个节点上
+# tree /etc/cni/net.d*
 mv /etc/cni/net.d{,-$(date +%Y%m%d)}
 
 # 删除iptables链表
@@ -395,6 +396,10 @@ ip route show | grep cali
 ip link | awk '/cali/{printf("ip link delete %s \n", $2)}' | sed 's/@.*$//' | sh
 ip link | grep cali
 
+# reset cni
+systemctl restart kubelet && sleep 5 && systemctl restart containerd
+
+# install cni
 ```
 
 
@@ -402,13 +407,21 @@ ip link | grep cali
 #### 2.3.2 应用
 
 ```bash
+# # cilium (required kernel>4.18 support ebpf)
+# 内核版本
+uname -r
+# 查看 /boot/config-$(uname -r) 中 BPF 相关
+grep -E 'CONFIG_BPF|CONFIG_BPF_SYSCALL|CONFIG_CGROUP_BPF' /boot/config-$(uname -r) || true
+# 或查看是否包含 helper 名称（次优方案）
+grep bpf_get_current_cgroup_id /proc/kallsyms || true
+
 # 待验证可实施性
 helm repo add cilium https://helm.cilium.io/
 helm repo update cilium
 helm search repo cilium
 helm show values cilium/cilium \
   --version 1.18.3 > cilium.yaml-1.18.3-default
-
+  
 # # Containers Images
 # quay.io/cilium/cilium:v1.18.3
 # quay.io/cilium/certgen:v0.2.4
@@ -427,13 +440,14 @@ helm show values cilium/cilium \
 helm install cilium cilium/cilium \
   -f cilium.yaml-1.18.3 \
   --namespace=kube-system \
-  --version 1.18.3
+  --version 1.18.3 --debug | tee debug.out
 
 helm upgrade --install cilium cilium/cilium \
   -f cilium.yaml-1.18.3 \
   --namespace=kube-system \
   --version 1.18.3 --debug
 
+helm -n kube-system uninstall cilium
 
 # CILIUM CLI
 CILIUM_CLI_VERSION=v0.18.8
@@ -594,6 +608,7 @@ kubectl get namespace cilium-secrets -o json \
 
 # 每个节点上
 mv /etc/cni/net.d{,-$(date +%Y%m%d)-2}
+# rm -rf /etc/cni/net.d
 
 # 删除iptables链表
 ip link | awk '/cilium/{print $2}' | sed 's/://' | xargs -I{} sudo ip link delete {}
@@ -614,6 +629,8 @@ ip link | grep cilium
 
 # reset cni
 systemctl restart kubelet && sleep 5 && systemctl restart containerd
+
+# install cni
 ```
 
 
