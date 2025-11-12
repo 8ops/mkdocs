@@ -198,6 +198,7 @@ nav:
       - kubernetes/42-metallb.md
       - kubernetes/29-dashboard.md
       - kubernetes/29-controller.md
+      - kubernetes/43-envoy.md
       - kubernetes/29-rancher.md
     - 【日常应用】:
       - kubernetes/30-resource.md

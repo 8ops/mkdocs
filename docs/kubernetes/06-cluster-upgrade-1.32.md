@@ -404,7 +404,9 @@ systemctl restart kubelet && sleep 5 && systemctl restart containerd
 
 
 
-#### 2.3.2 应用
+#### 2.3.2 安装cilium
+
+##### 2.3.2.1 helm
 
 ```bash
 # # cilium (required kernel>4.18 support ebpf)
@@ -416,7 +418,7 @@ grep -E 'CONFIG_BPF|CONFIG_BPF_SYSCALL|CONFIG_CGROUP_BPF' /boot/config-$(uname -
 grep bpf_get_current_cgroup_id /proc/kallsyms || true
 
 CILIUM_VERSION=1.12.19
-CILIUM_VERSION=1.18.0
+CILIUM_VERSION=1.17.9
 # CILIUM_VERSION=1.18.3 # 报ebpf支持受限内核>4.18，实际kernel=5.4
 
 helm repo add cilium https://helm.cilium.io/
@@ -452,41 +454,30 @@ helm upgrade --install cilium cilium/cilium \
   
 helm -n kube-system uninstall cilium
 
-# --------
-# CILIUM CLI
-CILIUM_CLI_VERSION=v0.18.8
-curl -sL --remote-name-all https://github.com/cilium/cilium-cli/releases/download/${CILIUM_CLI_VERSION}/cilium-linux-amd64.tar.gz{,.sha256sum}
-sha256sum --check cilium-linux-amd64.tar.gz.sha256sum
-tar xzvfC cilium-linux-amd64.tar.gz ~/bin
-
-# HUBBLE
-HUBBLE_VERSION=v1.18.3
-curl -sL --remote-name-all https://github.com/cilium/hubble/releases/download/${HUBBLE_VERSION}/hubble-linux-amd64.tar.gz{,.sha256sum}
-sha256sum --check hubble-linux-amd64.tar.gz.sha256sum
-
-# reset cni
-systemctl restart kubelet && sleep 5 && systemctl restart containerd
 ```
 
 
 
-> cilium.yaml-1.18.3
+> cilium.yaml-1.17.9
 
 ```yaml
 image:
   repository: "hub.8ops.top/quay/cilium"
-  tag: v1.18.3
+  tag: "v1.17.9"
   useDigest: false
 
 resources:
   limits:
-    cpu: 1
+    cpu: 2
     memory: 2Gi
+  requests:
+    cpu: 50m
+    memory: 64Mi
 
 certgen:
   image:
     repository: "hub.8ops.top/quay/cilium-certgen"
-    tag: v0.2.4
+    tag: "v0.2.1"
     useDigest: false
 
 hubble:
@@ -494,14 +485,17 @@ hubble:
   relay:
     enabled: true
     image:
-      repository: hub.8ops.top/quay/hubble-relay
-      tag: v1.18.3
+      repository: "hub.8ops.top/quay/hubble-relay"
+      tag: "v1.17.9"
       useDigest: false
 
     resources:
       limits:
-        cpu: 250m
-        memory: 512Mi
+        cpu: 1
+        memory: 1Gi
+      requests:
+        cpu: 50m
+        memory: 64Mi
 
     prometheus:
       enabled: true
@@ -514,25 +508,31 @@ hubble:
 
     backend:
       image:
-        repository: hub.8ops.top/quay/hubble-ui-backend
-        tag: v0.13.3
+        repository: "hub.8ops.top/quay/hubble-ui-backend"
+        tag: "v0.13.3"
         useDigest: false
 
       resources:
         limits:
-          cpu: 250m
-          memory: 512Mi
+          cpu: 1
+          memory: 1Gi
+        requests:
+          cpu: 50m
+          memory: 64Mi
 
     frontend:
       image:
-        repository: hub.8ops.top/quay/hubble-ui
-        tag: v0.13.3
+        repository: "hub.8ops.top/quay/hubble-ui"
+        tag: "v0.13.3"
         useDigest: false
 
       resources:
         limits:
-          cpu: 250m
-          memory: 512Mi
+          cpu: 1
+          memory: 1Gi
+        requests:
+          cpu: 50m
+          memory: 64Mi
 
     ingress:
       enabled: true
@@ -551,47 +551,56 @@ ipam:
     clusterPoolIPv4MaskSize: 24
 
 prometheus:
-  metricsService: true
   enabled: true
   port: 9962
-
-envoy:
-  enabled: ~
 
 operator:
   enabled: true
   image:
-    repository: hub.8ops.top/quay/cilium-operator
-    tag: v1.18.3
+    repository: "hub.8ops.top/quay/cilium-operator"
+    tag: "v1.17.9"
     useDigest: false
 
   resources:
     limits:
-      cpu: 250m
-      memory: 512Mi
+      cpu: 1
+      memory: 1Gi
+    requests:
+      cpu: 50m
+      memory: 64Mi
 
   prometheus:
-    metricsService: true
     enabled: true
     port: 9963
 
-envoyConfig:
-  enabled: false
-  secretsNamespace:
-    create: false
-    name: cilium-secrets
-
 ingressController:
-  enabled: false
-  secretsNamespace:
-    create: false
-    name: cilium-secrets
+  enabled: true
 
-tls:
-  secretsNamespace:
-    create: false
-    name: cilium-secrets
+envoy:
+  enabled: false
 ```
+
+
+
+##### 2.3.2.2 utils
+
+```bash
+# CILIUM CLI
+CILIUM_CLI_VERSION=v0.18.8
+curl -sL --remote-name-all https://github.com/cilium/cilium-cli/releases/download/${CILIUM_CLI_VERSION}/cilium-linux-amd64.tar.gz{,.sha256sum}
+sha256sum --check cilium-linux-amd64.tar.gz.sha256sum
+tar xzvfC cilium-linux-amd64.tar.gz ~/bin
+
+# HUBBLE
+HUBBLE_VERSION=v1.18.3
+curl -sL --remote-name-all https://github.com/cilium/hubble/releases/download/${HUBBLE_VERSION}/hubble-linux-amd64.tar.gz{,.sha256sum}
+sha256sum --check hubble-linux-amd64.tar.gz.sha256sum
+
+# reset cni
+systemctl restart kubelet && sleep 5 && systemctl restart containerd
+```
+
+
 
 
 
