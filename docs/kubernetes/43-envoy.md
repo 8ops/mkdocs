@@ -438,7 +438,7 @@ Status code distribution:
 
 
 
-### 3.1 ClientTrafficPolicy
+### 3.1111 ClientTrafficPolicy
 
 面向 *Client → Ingress* 方向的策略（限速、连接、TLS、HTTP options）
 
@@ -462,7 +462,7 @@ Status code distribution:
 
 
 
-#### 3.2 BackendTrafficPolicy
+### 3.2- BackendTrafficPolicy
 
 面向 *Route → Backend* 方向（重试、超时、负载均衡、连接池）
 
@@ -470,7 +470,7 @@ Status code distribution:
 
 
 
-#### 3.3 SecurityPolicy
+### 3.3 -SecurityPolicy
 
 横向的安全策略（JWT、mTLS、IP 限制、WAF）
 
