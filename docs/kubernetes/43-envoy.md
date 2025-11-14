@@ -1,26 +1,29 @@
 # Envoy
 
-[Reference](https://www.envoyproxy.io/docs)
+[Reference](https://gateway.envoyproxy.io/docs/tasks/quickstart/)
+
+
 
 ## 一、安装
 
-### 1.1 quick install 
+### 1.1 Quick Install 
 
 ```bash
 # 1) Install the Gateway API CRDs and Envoy Gateway:
+GATEWAY_HELM_VERSION=1.6.0
 helm show values oci://docker.io/envoyproxy/gateway-helm \
-  --version 1.6.0 > envoy-gateway.yaml-1.6.0-default
+  --version ${GATEWAY_HELM_VERSION} > envoy-gateway.yaml-1.6.0-default
 
 helm install eg oci://docker.io/envoyproxy/gateway-helm \
-  --version 1.6.0 \
-  -f envoy-gateway.yaml-1.6.0 \
+  --version ${GATEWAY_HELM_VERSION} \
+  -f envoy-gateway.yaml-${GATEWAY_HELM_VERSION} \
   -n envoy-gateway-system \
   --create-namespace \
   --debug | tee debug.out
 
 helm upgrade --install eg oci://docker.io/envoyproxy/gateway-helm \
-  --version 1.6.0 \
-  -f envoy-gateway-helm.yaml-1.6.0 \
+  --version ${GATEWAY_HELM_VERSION} \
+  -f envoy-gateway.yaml-${GATEWAY_HELM_VERSION} \
   -n envoy-gateway-system 
 
 # # Containers Images
@@ -41,9 +44,11 @@ ENVOY_GATEWAY_VERSION=v1.6.0
 curl -sL -o 20-envoy-gateway-quickstart-${ENVOY_GATEWAY_VERSION}.yaml-default \
   https://github.com/envoyproxy/gateway/releases/download/${ENVOY_GATEWAY_VERSION}/quickstart.yaml
 
-vim 20-envoy-gateway-quickstart-${ENVOY_GATEWAY_VERSION}.yaml
+vim 20-envoy-gateway-${ENVOY_GATEWAY_VERSION}.yaml
+vim 20-envoy-quickstart.yaml
 
-kubectl apply -f 20-envoy-gateway-quickstart-${ENVOY_GATEWAY_VERSION}.yaml
+kubectl apply -f 20-envoy-gateway-${ENVOY_GATEWAY_VERSION}.yaml
+kubectl apply -f 20-envoy-quickstart.yaml
 
 ```
 
@@ -55,133 +60,52 @@ kubectl apply -f 20-envoy-gateway-quickstart-${ENVOY_GATEWAY_VERSION}.yaml
 
 ```yaml
 # envoy-gateway.yaml-1.6.0
-certgen:
-  job:
-    affinity: {}
-    annotations: {}
-    args: []
-    nodeSelector: {}
-    pod:
-      annotations: {}
-      labels: {}
-    resources: {}
-    securityContext:
-      allowPrivilegeEscalation: false
-      capabilities:
-        drop:
-        - ALL
-      privileged: false
-      readOnlyRootFilesystem: true
-      runAsGroup: 65532
-      runAsNonRoot: true
-      runAsUser: 65532
-      seccompProfile:
-        type: RuntimeDefault
-    tolerations: []
-    ttlSecondsAfterFinished: 30
-  rbac:
-    annotations: {}
-    labels: {}
-config:
-  envoyGateway:
-    extensionApis: {}
-    gateway:
-      controllerName: gateway.envoyproxy.io/gatewayclass-controller
-    logging:
-      level:
-        default: info
-    provider:
-      type: Kubernetes
-createNamespace: false
+global:
+  images:
+    envoyGateway:
+      image: hub.8ops.top/google_containers/envoyproxy-gateway:v1.6.0
+      pullPolicy: IfNotPresent
+    ratelimit:
+      image: hub.8ops.top/google_containers/envoyproxy-ratelimit:99d85510
+      pullPolicy: IfNotPresent
+
 deployment:
-  annotations: {}
   envoyGateway:
-    image:
-      repository: ""
-      tag: ""
-    imagePullPolicy: ""
-    imagePullSecrets: []
     resources:
       limits:
         cpu: 1
         memory: 1Gi
       requests:
-        cpu: 100m
-        memory: 256Mi
-    securityContext:
-      allowPrivilegeEscalation: false
-      capabilities:
-        drop:
-        - ALL
-      privileged: false
-      runAsGroup: 65532
-      runAsNonRoot: true
-      runAsUser: 65532
-      seccompProfile:
-        type: RuntimeDefault
-  pod:
-    affinity: {}
-    annotations:
-      prometheus.io/port: "19001"
-      prometheus.io/scrape: "true"
-    labels: {}
-    nodeSelector: {}
-    tolerations: []
-    topologySpreadConstraints: []
-  ports:
-  - name: grpc
-    port: 18000
-    targetPort: 18000
-  - name: ratelimit
-    port: 18001
-    targetPort: 18001
-  - name: wasm
-    port: 18002
-    targetPort: 18002
-  - name: metrics
-    port: 19001
-    targetPort: 19001
-  priorityClassName: null
-  replicas: 1
-global:
-  imagePullSecrets: []
-  imageRegistry: ""
-  images:
-    envoyGateway:
-      image: hub.8ops.top/google_containers/envoyproxy-gateway:v1.6.0
-      pullPolicy: IfNotPresent
-      pullSecrets: []
-    ratelimit:
-      image: hub.8ops.top/google_containers/envoyproxy-ratelimit:99d85510
-      pullPolicy: IfNotPresent
-      pullSecrets: []
-    envoyProxy:
-      image: hub.8ops.top/google_containers/envoyproxy-envoy:distroless-v1.36.2
-      pullPolicy: IfNotPresent
-      pullSecrets: []
-hpa:
-  behavior: {}
-  enabled: false
-  maxReplicas: 1
-  metrics: []
-  minReplicas: 1
-kubernetesClusterDomain: cluster.local
-podDisruptionBudget:
-  minAvailable: 0
+        cpu: 50m
+        memory: 64Mi
+
 service:
-  annotations: {}
-  trafficDistribution: ""
-topologyInjector:
-  annotations: {}
-  enabled: true
+  type: "ClusterIP"
+
+config:
+  envoyGateway:
+    gateway:
+      controllerName: gateway.envoyproxy.io/gatewayclass-controller
+    provider:
+      type: Kubernetes
+    logging:
+      level:
+        default: info
+    extensionApis:
+      enableBackend: true
 ```
 
 
 
 #### 1.2.2 quickstart.yaml
 
+`20-envoy-gateway-quickstart-v1.6.0.yaml`
+
+- EnvoyProxy
+- GatewayClass
+- Gateway
+
 ```yaml
-# 20-envoy-gateway-quickstart-v1.6.0.yaml
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: EnvoyProxy
 metadata:
@@ -208,7 +132,7 @@ spec:
 apiVersion: gateway.networking.k8s.io/v1
 kind: GatewayClass
 metadata:
-  name: eg
+  name: gc
 spec:
   controllerName: gateway.envoyproxy.io/gatewayclass-controller
   parametersRef:
@@ -220,23 +144,84 @@ spec:
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
-  name: eg
+  name: gw
+  namespace: default
 spec:
-  gatewayClassName: eg
+  gatewayClassName: gc
   listeners:
-    - name: http
-      protocol: HTTP
-      port: 80
+#     - name: http
+#       protocol: HTTP
+#       port: 80
+    - name: https
+      protocol: HTTPS
+      allowedRoutes:
+        namespaces:
+          from: All
+      port: 443
+      tls:
+        mode: Terminate
+        certificateRefs:
+        - kind: Secret
+          name: tls-8ops.top
 ---
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: ClientTrafficPolicy
+metadata:
+  name: global-client-traffic-policy
+  namespace: envoy-gateway-system
+spec:
+  targetRef:
+    group: gateway.networking.k8s.io
+    kind: Gateway
+    name: gw
+  headers:
+    enableEnvoyHeaders: true
+  http3: {}
+  tcpKeepalive:
+    idleTime: 20m
+    interval: 60s
+    probes: 3
+  timeout:
+    http:
+      idleTimeout: 30s
+---
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: global-security-policy
+  namespace: envoy-gateway-system
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: gw
+  authorization:
+    defaultAction: Deny
+    rules:
+      - action: Allow
+        principal:
+          clientCIDRs:
+            - 10.110.83.0/26
+```
+
+
+
+#### 1.2.3 basic.yaml
+
+`3.0-backend-basic.yaml`
+
+```yaml
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: backend
+  namespace: default
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: backend
+  namespace: default
   labels:
     app: backend
     service: backend
@@ -252,6 +237,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: backend
+  namespace: default
 spec:
   replicas: 1
   selector:
@@ -285,11 +271,12 @@ apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
   name: backend
+  namespace: default
 spec:
   parentRefs:
-    - name: eg
+    - name: gw
   hostnames:
-    - "www.example.com"
+    - "echo.8ops.top"
   rules:
     - backendRefs:
         - group: ""
@@ -301,6 +288,16 @@ spec:
         - path:
             type: PathPrefix
             value: /
+    - backendRefs:
+        - group: ""
+          kind: Service
+          name: echoserver
+          port: 8080
+          weight: 1
+      matches:
+        - path:
+            type: PathPrefix
+            value: /echoserver
 ```
 
 
@@ -309,13 +306,191 @@ spec:
 
 ## 二、使用
 
+```bash
+kubectl -n envoy-gateway-system get EnvoyProxy config
+kubectl -n envoy-gateway-system logs -f envoy-default-eg-e41e7b31-798989bdc7-6hvsm -c envoy
+
+kubectl get envoyproxy,gatewayclass,gateway,clienttrafficpolicy,securitypolicy -A
+
+kubectl get httproute,svc
+
+curl -i -H Host:echo.8ops.top http://10.101.11.213/
+curl -i -k -H Host:echo.8ops.top https://10.101.11.213/
+curl -i -k  -H Host:echo.8ops.top http://10.101.11.213/echoserver
+
+kubectl -n envoy-gateway-system logs -f \
+  envoy-default-gw-3d45476e-59c895d5d7-x4zhr \
+  -c envoy --tail 1 | \
+  jq ".start_time, .response_code, .\"x-envoy-origin-path\""
+```
+
+
+
 
 
 ## 三、策略
 
+[Gateway API Extensions](https://gateway.envoyproxy.io/v1.5/concepts/gateway_api_extensions/)
+
+Currently supported extensions include [`Backend`](https://gateway.envoyproxy.io/v1.5/api/extension_types/#backend), [`BackendTrafficPolicy`](https://gateway.envoyproxy.io/v1.5/api/extension_types/#backendtrafficpolicy), [`ClientTrafficPolicy`](https://gateway.envoyproxy.io/v1.5/api/extension_types/#clienttrafficpolicy), [`EnvoyExtensionPolicy`](https://gateway.envoyproxy.io/v1.5/api/extension_types/#envoyextensionpolicy), [`EnvoyGateway`](https://gateway.envoyproxy.io/v1.5/api/extension_types/#envoygateway), [`EnvoyPatchPolicy`](https://gateway.envoyproxy.io/v1.5/api/extension_types/#envoypatchpolicy), [`EnvoyProxy`](https://gateway.envoyproxy.io/v1.5/api/extension_types/#envoyproxy), [`HTTPRouteFilter`](https://gateway.envoyproxy.io/v1.5/api/extension_types/#httproutefilter), and [`SecurityPolicy`](https://gateway.envoyproxy.io/v1.5/api/extension_types/#securitypolicy).
 
 
-## 四、其他
+
+[Traffic](https://gateway.envoyproxy.io/v1.5/tasks/traffic/)
+
+
+
+### 3.1 Backend Routing
+
+动态代理访问
+
+```bash
+# extensionApis enableBackend (values.yaml)
+kubectl -n envoy-gateway-system edit cm envoy-gateway-config
+
+    extensionApis:
+      enableBackend: true
+
+
+```
+
+
+
+#### 3.1.1 Route to External Backend
+
+```bash
+kubectl apply -f 3.1.1-route-to-external-backend.yaml
+
+kubectl get HTTPRoute,Backend
+
+curl -H Host:proxy-demo.8ops.top http://10.101.11.213/
+```
+
+
+
+#### 3.1.2 Dynamic Forward Proxy
+
+```bash
+kubectl apply -f 3.1.2-dynamic-forward-proxy.yaml
+
+kubectl get HTTPRoute,Backend
+
+curl -H Host:books.8ops.top http://10.101.11.213/
+```
+
+
+
+### 3.2 Circuit Breakers
+
+```bash
+kubectl apply -f 3.2-circuit-breakers.yaml
+
+kubectl get BackendTrafficPolicy
+
+# web 压测工具
+hey -c 2 -q 1 -z 10s https://echo.8ops.top/hello
+
+Summary:
+  Total:	10.0070 secs
+  Slowest:	0.1193 secs
+  Fastest:	0.0045 secs
+  Average:	0.0177 secs
+  Requests/sec:	1.9986
+
+  Total data:	1620 bytes
+  Size/request:	81 bytes
+
+Response time histogram:
+  0.004 [1]	|■■
+  0.016 [17]	|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+  0.027 [0]	|
+  0.039 [0]	|
+  0.050 [0]	|
+  0.062 [0]	|
+  0.073 [0]	|
+  0.085 [0]	|
+  0.096 [0]	|
+  0.108 [0]	|
+  0.119 [2]	|■■■■■
+
+
+Latency distribution:
+  10% in 0.0047 secs
+  25% in 0.0051 secs
+  50% in 0.0062 secs
+  75% in 0.0086 secs
+  90% in 0.1193 secs
+  95% in 0.1193 secs
+  0% in 0.0000 secs
+
+Details (average, fastest, slowest):
+  DNS+dialup:	0.0112 secs, 0.0045 secs, 0.1193 secs
+  DNS-lookup:	0.0089 secs, 0.0000 secs, 0.0895 secs
+  req write:	0.0001 secs, 0.0000 secs, 0.0002 secs
+  resp wait:	0.0060 secs, 0.0043 secs, 0.0095 secs
+  resp read:	0.0001 secs, 0.0000 secs, 0.0002 secs
+
+Status code distribution:
+  [503]	20 responses
+```
+
+
+
+
+
+### 3.1 ClientTrafficPolicy
+
+面向 *Client → Ingress* 方向的策略（限速、连接、TLS、HTTP options）
+
+典型用途：
+
+- 全局/分域限速
+- 限制 client 最大连接数、超时时间
+- 启用 HSTS、strip headers、清洗 headers
+- 对入口流量进行 TLS 参数控制（版本、cipher suite）
+
+
+
+```bash
+
+
+
+
+```
+
+
+
+
+
+#### 3.2 BackendTrafficPolicy
+
+面向 *Route → Backend* 方向（重试、超时、负载均衡、连接池）
+
+
+
+
+
+#### 3.3 SecurityPolicy
+
+横向的安全策略（JWT、mTLS、IP 限制、WAF）
+
+
+
+```bash
+# 验证白名单
+curl -i -k -H Host:echo.8ops.top https://10.101.11.213/hello
+
+kubectl -n envoy-gateway-system rollout restart deploy envoy-default-gw-3d45476e
+kubectl -n envoy-gateway-system rollout restart deploy envoy-gateway
+
+
+```
+
+
+
+
+
+## 四、番外
 
 ### 4.1 官方YAML安装
 
@@ -375,6 +550,41 @@ kubectl -n envoy-gateway-system get pods
 kubectl get gateway,httproute -A
 kubectl -n envoy-gateway-system logs deploy/envoy-gateway -f
 
+```
+
+### 4.2 kustomization
+
+```bash
+# 保留官方原始YAML文件，动态替换私有镜像
+# 方便分开维护
+mkdir -p custom_yaml && cd custom_yaml
+wget https://github.com/envoyproxy/gateway/releases/download/v1.6.0/install.yaml
+vim kustomization.yaml
+kubectl apply -k .
+```
+
+
+
+```yaml
+resources:
+  - install.yaml
+
+images:
+  - name: docker.io/envoyproxy/envoy
+    newName: hub.8ops.top/google_containers/envoyproxy-envoy
+    newTag: distroless-v1.36.2
+  - name: envoyproxy/envoy
+    newName: hub.8ops.top/google_containers/envoyproxy-envoy
+    newTag: distroless-v1.36.2
+  - name: docker.io/envoyproxy/ratelimit
+    newName: hub.8ops.top/google_containers/envoyproxy-ratelimit
+    newTag: 99d85510
+  - name: docker.io/envoyproxy/gateway
+    newName: hub.8ops.top/google_containers/envoyproxy-gateway
+    newTag: v1.6.0
+  - name: envoyproxy/gateway
+    newName: hub.8ops.top/google_containers/envoyproxy-gateway
+    newTag: v1.6.0
 ```
 
 
