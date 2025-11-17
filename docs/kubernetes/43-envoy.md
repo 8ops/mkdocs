@@ -149,9 +149,9 @@ metadata:
 spec:
   gatewayClassName: gc
   listeners:
-#     - name: http
-#       protocol: HTTP
-#       port: 80
+    - name: http
+      protocol: HTTP
+      port: 80
     - name: https
       protocol: HTTPS
       allowedRoutes:
@@ -163,45 +163,6 @@ spec:
         certificateRefs:
         - kind: Secret
           name: tls-8ops.top
----
-apiVersion: gateway.envoyproxy.io/v1alpha1
-kind: ClientTrafficPolicy
-metadata:
-  name: global-client-traffic-policy
-  namespace: envoy-gateway-system
-spec:
-  targetRef:
-    group: gateway.networking.k8s.io
-    kind: Gateway
-    name: gw
-  headers:
-    enableEnvoyHeaders: true
-  http3: {}
-  tcpKeepalive:
-    idleTime: 20m
-    interval: 60s
-    probes: 3
-  timeout:
-    http:
-      idleTimeout: 30s
----
-apiVersion: gateway.envoyproxy.io/v1alpha1
-kind: SecurityPolicy
-metadata:
-  name: global-security-policy
-  namespace: envoy-gateway-system
-spec:
-  targetRefs:
-    - group: gateway.networking.k8s.io
-      kind: Gateway
-      name: gw
-  authorization:
-    defaultAction: Deny
-    rules:
-      - action: Allow
-        principal:
-          clientCIDRs:
-            - 10.110.83.0/26
 ```
 
 
@@ -310,13 +271,19 @@ spec:
 kubectl -n envoy-gateway-system get EnvoyProxy config
 kubectl -n envoy-gateway-system logs -f envoy-default-eg-e41e7b31-798989bdc7-6hvsm -c envoy
 
-kubectl get envoyproxy,gatewayclass,gateway,clienttrafficpolicy,securitypolicy -A
+export GATEWAY_HOST=10.101.11.213
+
+# global
+kubectl get envoyproxy,gatewayclass -A
+
+# gateway's policy
+kubectl get gateway,backend,BackendTrafficPolicy,clienttrafficpolicy,securitypolicy,HTTPRouteFilter, -A
 
 kubectl get httproute,svc
 
-curl -i -H Host:echo.8ops.top http://10.101.11.213/
-curl -i -k -H Host:echo.8ops.top https://10.101.11.213/
-curl -i -k  -H Host:echo.8ops.top http://10.101.11.213/echoserver
+curl -i -H Host:echo.8ops.top http://${GATEWAY_HOST}/
+curl -i -k -H Host:echo.8ops.top https://${GATEWAY_HOST}/
+curl -i -k  -H Host:echo.8ops.top http://${GATEWAY_HOST}/echoserver
 
 kubectl -n envoy-gateway-system logs -f \
   envoy-default-gw-3d45476e-59c895d5d7-x4zhr \
@@ -336,7 +303,18 @@ Currently supported extensions include [`Backend`](https://gateway.envoyproxy.io
 
 
 
-[Traffic](https://gateway.envoyproxy.io/v1.5/tasks/traffic/)
+Tasks
+
+- [Traffic](https://gateway.envoyproxy.io/v1.5/tasks/traffic/)
+
+- [Security](https://gateway.envoyproxy.io/v1.5/tasks/security/)
+- [Extensibility](https://gateway.envoyproxy.io/v1.5/tasks/extensibility/)
+- [Observability](https://gateway.envoyproxy.io/v1.5/tasks/observability/)
+- [Operations](https://gateway.envoyproxy.io/v1.5/tasks/operations/)
+
+API References 
+
+[Gateway API Extensions](https://gateway.envoyproxy.io/v1.5/api/extension_types/)
 
 
 
@@ -345,13 +323,13 @@ Currently supported extensions include [`Backend`](https://gateway.envoyproxy.io
 动态代理访问
 
 ```bash
-# extensionApis enableBackend (values.yaml)
+# support: extensionApis enableBackend (values.yaml)
 kubectl -n envoy-gateway-system edit cm envoy-gateway-config
 
     extensionApis:
       enableBackend: true
 
-
+kubectl -n envoy-gateway-system get cm envoy-gateway-config -o yaml
 ```
 
 
@@ -359,11 +337,11 @@ kubectl -n envoy-gateway-system edit cm envoy-gateway-config
 #### 3.1.1 Route to External Backend
 
 ```bash
+# namespace: default
 kubectl apply -f 3.1.1-route-to-external-backend.yaml
-
 kubectl get HTTPRoute,Backend
 
-curl -H Host:proxy-demo.8ops.top http://10.101.11.213/
+curl -H Host:proxy.8ops.top http://${GATEWAY_HOST}/
 ```
 
 
@@ -371,74 +349,78 @@ curl -H Host:proxy-demo.8ops.top http://10.101.11.213/
 #### 3.1.2 Dynamic Forward Proxy
 
 ```bash
+# namespace: default
 kubectl apply -f 3.1.2-dynamic-forward-proxy.yaml
-
 kubectl get HTTPRoute,Backend
 
-curl -H Host:books.8ops.top http://10.101.11.213/
+curl -H Host:books.8ops.top http://${GATEWAY_HOST}/
 ```
 
 
 
-### 3.2 Circuit Breakers
+### 3.2 Circuit Breakers (BackendTrafficPolicy)
+
+[Reference](https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/upstream/circuit_breaking)
 
 ```bash
+# namespace: default
 kubectl apply -f 3.2-circuit-breakers.yaml
-
 kubectl get BackendTrafficPolicy
 
 # web 压测工具
-hey -c 2 -q 1 -z 10s https://echo.8ops.top/hello
-
+hey -n 200 -c 200 -q 1000 -z 10s -host "echo.8ops.top" https://${GATEWAY_HOST}/hello
 Summary:
-  Total:	10.0070 secs
-  Slowest:	0.1193 secs
-  Fastest:	0.0045 secs
-  Average:	0.0177 secs
-  Requests/sec:	1.9986
+  Total:	11.6784 secs
+  Slowest:	3.4666 secs
+  Fastest:	0.2025 secs
+  Average:	0.9338 secs
+  Requests/sec:	190.6937
 
-  Total data:	1620 bytes
-  Size/request:	81 bytes
+  Total data:	250506 bytes
+  Size/request:	112 bytes
 
 Response time histogram:
-  0.004 [1]	|■■
-  0.016 [17]	|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
-  0.027 [0]	|
-  0.039 [0]	|
-  0.050 [0]	|
-  0.062 [0]	|
-  0.073 [0]	|
-  0.085 [0]	|
-  0.096 [0]	|
-  0.108 [0]	|
-  0.119 [2]	|■■■■■
+  0.203 [1]	|
+  0.529 [379]	|■■■■■■■■■■■■■■■■
+  0.855 [963]	|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+  1.182 [438]	|■■■■■■■■■■■■■■■■■■
+  1.508 [197]	|■■■■■■■■
+  1.835 [79]	|■■■
+  2.161 [56]	|■■
+  2.487 [56]	|■■
+  2.814 [32]	|■
+  3.140 [16]	|■
+  3.467 [10]	|
 
 
 Latency distribution:
-  10% in 0.0047 secs
-  25% in 0.0051 secs
-  50% in 0.0062 secs
-  75% in 0.0086 secs
-  90% in 0.1193 secs
-  95% in 0.1193 secs
-  0% in 0.0000 secs
+  10% in 0.4961 secs
+  25% in 0.6008 secs
+  50% in 0.7965 secs
+  75% in 1.0232 secs
+  90% in 1.6177 secs
+  95% in 2.1907 secs
+  99% in 2.8577 secs
 
 Details (average, fastest, slowest):
-  DNS+dialup:	0.0112 secs, 0.0045 secs, 0.1193 secs
-  DNS-lookup:	0.0089 secs, 0.0000 secs, 0.0895 secs
-  req write:	0.0001 secs, 0.0000 secs, 0.0002 secs
-  resp wait:	0.0060 secs, 0.0043 secs, 0.0095 secs
-  resp read:	0.0001 secs, 0.0000 secs, 0.0002 secs
+  DNS+dialup:	0.0282 secs, 0.2025 secs, 3.4666 secs
+  DNS-lookup:	0.0024 secs, 0.0000 secs, 0.0264 secs
+  req write:	0.0000 secs, 0.0000 secs, 0.0001 secs
+  resp wait:	0.7080 secs, 0.2025 secs, 2.1924 secs
+  resp read:	0.0000 secs, 0.0000 secs, 0.0003 secs
 
 Status code distribution:
-  [503]	20 responses
+  [200]	159 responses
+  [503]	2068 responses
 ```
 
 
 
 
 
-### 3.1111 ClientTrafficPolicy
+### 3.3 Client Traffic Policy
+
+[Reference](https://gateway.envoyproxy.io/v1.5/api/extension_types/#clienttrafficpolicy)
 
 面向 *Client → Ingress* 方向的策略（限速、连接、TLS、HTTP options）
 
@@ -452,39 +434,79 @@ Status code distribution:
 
 
 ```bash
+# namespace: default
+kubectl apply -f 3.3-client-traffic-policy.yaml
+kubectl get ClientTrafficPolicy
 
+# spec.tcpKeepalive.idleTime: 20m
+# spec.tcpKeepalive.interval: 60s
+curl -v -H "Host: echo.8ops.top" http://${GATEWAY_HOST}/get --next -H "Host: echo.8ops.top" http://${GATEWAY_HOST}/get
 
+# Output
+* Re-using existing connection with host echo.8ops.top
+* Connection #0 to host echo.8ops.top left intact
 
+# spec.clientIPDetection.xForwardedFor.numTrustedHops: 2
+curl -v https://${GATEWAY_HOST}/get \
+  -H "Host: echo.8ops.top" \
+  -H "X-Forwarded-Proto: https" \
+  -H "X-Forwarded-For: 1.1.1.1,2.2.2.2,3.3.3.3,4.4.4.4"
+
+# spec.timeout.http.idleTimeout: 5s
+# spec.timeout.http.requestReceivedTimeout: 2s
+openssl s_client -crlf -servername "echo.8ops.top" -connect ${GATEWAY_HOST}:443
+
+# spec.connection.connectionLimit.value: 5
+hey -n 200 -c 10 -q 1 -z 10s -host "echo.8ops.top" https://${GATEWAY_HOST}/hello
 
 ```
 
 
 
-
-
-### 3.2- BackendTrafficPolicy
-
-面向 *Route → Backend* 方向（重试、超时、负载均衡、连接池）
-
-
-
-
-
-### 3.3 -SecurityPolicy
-
-横向的安全策略（JWT、mTLS、IP 限制、WAF）
-
-
+### 3.4 Direct Response (HTTPRouteFilter)
 
 ```bash
-# 验证白名单
-curl -i -k -H Host:echo.8ops.top https://10.101.11.213/hello
+# naemspace: default
+kubectl apply -f 3.4-http-route-filter.yaml
+kubectl get HTTPRouteFilter
 
-kubectl -n envoy-gateway-system rollout restart deploy envoy-default-gw-3d45476e
-kubectl -n envoy-gateway-system rollout restart deploy envoy-gateway
+curl --verbose --header "Host: direct-response.8ops.top" http://${GATEWAY_HOST}/inline
+# 503
+# Oops! Your request is not found.
 
+curl --verbose --header "Host: direct-response.8ops.top" http://${GATEWAY_HOST}/value-ref
+# 500
+# {"error": "Internal Server Error"}
+```
+
+
+
+### 3.5 Failover (BackendTrafficPolicy)
+
+```bash
+# namespace: default
+kubectl apply -f 3.5-failover.yaml
+kubectl get BackendTrafficPolicy
+
+for i in {1..10}; do curl --verbose --header "Host: failover.8ops.top" http://${GATEWAY_HOST}/test 2>/dev/null | jq .pod; done
 
 ```
+
+
+
+### 3.6 Fault Injection (BackendTrafficPolicy)
+
+```bash
+# namespace: default
+kubectl apply -f 3.6-fault-injection.yaml
+kubectl get BackendTrafficPolicy
+
+hey -n 1000 -c 100 -host "foo.8ops.top"  http://${GATEWAY_HOST}/foo
+hey -n 10 -c 5 -z 5s -host "foo.8ops.top"  http://${GATEWAY_HOST}/foo
+hey -n 5 -c 1 -q 1 -z 5s -host "foo.8ops.top"  http://${GATEWAY_HOST}/foo
+```
+
+
 
 
 
