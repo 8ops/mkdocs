@@ -277,7 +277,7 @@ export GATEWAY_HOST=10.101.11.213
 kubectl get envoyproxy,gatewayclass -A
 
 # gateway's policy
-kubectl get gateway,backend,BackendTrafficPolicy,clienttrafficpolicy,securitypolicy,HTTPRouteFilter, -A
+kubectl get gateway,backend,BackendTrafficPolicy,clienttrafficpolicy,securitypolicy,HTTPRouteFilter -A
 
 kubectl get httproute,svc
 
@@ -318,7 +318,7 @@ API References
 
 
 
-### 3.1 Backend Routing
+### 3.1 Backend
 
 动态代理访问
 
@@ -334,14 +334,13 @@ kubectl -n envoy-gateway-system get cm envoy-gateway-config -o yaml
 
 
 
-#### 3.1.1 Route to External Backend
+#### 3.1.1 Route to External
 
 ```bash
-# namespace: default
-kubectl apply -f 3.1.1-route-to-external-backend.yaml
+kubectl apply -f 3.1.1-specific-proxy.yaml
 kubectl get HTTPRoute,Backend
 
-curl -H Host:proxy.8ops.top http://${GATEWAY_HOST}/
+curl -I -H Host:proxy.8ops.top http://${GATEWAY_HOST}/
 ```
 
 
@@ -350,25 +349,27 @@ curl -H Host:proxy.8ops.top http://${GATEWAY_HOST}/
 
 ```bash
 # namespace: default
-kubectl apply -f 3.1.2-dynamic-forward-proxy.yaml
+kubectl apply -f 3.1.2-dynamic-proxy.yaml
 kubectl get HTTPRoute,Backend
 
-curl -H Host:books.8ops.top http://${GATEWAY_HOST}/
+curl -I -H Host:books.8ops.top http://${GATEWAY_HOST}/
 ```
 
 
 
-### 3.2 Circuit Breakers (BackendTrafficPolicy)
+### 3.2 BackendTrafficPolicy
 
-[Reference](https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/upstream/circuit_breaking)
+#### 3.2.1 Circuit Breakers
 
 ```bash
 # namespace: default
-kubectl apply -f 3.2-circuit-breakers.yaml
+kubectl apply -f 3.2.1-circuit-breakers.yaml
 kubectl get BackendTrafficPolicy
 
 # web 压测工具
-hey -n 200 -c 200 -q 1000 -z 10s -host "echo.8ops.top" https://${GATEWAY_HOST}/hello
+hey -n 200 -c 200 -q 200 -z 5s -host "echo.8ops.top" http://${GATEWAY_HOST}/hello
+hey -n 2 -c 5 -q 250 -z 5s     -host "echo.8ops.top" http://${GATEWAY_HOST}/hello
+# Output
 Summary:
   Total:	11.6784 secs
   Slowest:	3.4666 secs
@@ -416,9 +417,75 @@ Status code distribution:
 
 
 
+#### 3.2.2 Failover
+
+```bash
+# namespace: default
+kubectl apply -f 3.2.2-failover.yaml
+kubectl get BackendTrafficPolicy
+
+for i in {1..10}
+do 
+  curl --verbose --header "Host: failover.8ops.top" \
+  http://${GATEWAY_HOST}/test 2>/dev/null | jq .pod
+done
+
+```
 
 
-### 3.3 Client Traffic Policy
+
+#### 3.2.3 Fault Injection
+
+```bash
+# namespace: default
+kubectl apply -f 3.2.3-fault-injection.yaml
+kubectl get BackendTrafficPolicy
+
+curl -i -H "Host: fault-abort.8ops.top"  http://${GATEWAY_HOST}/abort
+hey -n 5 -c 2 -q 1 -z 5s -host "fault-abort.8ops.top"  http://${GATEWAY_HOST}/abort
+
+curl -i -H "Host: fault-delay.8ops.top"  http://${GATEWAY_HOST}/delay
+hey -n 5 -c 2 -q 1 -z 5s -host "fault-delay.8ops.top"  http://${GATEWAY_HOST}/delay
+```
+
+
+
+#### 3.2.4 Rate Limit
+
+```bash
+kubectl apply -f 3.2.4-ratelimit.yaml
+kubectl get HTTPRoute,BackendTrafficPolicy
+
+curl -i -H "Host: limit.8ops.top"  http://${GATEWAY_HOST}/ratelimit
+hey -n 5 -c 2 -q 10 -z 5s -host "limit.8ops.top"  http://${GATEWAY_HOST}/ratelimit
+# Output
+Status code distribution:
+  [200]	5 responses
+  [429]	95 responses
+
+# 经测试与 circuitBreaker 同时应用在策略时会不生效
+
+# 当 clientSelectors 存在多个条件时，是与&的关系
+hey -n 5 -c 2 -q 10 -z 5s -host "limit.8ops.top" -H "x-user-id:one"  http://${GATEWAY_HOST}/ratelimit
+# Output
+Status code distribution:
+  [200]	58 responses
+  [429]	42 responses
+
+curl -I -H "Host:limit.8ops.top" -H "x-user-id:one"  http://${GATEWAY_HOST}/ratelimit
+# Output
+x-ratelimit-limit: 10
+x-ratelimit-remaining: 9
+x-ratelimit-reset: 0
+```
+
+
+
+
+
+### 3.3 ClientTrafficPolicy
+
+Client Traffic Policy
 
 [Reference](https://gateway.envoyproxy.io/v1.5/api/extension_types/#clienttrafficpolicy)
 
@@ -438,72 +505,127 @@ Status code distribution:
 kubectl apply -f 3.3-client-traffic-policy.yaml
 kubectl get ClientTrafficPolicy
 
-# spec.tcpKeepalive.idleTime: 20m
+# spec.tcpKeepalive.idleTime: 60s
 # spec.tcpKeepalive.interval: 60s
-curl -v -H "Host: echo.8ops.top" http://${GATEWAY_HOST}/get --next -H "Host: echo.8ops.top" http://${GATEWAY_HOST}/get
-
+curl -v -H "Host: echo.8ops.top" http://${GATEWAY_HOST}/get \
+  --next -H "Host: echo.8ops.top" http://${GATEWAY_HOST}/get
 # Output
 * Re-using existing connection with host echo.8ops.top
 * Connection #0 to host echo.8ops.top left intact
 
 # spec.clientIPDetection.xForwardedFor.numTrustedHops: 2
-curl -v https://${GATEWAY_HOST}/get \
+curl -v http://${GATEWAY_HOST}/get \
   -H "Host: echo.8ops.top" \
-  -H "X-Forwarded-Proto: https" \
+  -H "X-Forwarded-Proto: http" \
   -H "X-Forwarded-For: 1.1.1.1,2.2.2.2,3.3.3.3,4.4.4.4"
 
-# spec.timeout.http.idleTimeout: 5s
-# spec.timeout.http.requestReceivedTimeout: 2s
-openssl s_client -crlf -servername "echo.8ops.top" -connect ${GATEWAY_HOST}:443
+# spec.headers.disableRateLimitHeaders: false
+curl -I -H "Host: limit.8ops.top" http://${GATEWAY_HOST}/get
+# Output
+HTTP/1.1 200 OK
+content-type: application/json
+x-content-type-options: nosniff
+date: Tue, 18 Nov 2025 06:17:34 GMT
+content-length: 417
+x-ratelimit-limit: 4294967295
+x-ratelimit-remaining: 4294967295
+x-ratelimit-reset: 0
 
-# spec.connection.connectionLimit.value: 5
-hey -n 200 -c 10 -q 1 -z 10s -host "echo.8ops.top" https://${GATEWAY_HOST}/hello
+# spec.headers.requestID: Generate
+curl -s -H "Host: echo.8ops.top" http://${GATEWAY_HOST}/get | \
+  jq '.headers."X-Request-Id"'
+curl -s -H "Host: echo.8ops.top" -H "X-Request-Id: abc" http://${GATEWAY_HOST}/get \
+  | jq '.headers."X-Request-Id"'
 
+# spec.tls.minVersion: "1.2"
+curl -v -k -H "Host: echo.8ops.top" http://${GATEWAY_HOST}/get \
+  --tls-max 1.1 --tlsv1.1
+curl -v -k -H "Host: echo.8ops.top" http://${GATEWAY_HOST}/get \
+  --tls-max 1.2 --tlsv1.2
+
+# spec.timeout.http.idleTimeout: 10s
+time openssl s_client -crlf -servername "echo.8ops.top" -connect ${GATEWAY_HOST}:443
+# Output
+real	0m10.042s
+user	0m0.021s
+sys	0m0.009s
+
+# spec.connection.connectionLimit.value: 1
+# spec.connection.connectionLimit.closeDelay: 1s
+time hey -n 5 -c 5 -q 5 -z 5s -host "echo.8ops.top" https://${GATEWAY_HOST}/connectionlimit
+# Output unlimited 
+Status code distribution:
+  [200]	125 responses
+# Output limited
+Status code distribution:
+  [200]	35 responses
+
+Error distribution:
+  [4]	Get "https://10.101.11.213/connectionlimit": EOF
 ```
 
 
 
-### 3.4 Direct Response (HTTPRouteFilter)
+### 3.4 HTTPRouteFilter
+
+#### 3.4.1 Direct Response
 
 ```bash
-# naemspace: default
-kubectl apply -f 3.4-http-route-filter.yaml
+kubectl apply -f 3.4.1-direct-response.yaml
 kubectl get HTTPRouteFilter
 
-curl --verbose --header "Host: direct-response.8ops.top" http://${GATEWAY_HOST}/inline
-# 503
+curl -v -H "Host: direct-response.8ops.top" http://${GATEWAY_HOST}/inline
+# Output: 503
 # Oops! Your request is not found.
 
-curl --verbose --header "Host: direct-response.8ops.top" http://${GATEWAY_HOST}/value-ref
-# 500
+curl -v -H "Host: direct-response.8ops.top" http://${GATEWAY_HOST}/value-ref
+# Output: 500
 # {"error": "Internal Server Error"}
 ```
 
 
 
-### 3.5 Failover (BackendTrafficPolicy)
+#### 3.4.2 URLRewrite
+
+- ReplacePrefixMatch
+- ReplaceFullPath
+- URLRewrite
 
 ```bash
-# namespace: default
-kubectl apply -f 3.5-failover.yaml
-kubectl get BackendTrafficPolicy
+kubectl apply -f 3.4.2-url-rewirte.yaml
 
-for i in {1..10}; do curl --verbose --header "Host: failover.8ops.top" http://${GATEWAY_HOST}/test 2>/dev/null | jq .pod; done
-
+# spec.rules[filters[]]
+curl -v -H "Host: path-rewrite.8ops.top" http://${GATEWAY_HOST}/api/v1/xx
+# Output
+	request_uri=http://path-rewrite.8ops.top:8080/path/xx
+	
+# url（debug）
+# curl -I -H "Host: url-rewrite.8ops.top" http://${GATEWAY_HOST}/old
 ```
 
 
 
-### 3.6 Fault Injection (BackendTrafficPolicy)
+### 3.5 
 
 ```bash
-# namespace: default
-kubectl apply -f 3.6-fault-injection.yaml
-kubectl get BackendTrafficPolicy
+kubectl patch gateway gw --type=json --patch '
+- op: add
+  path: /spec/addresses
+  value:
+   - type: IPAddress
+     value: 1.2.3.4
+'
 
-hey -n 1000 -c 100 -host "foo.8ops.top"  http://${GATEWAY_HOST}/foo
-hey -n 10 -c 5 -z 5s -host "foo.8ops.top"  http://${GATEWAY_HOST}/foo
-hey -n 5 -c 1 -q 1 -z 5s -host "foo.8ops.top"  http://${GATEWAY_HOST}/foo
+kubectl patch gateway gw --type=json --patch '
+- op: remove
+  path: /spec/addresses
+  value:
+   - type: IPAddress
+     value: 1.2.3.4
+'
+
+kubectl get service -n envoy-gateway-system
+
 ```
 
 
