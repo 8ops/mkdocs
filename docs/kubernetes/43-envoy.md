@@ -297,12 +297,12 @@ curl -i -k  -H Host:echo.8ops.top http://${GATEWAY_HOST}/echoserver
 
 kubectl -n envoy-gateway-system logs -f \
   pod/envoy-default-gw-3d45476e-779fb9dc9d-kbf4g \
-  -c envoy --tail 1 | \
+  -c envoy --tail 5 | \
   jq '.start_time, .response_code, ."x-envoy-origin-path"'
 
 kubectl -n envoy-gateway-system logs -f \
   pod/envoy-default-gw-3d45476e-779fb9dc9d-x6zhr \
-  -c envoy --tail 1 | \
+  -c envoy --tail 5 | \
   jq '.start_time, .response_code, ."x-envoy-origin-path"'  
 ```
 
@@ -477,7 +477,7 @@ Status code distribution:
 
 # 【测试效果】
 # 当externalTrafficPolicy设置成Local时流量在控制平面始终流向其中一个Pod
-# 经测试与 circuitBreaker 同时应用在策略时会不生效
+# 经测试与 circuitBreaker 同时应用时会不生效
 # 当 clientSelectors 存在多个条件时，是与&的关系
 
 for i in {0..9}
@@ -603,14 +603,36 @@ done
 #### 3.2.6 Rate Limit (merging)
 
 ```bash
-# 未验证效果
 kubectl apply -f 3.2.7-policy-merging.yaml
 kubectl get HTTPRoute,BackendTrafficPolicy
+
+# 【测试效果】
+# 经测试与 circuitBreaker 同时应用时会不生效
+# 当 global & local 策略生效时，优先级 httproute > gateway
 
 curl -I -H "Host: echo.8ops.top" http://${GATEWAY_HOST}/get/${i}
 curl -I -H "Host: ratelimit-local.8ops.top" -H "x-user-id:one"  http://${GATEWAY_HOST}/ratelimit/${i}
 curl -I -H "Host: ratelimit-global.8ops.top" -H "x-user-id:one"  http://${GATEWAY_HOST}/ratelimit/${i}
 curl -I -H "Host: ratelimit-http.8ops.top" -H "x-user-id: one" http://${GATEWAY_HOST}/get/${i}
+# Output (global)
+x-ratelimit-limit: 200, 200;w=1
+x-ratelimit-remaining: 199
+x-ratelimit-reset: 1
+
+curl -I -H "Host: merging-http.8ops.top" http://${GATEWAY_HOST}/get
+# Output (global & local)
+x-ratelimit-limit: 200, 200;w=1
+x-ratelimit-remaining: 199
+x-ratelimit-reset: 1
+x-ratelimit-limit: 2, 2;w=1
+x-ratelimit-remaining: 1
+x-ratelimit-reset: 1
+
+for i in {1..5}
+do
+curl -I -H "Host: merging-http.8ops.top" http://${GATEWAY_HOST}/get/${i}
+done
+
 ```
 
 
