@@ -363,7 +363,6 @@ curl -I -H Host:proxy.8ops.top http://${GATEWAY_HOST}/
 #### 3.1.2 Dynamic Forward Proxy
 
 ```bash
-# namespace: default
 kubectl apply -f 3.1.2-dynamic-proxy.yaml
 kubectl get HTTPRoute,Backend
 
@@ -377,7 +376,6 @@ curl -I -H Host:books.8ops.top http://${GATEWAY_HOST}/
 #### 3.2.1 Circuit Breakers
 
 ```bash
-# namespace: default
 kubectl apply -f 3.2.1-circuit-breakers.yaml
 kubectl get BackendTrafficPolicy
 
@@ -435,7 +433,6 @@ Status code distribution:
 #### 3.2.2 Failover
 
 ```bash
-# namespace: default
 kubectl apply -f 3.2.2-failover.yaml
 kubectl get BackendTrafficPolicy
 
@@ -452,7 +449,7 @@ done
 #### 3.2.3 Fault Injection
 
 ```bash
-# namespace: default
+# 未验证效果
 kubectl apply -f 3.2.3-fault-injection.yaml
 kubectl get BackendTrafficPolicy
 
@@ -572,6 +569,48 @@ hey -n 5 -c 1 -q 10 -z 5s -host "ratelimit-global.8ops.top" -H "x-user-id:one"  
 Status code distribution:
   [200]	50 responses
 
+```
+
+
+
+#### 3.2.5 Rate Limit (Policy)
+
+```bash
+kubectl apply -f 3.2.6-policy-httproute.yaml
+kubectl get HTTPRoute,BackendTrafficPolicy
+
+for i in {1..4} 
+do
+curl -I -H "Host: ratelimit-http.8ops.top" -H "x-user-id: one" http://${GATEWAY_HOST}/get/${i}
+done
+
+for i in {1..4} 
+do
+curl -I -H "Host: ratelimit-http.8ops.top" -H "x-user-id: admin" http://${GATEWAY_HOST}/get/${i}
+done
+
+for j in {a..d}
+do
+for i in {1..4} 
+do
+curl -I -H "Host: ratelimit-http.8ops.top" -H "x-user-id: one-${i}" http://${GATEWAY_HOST}/get/${j}/${i}
+done
+done
+```
+
+
+
+#### 3.2.6 Rate Limit (merging)
+
+```bash
+# 未验证效果
+kubectl apply -f 3.2.7-policy-merging.yaml
+kubectl get HTTPRoute,BackendTrafficPolicy
+
+curl -I -H "Host: echo.8ops.top" http://${GATEWAY_HOST}/get/${i}
+curl -I -H "Host: ratelimit-local.8ops.top" -H "x-user-id:one"  http://${GATEWAY_HOST}/ratelimit/${i}
+curl -I -H "Host: ratelimit-global.8ops.top" -H "x-user-id:one"  http://${GATEWAY_HOST}/ratelimit/${i}
+curl -I -H "Host: ratelimit-http.8ops.top" -H "x-user-id: one" http://${GATEWAY_HOST}/get/${i}
 ```
 
 
