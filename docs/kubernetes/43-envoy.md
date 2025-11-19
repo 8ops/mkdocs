@@ -14,6 +14,7 @@ GATEWAY_HELM_VERSION=1.6.0
 helm show values oci://docker.io/envoyproxy/gateway-helm \
   --version ${GATEWAY_HELM_VERSION} > envoy-gateway.yaml-1.6.0-default
 
+# Install
 helm install eg oci://docker.io/envoyproxy/gateway-helm \
   --version ${GATEWAY_HELM_VERSION} \
   -f envoy-gateway.yaml-${GATEWAY_HELM_VERSION} \
@@ -21,15 +22,26 @@ helm install eg oci://docker.io/envoyproxy/gateway-helm \
   --create-namespace \
   --debug | tee debug.out
 
+# # Containers Images
+# docker.io/envoyproxy/gateway:v1.6.0
+# docker.io/envoyproxy/ratelimit:99d85510
+# docker.io/envoyproxy/envoy:distroless-v1.36.2
+
+# Upgrade
 helm upgrade --install eg oci://docker.io/envoyproxy/gateway-helm \
   --version ${GATEWAY_HELM_VERSION} \
   -f envoy-gateway.yaml-${GATEWAY_HELM_VERSION} \
   -n envoy-gateway-system 
 
-# # Containers Images
-# docker.io/envoyproxy/gateway:v1.6.0
-# docker.io/envoyproxy/ratelimit:99d85510
-# docker.io/envoyproxy/envoy:distroless-v1.36.2
+# Support Redis
+kubectl apply -f 20-envoy-redis.yaml
+kubectl -n envoy-gateway-system get deploy envoy-redis
+
+helm upgrade eg oci://docker.io/envoyproxy/gateway-helm \
+  --set config.envoyGateway.rateLimit.backend.type=Redis \
+  --set config.envoyGateway.rateLimit.backend.redis.url="envoy-redis.envoy-gateway-system.svc.cluster.local:6379" \
+  --reuse-values \
+  -n envoy-gateway-system
 
 kubectl get crds \
   backendtlspolicies.gateway.networking.k8s.io \
@@ -44,11 +56,9 @@ ENVOY_GATEWAY_VERSION=v1.6.0
 curl -sL -o 20-envoy-gateway-quickstart-${ENVOY_GATEWAY_VERSION}.yaml-default \
   https://github.com/envoyproxy/gateway/releases/download/${ENVOY_GATEWAY_VERSION}/quickstart.yaml
 
-vim 20-envoy-gateway-${ENVOY_GATEWAY_VERSION}.yaml
-vim 20-envoy-quickstart.yaml
+vim 20-envoy-gateway-quickstart-${ENVOY_GATEWAY_VERSION}.yaml
 
-kubectl apply -f 20-envoy-gateway-${ENVOY_GATEWAY_VERSION}.yaml
-kubectl apply -f 20-envoy-quickstart.yaml
+kubectl apply -f 20-envoy-gateway-quickstart-${ENVOY_GATEWAY_VERSION}.yaml
 
 ```
 
@@ -271,7 +281,7 @@ spec:
 kubectl -n envoy-gateway-system get EnvoyProxy config
 kubectl -n envoy-gateway-system logs -f envoy-default-eg-e41e7b31-798989bdc7-6hvsm -c envoy
 
-export GATEWAY_HOST=10.101.11.213
+export GATEWAY_HOST=$(kubectl get gateway gw -o jsonpath='{.status.addresses[0].value}')
 
 # global
 kubectl get envoyproxy,gatewayclass -A
@@ -286,9 +296,14 @@ curl -i -k -H Host:echo.8ops.top https://${GATEWAY_HOST}/
 curl -i -k  -H Host:echo.8ops.top http://${GATEWAY_HOST}/echoserver
 
 kubectl -n envoy-gateway-system logs -f \
-  envoy-default-gw-3d45476e-59c895d5d7-x4zhr \
+  pod/envoy-default-gw-3d45476e-779fb9dc9d-kbf4g \
   -c envoy --tail 1 | \
-  jq ".start_time, .response_code, .\"x-envoy-origin-path\""
+  jq '.start_time, .response_code, ."x-envoy-origin-path"'
+
+kubectl -n envoy-gateway-system logs -f \
+  pod/envoy-default-gw-3d45476e-779fb9dc9d-x6zhr \
+  -c envoy --tail 1 | \
+  jq '.start_time, .response_code, ."x-envoy-origin-path"'  
 ```
 
 
@@ -426,7 +441,7 @@ kubectl get BackendTrafficPolicy
 
 for i in {1..10}
 do 
-  curl --verbose --header "Host: failover.8ops.top" \
+  curl -v -H "Host: failover.8ops.top" \
   http://${GATEWAY_HOST}/test 2>/dev/null | jq .pod
 done
 
@@ -450,10 +465,10 @@ hey -n 5 -c 2 -q 1 -z 5s -host "fault-delay.8ops.top"  http://${GATEWAY_HOST}/de
 
 
 
-#### 3.2.4 Rate Limit
+#### 3.2.4 Rate Limit (Local)
 
 ```bash
-kubectl apply -f 3.2.4-ratelimit.yaml
+kubectl apply -f 3.2.4-ratelimit-local.yaml
 kubectl get HTTPRoute,BackendTrafficPolicy
 
 curl -i -H "Host: limit.8ops.top"  http://${GATEWAY_HOST}/ratelimit
@@ -463,20 +478,100 @@ Status code distribution:
   [200]	5 responses
   [429]	95 responses
 
+# 【测试效果】
+# 当externalTrafficPolicy设置成Local时流量在控制平面始终流向其中一个Pod
 # 经测试与 circuitBreaker 同时应用在策略时会不生效
-
 # 当 clientSelectors 存在多个条件时，是与&的关系
-hey -n 5 -c 2 -q 10 -z 5s -host "limit.8ops.top" -H "x-user-id:one"  http://${GATEWAY_HOST}/ratelimit
-# Output
-Status code distribution:
-  [200]	58 responses
-  [429]	42 responses
 
-curl -I -H "Host:limit.8ops.top" -H "x-user-id:one"  http://${GATEWAY_HOST}/ratelimit
+for i in {0..9}
+do
+curl -I -H "Host: ratelimit-local.8ops.top" -H "x-user-id:one"  http://${GATEWAY_HOST}/ratelimit/${i}
+done
 # Output
 x-ratelimit-limit: 10
 x-ratelimit-remaining: 9
 x-ratelimit-reset: 0
+
+hey -n 5 -c 2 -q 10 -z 5s -host "ratelimit-local.8ops.top" -H "x-user-id:one"  http://${GATEWAY_HOST}/ratelimit
+# Output
+Status code distribution:
+  [200]	100 responses
+
+hey -n 5 -c 4 -q 10 -z 5s -host "ratelimit-local.8ops.top" -H "x-user-id:one"  http://${GATEWAY_HOST}/ratelimit
+# Output
+Status code distribution:
+  [200]	116 responses
+  [429]	81 responses
+
+```
+
+
+
+> ratelimit.yaml
+
+```yaml
+  rateLimit:
+    type: Global
+    global:
+      rules:
+      - clientSelectors:
+        - sourceCIDR:
+            value: 0.0.0.0/0
+          headers:
+          - name: x-user-id
+            value: one
+        limit:
+          requests: 10
+          unit: Second
+```
+
+
+
+>   修正 envoy-gateway 流量去单一Pod
+
+```bash
+# 【临时生效】
+# envoy-gateway 设置为多副本时，当externalTrafficPolicy设置成Local时流量在控制平面始终流向其中一个Pod
+kubectl -n envoy-gateway-system get service/envoy-default-gw-3d45476e -o jsonpath='{.spec.externalTrafficPolicy}'
+kubectl -n envoy-gateway-system patch service envoy-default-gw-3d45476e -p '{"spec":{"externalTrafficPolicy":"Cluster"}}'
+
+# 【持久生效】（两种patch方式）
+kubectl -n envoy-gateway-system get EnvoyProxy config -o jsonpath='{.spec.provider.kubernetes.envoyService.externalTrafficPolicy}' 
+kubectl -n envoy-gateway-system patch EnvoyProxy config --type='json' \
+-p='[{"op":"replace","path":"/spec/provider/kubernetes/envoyService/externalTrafficPolicy","value":"Cluster"}]'
+kubectl -n envoy-gateway-system patch EnvoyProxy config --type='merge' \
+  -p='{"spec":{"provider":{"kubernetes":{"envoyService":{"externalTrafficPolicy":"Cluster"}}}}}'
+
+```
+
+
+
+#### 3.2.5 Rate Limit (Global)
+
+```bash
+kubectl apply -f 3.2.5-ratelimit-global.yaml
+kubectl get HTTPRoute,BackendTrafficPolicy
+
+for i in {0..9}
+do
+curl -I -H "Host: ratelimit-global.8ops.top" -H "x-user-id:one"  http://${GATEWAY_HOST}/ratelimit/${i}
+done
+# Output
+x-ratelimit-limit: 10, 10;w=1
+x-ratelimit-remaining: 9
+x-ratelimit-reset: 1
+
+hey -n 5 -c 2 -q 10 -z 5s -host "ratelimit-global.8ops.top" -H "x-user-id:one"  http://${GATEWAY_HOST}/ratelimit
+# Output
+Status code distribution:
+  [200]	56 responses
+  [429]	41 responses
+
+hey -n 5 -c 1 -q 10 -z 5s -host "ratelimit-global.8ops.top" -H "x-user-id:one"  http://${GATEWAY_HOST}/ratelimit
+# Output
+Status code distribution:
+  [200]	50 responses
+
 ```
 
 
