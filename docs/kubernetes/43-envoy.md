@@ -726,12 +726,24 @@ Error distribution:
 
 
 
+#### 3.4.1 HTTP Redirect
+
 ```bash
 kubectl apply -f 3.4.1-http-redirect.yaml
 kubectl get HTTPRoute
 
 curl -v -H "Host: http-redirect.8ops.top" http://${GATEWAY_HOST}
 
+```
+
+#### 3.4.2 HTTP TLS Redirect
+
+```bash
+kubectl apply -f 3.4.2-http-tls.yaml
+kubectl get HTTPRoute
+
+curl -v -H "Host: http-tls.8ops.top" http://${GATEWAY_HOST}
+curl -k -H "Host: http-tls.8ops.top" https://${GATEWAY_HOST}
 ```
 
 
