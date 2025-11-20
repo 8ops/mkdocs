@@ -33,7 +33,7 @@ helm upgrade --install eg oci://docker.io/envoyproxy/gateway-helm \
   -f envoy-gateway.yaml-${GATEWAY_HELM_VERSION} \
   -n envoy-gateway-system 
 
-# Support Redis
+# Upgrade: Support Redis
 kubectl apply -f 20-envoy-redis.yaml
 kubectl -n envoy-gateway-system get deploy envoy-redis
 
@@ -722,12 +722,28 @@ Error distribution:
 
 
 
-### 3.4 HTTPRouteFilter
+### 3.4 HTTPRoute
 
-#### 3.4.1 Direct Response
+
 
 ```bash
-kubectl apply -f 3.4.1-direct-response.yaml
+kubectl apply -f 3.4.1-http-redirect.yaml
+kubectl get HTTPRoute
+
+curl -v -H "Host: http-redirect.8ops.top" http://${GATEWAY_HOST}
+
+```
+
+
+
+
+
+### 3.5 HTTPRouteFilter
+
+#### 3.5.1 Direct Response
+
+```bash
+kubectl apply -f 3.5.1-direct-response.yaml
 kubectl get HTTPRouteFilter
 
 curl -v -H "Host: direct-response.8ops.top" http://${GATEWAY_HOST}/inline
@@ -741,14 +757,14 @@ curl -v -H "Host: direct-response.8ops.top" http://${GATEWAY_HOST}/value-ref
 
 
 
-#### 3.4.2 URLRewrite
+#### 3.5.2 URLRewrite
 
 - ReplacePrefixMatch
 - ReplaceFullPath
 - URLRewrite
 
 ```bash
-kubectl apply -f 3.4.2-url-rewirte.yaml
+kubectl apply -f 3.5.2-url-rewirte.yaml
 
 # spec.rules[filters[]]
 curl -v -H "Host: path-rewrite.8ops.top" http://${GATEWAY_HOST}/api/v1/xx
@@ -761,7 +777,7 @@ curl -v -H "Host: path-rewrite.8ops.top" http://${GATEWAY_HOST}/api/v1/xx
 
 
 
-### 3.5 
+### 3.6 External IPS
 
 ```bash
 kubectl patch gateway gw --type=json --patch '
@@ -781,7 +797,22 @@ kubectl patch gateway gw --type=json --patch '
 '
 
 kubectl get service -n envoy-gateway-system
+```
 
+
+
+### 3.7 HTTP CONNECT Tunnels
+
+```bash
+kubectl apply -f 3.7-http-connect-tunnels.yaml
+kubectl get httproute,httproute,backendtrafficpolicy
+
+export PROXY_GATEWAY_HOST=$(kubectl get gateway/connect-proxy -o jsonpath='{.status.addresses[0].value}')
+
+curl -ik -v -x ${PROXY_GATEWAY_HOST}:80 https://httpbin.org | grep -o "<title>.*</title>"
+
+kubectl logs -f -n envoy-gateway-system pod/envoy-default-connect-proxy-f7d7286e-5764598547-6vzlb --tail 10
+kubectl logs -n envoy-gateway-system deployments/envoy-default-connect-proxy-f7d7286e | tail -n 1 | jq | grep method
 ```
 
 
