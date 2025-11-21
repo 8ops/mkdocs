@@ -303,7 +303,7 @@ kubectl -n envoy-gateway-system logs -f \
 kubectl -n envoy-gateway-system logs -f \
   pod/envoy-default-gw-3d45476e-779fb9dc9d-x6zhr \
   -c envoy --tail 5 | \
-  jq '.start_time, .response_code, ."x-envoy-origin-path"'  
+  jq '.start_time, .response_code, ."x-envoy-origin-path", ."route_name"'
 ```
 
 
@@ -376,6 +376,7 @@ curl -I -H Host:books.8ops.top http://${GATEWAY_HOST}/
 #### 3.2.1 Circuit Breakers
 
 ```bash
+# 慎用，会影响ratelimit
 kubectl apply -f 3.2.1-circuit-breakers.yaml
 kubectl get BackendTrafficPolicy
 
@@ -468,7 +469,7 @@ hey -n 5 -c 2 -q 1 -z 5s -host "fault-delay.8ops.top"  http://${GATEWAY_HOST}/de
 kubectl apply -f 3.2.4-ratelimit-local.yaml
 kubectl get HTTPRoute,BackendTrafficPolicy
 
-curl -i -H "Host: limit.8ops.top"  http://${GATEWAY_HOST}/ratelimit
+curl -i -H "Host: ratelimit-local.8ops.top"  http://${GATEWAY_HOST}/ratelimit
 hey -n 5 -c 2 -q 10 -z 5s -host "limit.8ops.top"  http://${GATEWAY_HOST}/ratelimit
 # Output
 Status code distribution:
@@ -743,8 +744,71 @@ kubectl apply -f 3.4.2-http-tls.yaml
 kubectl get HTTPRoute
 
 curl -v -H "Host: http-tls.8ops.top" http://${GATEWAY_HOST}
-curl -k -H "Host: http-tls.8ops.top" https://${GATEWAY_HOST}
+curl -v -k -H "Host: http-tls.8ops.top" https://${GATEWAY_HOST}
+
+# multi domain+tls
+curl -v -H "Host: http-tls.u3c.ai" http://${GATEWAY_HOST}
+curl -v -k -H "Host: http-tls.u3c.ai" https://${GATEWAY_HOST}
+
+curl -v -H "Host: echo.u3c.ai" http://${GATEWAY_HOST}
+
+# 测试效果
+# 1，当监听证书匹配不上，会默认使用第一个证书。建议多gateway-listeners
+# 2，同一个listeners里面不能同时监听同一端口，或者port+name+Protocol
+# 3，httproter中当不指定sectionName时会默认监听所有预定义端口
+
 ```
+
+
+
+`gateway-gw.yaml`
+
+```yaml
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: gw
+spec:
+  gatewayClassName: gc
+  listeners:
+  - name: http
+    protocol: HTTP
+    port: 80
+  - name: http-8080
+    protocol: HTTP
+    port: 8080
+  - name: https
+    protocol: HTTPS
+    allowedRoutes:
+      namespaces:
+        from: All
+    port: 443
+    tls:
+      mode: Terminate
+      certificateRefs:
+      - group: ""
+        kind: Secret
+        name: tls-8ops.top
+      - group: ""
+        kind: Secret
+        name: tls-u3c.ai
+```
+
+
+
+`httproute-tls.yaml`
+
+```yaml
+kind: HTTPRoute
+metadata:
+  name: http-tls-v2
+spec:
+  parentRefs:
+    - name: gw
+      sectionName: http-8080
+```
+
+
 
 
 
