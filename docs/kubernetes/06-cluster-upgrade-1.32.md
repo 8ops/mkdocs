@@ -132,10 +132,12 @@ kubeadm config print upgrade-defaults | tee kubeadm-upgrade.yaml-${KUBE_VERSION}
 # vim kubeadm-upgrade.yaml/kubeadm-config.yaml
 cp kubeadm-upgrade.yaml-${KUBE_VERSION}-default kubeadm-upgrade.yaml-${KUBE_VERSION}
 vim kubeadm-upgrade.yaml-${KUBE_VERSION}
+# https://books.8ops.top/attachment/kubernetes/kubeadm-upgrade.yaml-v1.34.1
 
 # kubeadm upgrade plan/apply
 kubeadm upgrade plan
 vim kubeadm-config.yaml-${KUBE_VERSION}
+# https://books.8ops.top/attachment/kubernetes/kubeadm-config.yaml-v1.34.1
 kubeadm config images list --config kubeadm-config.yaml-${KUBE_VERSION}
 kubeadm config images pull --config kubeadm-config.yaml-${KUBE_VERSION}
 

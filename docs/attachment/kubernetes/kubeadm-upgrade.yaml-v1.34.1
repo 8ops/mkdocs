@@ -1,0 +1,21 @@
+apiVersion: kubeadm.k8s.io/v1beta4
+kind: UpgradeConfiguration
+plan:
+  kubernetesVersion: "v1.34.1"
+  allowRCUpgrades: false
+  etcdUpgrade: true
+apply:
+  imagePullPolicy: IfNotPresent
+  imagePullSerial: true
+  etcdUpgrade: true
+node:
+  certificateRenewal: true
+  etcdUpgrade: true
+timeouts:
+  controlPlaneComponentHealthCheck: 4m0s
+  discovery: 5m0s
+  etcdAPICall: 2m0s
+  kubeletHealthCheck: 4m0s
+  kubernetesAPICall: 1m0s
+  tlsBootstrap: 5m0s
+  upgradeManifests: 5m0s

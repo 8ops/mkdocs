@@ -24,5 +24,5 @@ _book
 video/
 site/
 
-#app/lib/
-docs/attachment/kubernetes/app/lib/
+# app/lib/
+# docs/attachment/kubernetes/app/lib/

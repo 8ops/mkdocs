@@ -82,7 +82,7 @@ ls -l /var/lib/etcd
 ### 2.3 安装容器运行时
 
 ```bash
-CONTAINERD_VERSION=1.5.9-0ubuntu1~20.04.4
+CONTAINERD_VERSION=1.7.28-0ubuntu1~24.04.1
 apt install -y containerd=${CONTAINERD_VERSION}
 
 apt-mark hold containerd
@@ -94,7 +94,7 @@ mkdir -p /etc/containerd
 containerd config default > /etc/containerd/config.toml-default
 cp /etc/containerd/config.toml-default /etc/containerd/config.toml
 
-sed -i 's#sandbox_image.*$#sandbox_image = "hub.8ops.top/google_containers/pause:3.6"#' /etc/containerd/config.toml  
+sed -i 's#sandbox_image.*$#sandbox_image = "hub.8ops.top/google_containers/pause:3.10.1"#' /etc/containerd/config.toml  
 sed -i 's#SystemdCgroup = false#SystemdCgroup = true#' /etc/containerd/config.toml 
 grep -P 'sandbox_image|SystemdCgroup' /etc/containerd/config.toml  
 systemctl restart containerd
@@ -107,7 +107,7 @@ systemctl status containerd
 
 ```bash
 # kubeadm
-KUBERNETES_VERSION=1.25.0-00
+KUBERNETES_VERSION=1.34.2-1.1
 apt install -y -q kubeadm=${KUBERNETES_VERSION} kubectl=${KUBERNETES_VERSION} kubelet=${KUBERNETES_VERSION}
 
 apt-mark hold kubeadm kubectl kubelet
@@ -127,6 +127,23 @@ crictl images
 crictl ps -a
 
 # 初始集群（仅需要在其中一台 control-plane 节点操作）
+export KUBE_VERSION=v1.34.1
+mkdir -p /opt/kubernetes && cd /opt/kubernetes
+kubeadm config print upgrade-defaults | tee kubeadm-upgrade.yaml-${KUBE_VERSION}-default
+
+
+
+# https://books.8ops.top/attachment/kubernetes/kubeadm-upgrade.yaml-v1.34.1
+
+# kubeadm upgrade plan/apply
+kubeadm upgrade plan
+vim kubeadm-config.yaml-${KUBE_VERSION}
+# https://books.8ops.top/attachment/kubernetes/kubeadm-config.yaml-v1.34.1
+
+
+
+
+
 # config
 kubeadm config print init-defaults > kubeadm-init.yaml-default
 
