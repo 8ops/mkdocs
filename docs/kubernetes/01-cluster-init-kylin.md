@@ -97,6 +97,8 @@ cp /etc/containerd/config.toml-default /etc/containerd/config.toml
 sed -i 's#sandbox_image.*$#sandbox_image = "hub.8ops.top/google_containers/pause:3.10.1"#' /etc/containerd/config.toml  
 sed -i 's#SystemdCgroup = false#SystemdCgroup = true#' /etc/containerd/config.toml 
 grep -P 'sandbox_image|SystemdCgroup' /etc/containerd/config.toml  
+sed -i '/.registry.mirrors/a \        [plugins."io.containerd.grpc.v1.cri".registry.mirrors."hub.8ops.top"]\n          endpoint = ["https://hub.8ops.top"]' /etc/containerd/config.toml
+sed -i '/.registry.configs/a \         [plugins."io.containerd.grpc.v1.cri".registry.configs."hub.8ops.top".tls]\n          insecure_skip_verify = true ' /etc/containerd/config.toml
 systemctl restart containerd
 systemctl status containerd
 ```
@@ -129,23 +131,23 @@ crictl ps -a
 # 初始集群（仅需要在其中一台 control-plane 节点操作）
 export KUBE_VERSION=v1.34.1
 mkdir -p /opt/kubernetes && cd /opt/kubernetes
-kubeadm config print upgrade-defaults | tee kubeadm-upgrade.yaml-${KUBE_VERSION}-default
 
+# # Support Upgrade
+# kubeadm config print upgrade-defaults | tee kubeadm-upgrade.yaml-${KUBE_VERSION}-default
+# # https://books.8ops.top/attachment/kubernetes/kubeadm-upgrade.yaml-v1.34.1
+# 
+# vim kubeadm-config.yaml-${KUBE_VERSION}
+# # https://books.8ops.top/attachment/kubernetes/kubeadm-config.yaml-v1.34.1
+# kubeadm config images list --config kubeadm-config.yaml-${KUBE_VERSION}
+# kubeadm config images pull --config kubeadm-config.yaml-${KUBE_VERSION}
+# 
+# kubeadm upgrade plan --config kubeadm-upgrade.yaml-${KUBE_VERSION}
+# kubeadm upgrade apply ${KUBE_VERSION} --config kubeadm-upgrade.yaml-${KUBE_VERSION}
 
-
-# https://books.8ops.top/attachment/kubernetes/kubeadm-upgrade.yaml-v1.34.1
-
-# kubeadm upgrade plan/apply
-kubeadm upgrade plan
-vim kubeadm-config.yaml-${KUBE_VERSION}
-# https://books.8ops.top/attachment/kubernetes/kubeadm-config.yaml-v1.34.1
-
-
-
-
-
-# config
-kubeadm config print init-defaults > kubeadm-init.yaml-default
+kubeadm config print init-defaults > kubeadm-init.yaml-${KUBE_VERSION}-default
+cp kubeadm-init.yaml-${KUBE_VERSION}-default kubeadm-init.yaml-${KUBE_VERSION}
+kubeadm init --config kubeadm-init.yaml-${KUBE_VERSION} --upload-certs -v 5
+# https://books.8ops.top/attachment/kubernetes/kubeadm-init.yaml-v1.34.1
 
 kubeadm config images list
 kubeadm config images list --config kubeadm-init.yaml
@@ -155,68 +157,17 @@ kubeadm init --config kubeadm-init.yaml --upload-certs
 
 mkdir -p ~/.kube && ln -s /etc/kubernetes/admin.conf ~/.kube/config 
 
-# 添加节点 control-plane
-kubeadm join 10.101.9.111:6443 --token abcdef.0123456789abcdef \
-    --discovery-token-ca-cert-hash sha256:b214dc5d30387ad52c40bcd6ffa0e4bc29d15b488752af6a6ee66996914b8659 \
-    --control-plane --certificate-key 629a5accb4cb5f839c004c07658d8fc275fb4145fc1fe44b2011249ac2fc4d83
+# join control-plane
+kubeadm join 10.101.11.20:6443 --token abcdef.0123456789abcdef \
+	--discovery-token-ca-cert-hash sha256:3120bda6edfea64948e5fc27e52dce5d4045b09bd0aa16f0e5cb48a55dc171b5 \
+	--control-plane --certificate-key 5453c6031ff44884c8dae2a22a02cb877255646eabbcc79365d26dd2d451944f
 
-# 添加节点 work-node
-kubeadm join 10.101.9.111:6443 --token abcdef.0123456789abcdef \
-    --discovery-token-ca-cert-hash sha256:b214dc5d30387ad52c40bcd6ffa0e4bc29d15b488752af6a6ee66996914b8659    
+# join work-node
+kubeadm join 10.101.11.20:6443 --token abcdef.0123456789abcdef \
+	--discovery-token-ca-cert-hash sha256:3120bda6edfea64948e5fc27e52dce5d4045b09bd0aa16f0e5cb48a55dc171b5
 ```
 
-> 编辑 kubeadm-init.yaml
 
-```bash
-apiVersion: kubeadm.k8s.io/v1beta3
-bootstrapTokens:
-- groups:
-  - system:bootstrappers:kubeadm:default-node-token
-  token: abcdef.0123456789abcdef
-  ttl: 24h0m0s
-  usages:
-  - signing
-  - authentication
-kind: InitConfiguration
-localAPIEndpoint:
-  advertiseAddress: 10.101.9.183
-  bindPort: 6443
-nodeRegistration:
-  criSocket: unix:///var/run/containerd/containerd.sock
-  imagePullPolicy: IfNotPresent
-  name: K-LAB-K8S-MASTER-01
-  taints: null
----
-apiServer:
-  timeoutForControlPlane: 4m0s
-apiVersion: kubeadm.k8s.io/v1beta3
-certificatesDir: /etc/kubernetes/pki
-clusterName: kubernetes
-controllerManager: {}
-dns:
-  imageRepository: hub.8ops.top/google_containers
-  imageTag: v1.9.3
-etcd:
-  local:
-    dataDir: /var/lib/etcd
-imageRepository: hub.8ops.top/google_containers
-kind: ClusterConfiguration
-kubernetesVersion: 1.25.0
-controlPlaneEndpoint: 10.101.9.111:6443
-networking:
-  dnsDomain: cluster.local
-  podSubnet: 172.20.0.0/16
-  serviceSubnet: 192.168.0.0/16
-scheduler: {}
----
-apiVersion: kubelet.config.k8s.io/v1beta1
-kind: KubeletConfiguration
-cgroupDriver: systemd
----
-apiVersion: kubeproxy.config.k8s.io/v1alpha1
-kind: KubeProxyConfiguration
-mode: ipvs
-```
 
 ### 2.5 优化配置
 
@@ -272,10 +223,7 @@ kubectl -n kube-system edit cm kube-proxy
 #### 4.1.1 Flannel
 
 ```bash
-#
-# Example
-#   https://books.8ops.top/attachment/kubernetes/kube-flannel.yaml-v0.19.1
-#
+# https://books.8ops.top/attachment/kubernetes/kube-flannel.yaml-v0.19.1
 
 kubectl apply -f kube-flannel.yaml
 ```
