@@ -1,0 +1,66 @@
+prometheus:
+  scrapeAnnotations: true
+
+controller:
+  enabled: true
+  logLevel: warn
+  image:
+    repository: hub.8ops.top/quay/metallb-controller
+    tag: v0.14.8
+
+  resources:
+    limits:
+      cpu: 100m
+      memory: 100Mi
+    requests:
+      cpu: 100m
+      memory: 100Mi
+
+speaker:
+  enabled: true
+  logLevel: warn
+  image:
+    repository: hub.8ops.top/quay/metallb-speaker
+    tag: v0.14.8
+
+  resources:
+    limits:
+      cpu: 100m
+      memory: 100Mi
+    requests:
+      cpu: 100m
+      memory: 100Mi
+
+  frr:
+    enabled: true
+    image:
+      repository: hub.8ops.top/quay/metallb-frrouting-frr
+      tag: 9.1.0
+    resources:
+      limits:
+        cpu: 100m
+        memory: 100Mi
+      requests:
+        cpu: 100m
+        memory: 100Mi
+
+  reloader:
+    resources:
+      limits:
+        cpu: 100m
+        memory: 100Mi
+      requests:
+        cpu: 100m
+        memory: 100Mi
+
+  frrMetrics:
+    resources:
+      limits:
+        cpu: 100m
+        memory: 100Mi
+      requests:
+        cpu: 100m
+        memory: 100Mi
+
+
+

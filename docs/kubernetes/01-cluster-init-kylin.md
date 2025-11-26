@@ -208,6 +208,7 @@ kubectl -n kube-system edit cm kube-proxy
       syncPeriod: 5s     # upgrade
       minSyncPeriod: 5s  # upgrade
 ……
+
 ```
 
 
@@ -216,25 +217,39 @@ kubectl -n kube-system edit cm kube-proxy
 
 
 
-## 四、Addon
+## 四、addons
 
-### 4.1 CNI
 
-#### 4.1.1 Flannel
 
 ```bash
-# https://books.8ops.top/attachment/kubernetes/kube-flannel.yaml-v0.19.1
+systemctl restart kubelet && sleep 5 && systemctl restart containerd
 
-kubectl apply -f kube-flannel.yaml
+# 去除 control-plane 污点
+kubectl taint nodes gat-devofc-xc-k8s-01 node-role.kubernetes.io/control-plane:NoSchedule-
+kubectl taint nodes gat-devofc-xc-k8s-02 node-role.kubernetes.io/control-plane:NoSchedule-
+kubectl taint nodes gat-devofc-xc-k8s-03 node-role.kubernetes.io/control-plane:NoSchedule-
 ```
 
-> 编辑配置
+
+
+### 4.1 cni
+
+#### 4.1.1 flannel
+
+```bash
+# https://books.8ops.top/attachment/kubernetes/kube-flannel.yaml-v0.27.4
+
+kubectl apply -f kube-flannel.yaml-v0.27.4
+
+```
+
+> 关键配置
 
 ```bash
 ……
   net-conf.json: | # relative
     {
-      "Network": "172.20.0.0/16",
+      "Network": "172.18.0.0/16",
       "Backend": {
         "Type": "host-gw"
       }
@@ -243,19 +258,108 @@ kubectl apply -f kube-flannel.yaml
     # 镜像替换为私有地址
       initContainers:
       - name: install-cni-plugin
-        image: hub.8ops.top/google_containers/flannel-cni-plugin:v1.1.0
+        image: hub.8ops.top/google_containers/flannel-cni-plugin:v1.8.0-flannel1
         ……
       - name: install-cni
-        image: hub.8ops.top/google_containers/flannel:v0.19.1
+        image: hub.8ops.top/google_containers/flannel:v0.27.4
         ……
       containers:
       - name: kube-flannel
-        image: hub.8ops.top/google_containers/flannel:v0.19.1
+        image: hub.8ops.top/google_containers/flannel:v0.27.4
+```
+
+> 卸载
+
+```bash
+kubectl delete -f kube-flannel.yml-v0.27.4
+
+# remove link
+ip link delete cni0
+# ip link delete flannel.1
+# ip link delete flannel.*
+
+# remove dictory
+# rm -f /etc/cni/net.d/10-flannel.conflist /etc/cni/net.d/10-flannel.conf
+rm -rf /var/lib/cni/ /run/flannel/ /etc/cni/net.d 
+
+# remove route
+# ip route delete 172.18.0.0/16
+
+systemctl restart kubelet && sleep 5 && systemctl restart containerd
+
 ```
 
 
 
-### 4.2 Ingress-Nginx
+#### 4.1.2 calico
+
+```bash
+# [未成功]
+# https://books.8ops.top/attachment/kubernetes/calico.yaml-v3.30.4
+
+kubectl apply -f calico.yaml-v3.30.4
+```
+
+> 卸载
+
+```bash
+kubectl delete -f calico.yaml-v3.30.4
+
+kubectl delete crd bgppeers.crd.projectcalico.org bgpconfigurations.crd.projectcalico.org \
+ippools.crd.projectcalico.org felixconfigurations.crd.projectcalico.org \
+clusterinformations.crd.projectcalico.org blockaffinities.crd.projectcalico.org \
+hostendpoints.crd.projectcalico.org ipamblocks.crd.projectcalico.org ipamhandles.crd.projectcalico.org \
+networkpolicies.crd.projectcalico.org globalnetworkpolicies.crd.projectcalico.org
+
+ip link delete cni0
+rm -rf /var/lib/cni/ /run/flannel/ /etc/cni/net.d 
+systemctl restart kubelet && sleep 5 && systemctl restart containerd
+```
+
+
+
+#### 4.1.3 cilium
+
+```bash
+CILIUM_VERSION=1.17.9
+
+helm repo add cilium https://helm.cilium.io/
+helm repo update cilium
+helm search repo cilium
+helm show values cilium/cilium \
+  --version ${CILIUM_VERSION} > cilium.yaml-${CILIUM_VERSION}-default
+
+helm install cilium cilium/cilium \
+  -f cilium.yaml-${CILIUM_VERSION} \
+  --namespace=kube-system \
+  --version ${CILIUM_VERSION}
+```
+
+
+
+### 4.2 metallb
+
+```bash
+METALLB_VERSION=0.15.2
+
+helm repo add metallb https://metallb.github.io/metallb
+helm repo update metallb
+helm search repo metallb
+helm show values metallb/metallb \
+  --version ${METALLB_VERSION} > metallb.yaml-${METALLB_VERSION}-default
+
+helm install metallb metallb/metallb \
+  -f metallb.yaml-${METALLB_VERSION} \
+  --namespace=kube-server \
+  --create-namespace \
+  --version ${METALLB_VERSION}
+
+helm -n kube-server uninstall metallb
+```
+
+
+
+### 4.3 ingress-nginx
 
 ```bash
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
@@ -348,7 +452,7 @@ systemctl daemon-reload && sleep 5 && systemctl status logrotate.timer
 
 
 
-### 4.2 Dashboard
+### 4.4 dashboard
 
 ```bash
 helm repo add kubernetes-dashboard https://kubernetes.github.io/dashboard/

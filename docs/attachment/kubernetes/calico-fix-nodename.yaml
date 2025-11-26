@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: calico-fix-nodename
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      app: calico-fix-nodename
+  template:
+    metadata:
+      labels:
+        app: calico-fix-nodename
+    spec:
+      hostNetwork: true
+      tolerations:
+      - operator: Exists
+      nodeSelector: {}
+      containers:
+      - name: fix-nodename
+        image: hub.8ops.top/third/busybox:1.28.0
+        securityContext:
+          privileged: true
+        env:
+        - name: K8S_NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        command:
+        - /bin/sh
+        - -c
+        - |
+          set -ex
+          echo "==== Fixing /var/lib/calico/nodename on $(hostname) ===="
+
+          mkdir -p /host/var/lib/calico
+          chmod 755 /host/var/lib/calico
+
+          echo "${K8S_NODE_NAME}" > /host/var/lib/calico/nodename
+          chmod 644 /host/var/lib/calico/nodename
+
+          echo "Wrote nodename:"
+          cat /host/var/lib/calico/nodename || true
+
+          echo "sleep 600 to allow operator checking"
+          sleep 600
+        volumeMounts:
+        - name: host-root
+          mountPath: /host
+      volumes:
+      - name: host-root
+        hostPath:
+          path: /
+          type: Directory

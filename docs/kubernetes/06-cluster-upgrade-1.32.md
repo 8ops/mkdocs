@@ -200,11 +200,11 @@ curl -s -k -o 01-calico.yaml-${CALICO_VERSION}.yaml-default \
 vim 01-calico.yaml-${CALICO_VERSION}.yaml
 
 # # Containers Images
-# image: quay.io/calico/cni:v3.31.0
-# image: quay.io/calico/cni:v3.31.0
-# image: quay.io/calico/node:v3.31.0
-# image: quay.io/calico/node:v3.31.0
-# image: quay.io/calico/kube-controllers:v3.31.0
+# image: quay.io/calico/cni:v3.30.4
+# image: quay.io/calico/cni:v3.30.4
+# image: quay.io/calico/node:v3.30.4
+# image: quay.io/calico/node:v3.30.4
+# image: quay.io/calico/kube-controllers:v3.30.4
 
 kubectl apply -f 01-calico.yaml-${CALICO_VERSION}.yaml
 
@@ -368,7 +368,7 @@ whisker                         False       True          False      117s
 
 ```bash
 # 删除calico资源
-kubectl apply -f 01-calico.yaml-${CALICO_VERSION}.yaml
+kubectl delete -f 01-calico.yaml-${CALICO_VERSION}.yaml
 
 kubectl delete crd bgppeers.crd.projectcalico.org bgpconfigurations.crd.projectcalico.org \
 ippools.crd.projectcalico.org felixconfigurations.crd.projectcalico.org \
@@ -1253,18 +1253,25 @@ W1021 17:12:34.221411 1036588 postupgrade.go:116] Using temporary directory /etc
 ### 4.1 metallb
 
 ```bash
+METALLB_VERSION=0.15.2
 helm repo add metallb https://metallb.github.io/metallb
 helm repo update metallb
 helm search repo metallb
 
 helm show values metallb/metallb \
-  --version 0.15.2 > metallb.yaml-0.15.2-default
+  --version ${METALLB_VERSION} > metallb.yaml-${METALLB_VERSION}-default
 
-helm upgrade --install metallb metallb/metallb \
-  -f metallb.yaml-0.15.2 \
+helm install metallb metallb/metallb \
+  -f metallb.yaml-${METALLB_VERSION} \
   --namespace=kube-server \
   --create-namespace \
-  --version 0.15.2 --debug
+  --version ${METALLB_VERSION}
+
+helm upgrade --install metallb metallb/metallb \
+  -f metallb.yaml-${METALLB_VERSION} \
+  --namespace=kube-server \
+  --create-namespace \
+  --version ${METALLB_VERSION}
 
 ```
 

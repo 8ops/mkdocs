@@ -24,7 +24,7 @@ items:
           app: nginx
       spec:
         containers:
-        - image: hub.8ops.top/third/nginx:1.21.3
+        - image: hub.8ops.top/bitnami/nginx:1.23.4
           imagePullPolicy: IfNotPresent
           name: nginx
           resources:

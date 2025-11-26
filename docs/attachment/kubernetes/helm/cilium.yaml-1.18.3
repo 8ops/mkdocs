@@ -1,0 +1,121 @@
+
+image:
+  repository: "hub.8ops.top/quay/cilium"
+  tag: "v1.18.3"
+  useDigest: false
+
+resources: 
+  limits:
+    cpu: 2
+    memory: 2Gi
+  requests:
+    cpu: 50m
+    memory: 64Mi
+ 
+certgen:
+  image:
+    repository: "hub.8ops.top/quay/cilium-certgen"
+    tag: "v0.2.4"
+    useDigest: false
+
+hubble:
+  enabled: true
+  relay:
+    enabled: true
+    image:
+      repository: "hub.8ops.top/quay/hubble-relay"
+      tag: "v1.18.3"
+      useDigest: false
+
+    resources:
+      limits:
+        cpu: 1
+        memory: 1Gi
+      requests:
+        cpu: 50m
+        memory: 64Mi
+
+    prometheus:
+      enabled: true
+      port: 9966
+
+  ui:
+    enabled: true
+    standalone:
+      enabled: true
+
+    backend:
+      image:
+        repository: "hub.8ops.top/quay/hubble-ui-backend"
+        tag: "v0.13.3"
+        useDigest: false
+
+      resources:
+        limits:
+          cpu: 1
+          memory: 1Gi
+        requests:
+          cpu: 50m
+          memory: 64Mi
+
+    frontend:
+      image:
+        repository: "hub.8ops.top/quay/hubble-ui"
+        tag: "v0.13.3"
+        useDigest: false
+
+      resources:
+        limits:
+          cpu: 1
+          memory: 1Gi
+        requests:
+          cpu: 50m
+          memory: 64Mi
+
+    ingress:
+      enabled: true
+      className: "external"
+      hosts:
+        - hubble.8ops.top
+      tls:
+        - secretName: tls-8ops.top
+          hosts:
+            - hubble.8ops.top
+
+ipam:
+  mode: "cluster-pool"
+  operator:
+    clusterPoolIPv4PodCIDRList: "172.19.0.0/16"
+    clusterPoolIPv4MaskSize: 24
+
+prometheus:
+  metricsService: true
+  enabled: true
+  port: 9962
+
+operator:
+  enabled: true
+  image:
+    repository: "hub.8ops.top/quay/cilium-operator"
+    tag: "v1.18.3"
+    useDigest: false
+
+  resources:
+    limits:
+      cpu: 1
+      memory: 1Gi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+
+  prometheus:
+    metricsService: true
+    enabled: true
+    port: 9963
+
+envoy:
+  enabled: false
+
+preflight:
+  enabled: false
+
