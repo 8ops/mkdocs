@@ -6,12 +6,17 @@
 
 > 当前各软件版本
 
-| 名称       | 版本    |
-| ---------- | ------- |
-| ubuntu     | v22.04  |
-| kubernetes | v1.34.1 |
-| flannel    | v0.27.3 |
-| calico     |         |
+| 名称          | 版本    |
+| ------------- | ------- |
+| ubuntu        | v22.04  |
+| kubernetes    | v1.34.1 |
+| flannel       | v0.27.3 |
+| calico        | v3.30.4 |
+| cilium        | 1.17.9  |
+| metallb       | 0.15.2  |
+| ingress-nginx | 4.13.3  |
+| envoy-gateway | 1.6.0   |
+| dashboard     | 4.13.3  |
 
 
 
