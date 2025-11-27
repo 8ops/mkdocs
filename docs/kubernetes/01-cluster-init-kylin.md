@@ -340,6 +340,7 @@ systemctl restart kubelet && sleep 5 && systemctl restart containerd
 #### 4.1.3 cilium
 
 ```bash
+# https://books.8ops.top/attachment/kubernetes/helm/cilium.yaml-1.17.9
 CILIUM_VERSION=1.17.9
 
 helm repo add cilium https://helm.cilium.io/
@@ -380,6 +381,7 @@ systemctl restart kubelet && sleep 5 && systemctl restart containerd
 ### 4.2 metallb
 
 ```bash
+# https://books.8ops.top/attachment/kubernetes/helm/metallb.yaml-0.15.2
 METALLB_VERSION=0.15.2
 
 helm repo add metallb https://metallb.github.io/metallb
@@ -408,6 +410,7 @@ helm -n kube-server uninstall metallb
 ### 4.3 ingress-nginx
 
 ```bash
+# https://books.8ops.top/attachment/kubernetes/helm/ingress-nginx.yaml-4.13.3
 INGRESS_NGINX_VERSION=4.13.3
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 helm repo update ingress-nginx
@@ -425,6 +428,7 @@ helm install ingress-nginx-external-controller \
 ### 4.4 envoy-gateway
 
 ```bash
+# https://books.8ops.top/attachment/kubernetes/helm/envoy-gateway.yaml-1.6.0
 GATEWAY_HELM_VERSION=1.6.0
 helm show values oci://docker.io/envoyproxy/gateway-helm \
   --version ${GATEWAY_HELM_VERSION} > envoy-gateway.yaml-1.6.0-default
@@ -454,6 +458,7 @@ curl -k -v -H "Host: echo.u3c.ai" https://10.101.11.244/echoserver
 ### 4.5 dashboard
 
 ```bash
+# https://books.8ops.top/attachment/kubernetes/helm/kubernetes-dashboard.yaml-7.13.0
 INGRESS_NGINX_VERSION=4.13.3
 helm repo add kubernetes-dashboard https://kubernetes.github.io/dashboard/
 helm repo update
