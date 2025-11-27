@@ -219,8 +219,6 @@ kubectl -n kube-system edit cm kube-proxy
 
 ## 四、addons
 
-
-
 ```bash
 systemctl restart kubelet && sleep 5 && systemctl restart containerd
 
@@ -229,6 +227,22 @@ kubectl taint nodes gat-devofc-xc-k8s-01 node-role.kubernetes.io/control-plane:N
 kubectl taint nodes gat-devofc-xc-k8s-02 node-role.kubernetes.io/control-plane:NoSchedule-
 kubectl taint nodes gat-devofc-xc-k8s-03 node-role.kubernetes.io/control-plane:NoSchedule-
 ```
+
+
+
+> 评测结论
+
+| 操作系统      | ubuntu | kylin | 备注 |
+| ------------- | ------ | ----- | ---- |
+| kubernetes    | √      |       |      |
+| cni / flannel | √      |       |      |
+| cni / calico  | x      |       |      |
+| cni / cilium  | √      |       |      |
+| metallb       |        |       |      |
+| ingress-nginx |        |       |      |
+| envoy-gateway |        |       |      |
+| dashboard     |        |       |      |
+| reboot 测试   |        |       |      |
 
 
 
@@ -335,6 +349,27 @@ helm install cilium cilium/cilium \
   --version ${CILIUM_VERSION}
 ```
 
+> 卸载
+
+```bash
+ip link delete cni0
+rm -rf /var/lib/cni/ /run/flannel/ /etc/cni/net.d 
+
+ip link | awk '/cilium/{print $2}' | sed 's/://' | xargs -I{} sudo ip link delete {}
+iptables-save | grep -i cilium
+iptables -F && iptables -t nat -F
+iptables -X && iptables -t nat -X
+iptables-save
+
+ip route show | awk '/cilium/{printf("ip route del %s\n", $1)}' | sh
+ip route show | grep cilium
+
+ip link | awk '/cilium/{printf("ip link delete %s \n", $2)}' | sed 's/@.*$//' | sh
+ip link | grep cilium
+
+systemctl restart kubelet && sleep 5 && systemctl restart containerd
+```
+
 
 
 ### 4.2 metallb
@@ -349,6 +384,12 @@ helm show values metallb/metallb \
   --version ${METALLB_VERSION} > metallb.yaml-${METALLB_VERSION}-default
 
 helm install metallb metallb/metallb \
+  -f metallb.yaml-${METALLB_VERSION} \
+  --namespace=kube-server \
+  --create-namespace \
+  --version ${METALLB_VERSION}
+
+helm upgrade --install metallb metallb/metallb \
   -f metallb.yaml-${METALLB_VERSION} \
   --namespace=kube-server \
   --create-namespace \
