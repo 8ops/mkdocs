@@ -1,0 +1,48 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: envoy-redis
+  namespace: envoy-gateway-system
+  labels:
+    app: envoy-redis
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app: envoy-redis
+  template:
+    metadata:
+      labels:
+        app: envoy-redis
+    spec:
+      containers:
+      - image: hub.8ops.top/middleware/redis:8.0.3
+        imagePullPolicy: IfNotPresent
+        name: envoy-redis
+        resources:
+          limits:
+            cpu: 100m
+            memory: 128Mi
+          requests:
+            cpu: 20m
+            memory: 32Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: envoy-redis
+  namespace: envoy-gateway-system
+  labels:
+    app: envoy-redis
+  annotations:
+spec:
+  ports:
+  - name: envoy-redis
+    port: 6379
+    protocol: TCP
+    targetPort: 6379
+  selector:
+    app: envoy-redis
+

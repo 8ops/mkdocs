@@ -400,95 +400,10 @@ helm -n kube-server uninstall metallb
 
 
 
-### 4.3 ingress-nginx
+### 4.3 envoy
 
 ```bash
-helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
-helm repo update
-helm search repo ingress-nginx
-helm show values ingress-nginx/ingress-nginx > ingress-nginx.yaml-v4.2.3-default
 
-# external
-# vim ingress-nginx-external.yaml-v4.2.3
-# e.g. https://books.8ops.top/attachment/kubernetes/helm/ingress-nginx-external.yaml-v4.2.3
-#
-kubectl label node gat-gslab-k8s-node-01 edge=external
-helm install ingress-nginx-external-controller ingress-nginx/ingress-nginx \
-    -f ingress-nginx-external.yaml-v4.2.3 \
-    -n kube-server \
-    --create-namespace \
-    --version 4.2.3
-    
-helm upgrade --install ingress-nginx-external-controller ingress-nginx/ingress-nginx \
-    -f ingress-nginx-external.yaml-v4.2.3 \
-    -n kube-server \
-    --create-namespace \
-    --version 4.2.3
-    
-# intrnal
-# vim ingress-nginx-internal.yaml-v4.2.3
-# e.g. https://books.8ops.top/attachment/kubernetes/helm/ingress-nginx-internal.yaml-v4.2.3
-#
-kubectl label node gat-gslab-k8s-node-02 edge=internal
-helm install ingress-nginx-internal-controller ingress-nginx/ingress-nginx \
-    -f ingress-nginx-internal.yaml-v4.2.3 \
-    -n kube-server \
-    --version 4.2.3
-
-```
-
-> 切割日志
-
-```bash
-# /etc/logrotate.d/nginx
-/var/log/nginx/access.log
- {
-    su systemd-resolve nginx-ingress
-    hourly
-    rotate 180
-    dateext
-    missingok
-    notifempty
-    compress
-    delaycompress
-    nomail
-    sharedscripts
-    postrotate
-        for pid in `/bin/pidof nginx `;do
-            kill -USR1 ${pid}
-        done
-    endscript
-}
-/var/log/nginx/error.log
- {
-    su systemd-resolve nginx-ingress
-    daily
-    rotate 7
-    dateext
-    missingok
-    notifempty
-    compress
-    delaycompress
-    nomail
-    sharedscripts
-    postrotate
-        for pid in `/bin/pidof nginx `;do
-            kill -USR1 ${pid}
-        done
-    endscript
-}
-
-# 确保uid=101,gid=82的用户和组存在
-groupadd -g 82 nginx-ingress
-cd /data1/log/nginx
-
-chown 101.82 * && ls -l 
-
-systemctl start logrotate && ls -l && sleep 5 && systemctl status logrotate
-
-# 调整定时器为小时
-sed -i 's/OnCalendar=daily/OnCalendar=hourly/' /lib/systemd/system/logrotate.timer
-systemctl daemon-reload && sleep 5 && systemctl status logrotate.timer
 ```
 
 

@@ -1,0 +1,53 @@
+global:
+  images:
+    envoyGateway:
+      image: hub.8ops.top/google_containers/envoyproxy-gateway:v1.6.0
+      pullPolicy: IfNotPresent
+    ratelimit:
+      image: hub.8ops.top/google_containers/envoyproxy-ratelimit:99d85510
+      pullPolicy: IfNotPresent
+
+deployment:
+  envoyGateway:
+    resources:
+      limits:
+        cpu: 200
+        memory: 256Mi
+      requests:
+        cpu: 50m
+        memory: 64Mi
+
+service:
+  type: "ClusterIP"
+
+hpa:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 3
+
+config:
+  envoyGateway:
+    gateway:
+      controllerName: gateway.envoyproxy.io/gatewayclass-controller
+    provider:
+      type: Kubernetes
+      kubernetes:
+        rateLimitDeployment:
+          container:
+            resources:
+              limits:
+                cpu: 500
+                memory: 512Mi
+              requests:
+                cpu: 50m
+                memory: 64Mi
+    logging:
+      level:
+        default: warn
+    extensionApis:
+      enableBackend: true
+    rateLimit:
+      backend:
+        type: Redis
+        redis:
+          url: envoy-redis.envoy-gateway-system.svc.cluster.local:6379
