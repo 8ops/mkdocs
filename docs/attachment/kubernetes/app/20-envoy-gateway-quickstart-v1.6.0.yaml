@@ -21,6 +21,7 @@ spec:
       envoyService:
         type: LoadBalancer
         externalTrafficPolicy: Cluster
+        loadBalancerIP: "10.101.11.244"
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: GatewayClass
