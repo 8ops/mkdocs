@@ -232,17 +232,17 @@ kubectl taint nodes gat-devofc-xc-k8s-03 node-role.kubernetes.io/control-plane:N
 
 > 评测结论
 
-| 操作系统      | ubuntu | kylin | 备注 |
-| ------------- | ------ | ----- | ---- |
-| kubernetes    | √      |       |      |
-| cni / flannel | √      |       |      |
-| cni / calico  | x      |       |      |
-| cni / cilium  | √      |       |      |
-| metallb       |        |       |      |
-| ingress-nginx |        |       |      |
-| envoy-gateway |        |       |      |
-| dashboard     |        |       |      |
-| reboot 测试   |        |       |      |
+| 操作系统      | ubuntu | kylin | 备注                       |
+| ------------- | ------ | ----- | -------------------------- |
+| kubernetes    | √      |       |                            |
+| cni / flannel | √      |       |                            |
+| cni / calico  | x      |       |                            |
+| cni / cilium  | √      |       |                            |
+| metallb       | mostly |       | frr未就位，service访问不通 |
+| ingress-nginx | √      |       |                            |
+| envoy-gateway | √      |       |                            |
+| dashboard     | √      |       |                            |
+| reboot 测试   |        |       |                            |
 
 
 
@@ -400,48 +400,74 @@ helm -n kube-server uninstall metallb
 
 
 
-### 4.3 envoy
+### 4.3 ingress-nginx
 
 ```bash
+INGRESS_NGINX_VERSION=4.13.3
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+helm repo update ingress-nginx
+helm search repo ingress-nginx
+
+helm install ingress-nginx-external-controller \
+  ingress-nginx/ingress-nginx \
+  -f ingress-nginx.yaml-${INGRESS_NGINX_VERSION} \
+  -n kube-server \
+  --version ${INGRESS_NGINX_VERSION}
+```
+
+
+
+### 4.4 envoy-gateway
+
+```bash
+GATEWAY_HELM_VERSION=1.6.0
+helm show values oci://docker.io/envoyproxy/gateway-helm \
+  --version ${GATEWAY_HELM_VERSION} > envoy-gateway.yaml-1.6.0-default
+
+# Install
+kubectl apply -f 20-envoy-redis.yaml
+
+helm install eg oci://docker.io/envoyproxy/gateway-helm \
+  --version ${GATEWAY_HELM_VERSION} \
+  -f envoy-gateway.yaml-${GATEWAY_HELM_VERSION} \
+  -n envoy-gateway-system \
+  --create-namespace 
+
+kubectl apply -f 20-envoy-gateway-quickstart-v1.6.0.yaml
+kubectl apply -f 20-3.0-backend-basic.yaml
+
+curl -k -v -H "Host: echo.8ops.top" https://10.101.11.244/echo
+curl -k -v -H "Host: echo.8ops.top" https://10.101.11.244/echoserver
+
+curl -k -v -H "Host: echo.u3c.ai" https://10.101.11.244/echo
+curl -k -v -H "Host: echo.u3c.ai" https://10.101.11.244/echoserver
 
 ```
 
 
 
-### 4.4 dashboard
+### 4.5 dashboard
 
 ```bash
+INGRESS_NGINX_VERSION=4.13.3
 helm repo add kubernetes-dashboard https://kubernetes.github.io/dashboard/
 helm repo update
 helm search repo kubernetes-dashboard
 helm show values kubernetes-dashboard/kubernetes-dashboard > kubernetes-dashboard.yaml-v5.10.0-default
 
-# vim kubernetes-dashboard.yaml-v5.10.0
-# e.g. https://books.8ops.top/attachment/kubernetes/helm/kubernetes-dashboard.yaml-v5.10.0
-# 
+helm install kubernetes-dashboard \
+  kubernetes-dashboard/kubernetes-dashboard \
+  -f kubernetes-dashboard.yaml-${KUBERNETES_DASHBOARD_VERSION} \
+  -n kube-server \
+  --create-namespace \
+  --version ${KUBERNETES_DASHBOARD_VERSION}
 
-helm install kubernetes-dashboard kubernetes-dashboard/kubernetes-dashboard \
-    -f kubernetes-dashboard.yaml-v5.10.0 \
-    -n kube-server \
-    --create-namespace \
-    --version 5.10.0
-
-helm upgrade --install kubernetes-dashboard kubernetes-dashboard/kubernetes-dashboard \
-    -f kubernetes-dashboard.yaml-v5.10.0 \
-    -n kube-server \
-    --create-namespace \
-    --version 5.10.0
-    
-# create sa for guest
 kubectl create serviceaccount dashboard-guest -n kube-server
 
-# binding clusterrole
-kubectl create clusterrolebinding dashboard-guest \
+kubectl create clusterrolebinding dashboard-guest-binding \
   --clusterrole=view \
   --serviceaccount=kube-server:dashboard-guest
-
-# create token
-# kubernetes v1.24.0+ newst 需要主动创建 secret
+  
 kubectl apply -f - <<EOF
 apiVersion: v1
 kind: Secret
@@ -453,38 +479,7 @@ metadata:
 type: kubernetes.io/service-account-token
 EOF
 
-# output token
-kubectl -n kube-server describe secrets dashboard-guest-secret
-# 
-# kubectl -n kube-server get secrets dashboard-guest-secret -o=jsonpath={.data.token} | \
-#   base64 -d
-#
-# kubectl describe secrets \
-#   -n kube-server $(kubectl -n kube-server get secret | awk '/dashboard-guest/{print $1}')
-
-#----
-# create sa for ops
-kubectl create serviceaccount dashboard-ops -n kube-server
-
-# binding clusterrole
-kubectl create clusterrolebinding dashboard-ops \
-  --clusterrole=cluster-admin \
-  --serviceaccount=kube-server:dashboard-ops
-
-# create token
-kubectl apply -f - <<EOF
-apiVersion: v1
-kind: Secret
-metadata:
-  name: dashboard-ops-secret
-  namespace: kube-server
-  annotations:
-    kubernetes.io/service-account.name: dashboard-ops
-type: kubernetes.io/service-account-token
-EOF
-
-# output token
-kubectl -n kube-server describe secrets dashboard-ops-secret
+kubectl -n kube-server get secrets dashboard-guest-secret -o=jsonpath={.data.token} | base64 -d; echo
 
 ```
 

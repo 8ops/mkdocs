@@ -1,0 +1,155 @@
+
+controller:
+  name: external
+  image:
+    registry: hub.8ops.top
+    image: google_containers/ingress-nginx-controller
+    tag: "v1.13.3"
+    digest:
+
+  config:
+    access-log-path: /var/log/nginx/access.log
+    allow-snippet-annotations: "true"
+    client-body-buffer-size: 16k
+    client-body-timeout: "30"
+    client-header-buffer-size: 32k
+    client-header-timeout: "30"
+    enable-underscores-in-headers: "true"
+    error-log-path: /var/log/nginx/error.log
+    gzip-level: "6"
+    gzip-min-length: "1024"
+    hide-headers: Vary,X-Script-Filename,X-Powered-By
+    http-snippet: |
+      proxy_cache_path /tmp/nginx-cache-response levels=1:2 keys_zone=response-cache:10m max_size=128m inactive=7d use_temp_path=off;
+    keep-alive: "900"
+    keep-alive-requests: "10000"
+    large-client-header-buffers: 4 32k
+    limit-req-status-code: "429"
+    log-format-upstream: '{"timestamp":"$time_iso8601","msec":"$msec","remote_port":"$remote_port","method":"$request_method","domain":"$host","uri":"$uri","args":"$args","server_protocol":"$server_protocol","http_user_agent":"$http_user_agent","http_referer":"$http_referer","http_cookie":"$http_cookie","app_name":"$upstream_http_x_app_name","app_instance":"$upstream_http_x_app_instance","trace_id":"$upstream_http_x_trace_id","span_id":"$upstream_http_x_span_id","parent_id":"$upstream_http_x_parent_id","x_request_id":"$http_x_request_id","request_time":"$request_time","response_time":"$upstream_response_time","remote_addr":"$remote_addr","upstream_http_location":"$upstream_http_location","x_real_ip":"$http_x_real_ip","x_forwarded_for":"$http_x_forwarded_for","upstream_addr":"$upstream_addr","response_code":"$status","upstream_response_code":"$upstream_status","request_length":"$request_length","content_length":"$content_length","bytes_sent":"$bytes_sent","body_bytes_sent":"$body_bytes_sent","custom_headers":{"x_client_version":"$http_x_client_version","x_api_version":"$http_x_api_version","x_os_name":"$http_x_os_name","x_os_version":"$http_x_os_version","x_carrier":"$http_x_carrier","x_network_type":"$http_x_network_type","x_request_id":"$http_x_request_id","x_manufacture":"$http_x_manufacture","x_latitude":"$http_x_latitude","x_longitude":"$http_x_longitude","x_token":"$http_x_token","x_ts":"$http_x_ts","x_sign":"$http_x_sign","x_device_id":"$http_x_device_id","x_req_app_name":"$http_x_req_app_name","x_req_app_instance":"$http_x_req_app_instance"},"scheme":"$scheme","ssl_protocol":"$ssl_protocol"}'
+    proxy-body-size: 16m
+    proxy-buffer-size: 16k
+    proxy-buffers-number: "8"
+    proxy-connect-timeout: "15"
+    proxy-headers-hash-bucket-size: "6400"
+    proxy-headers-hash-max-size: "51200"
+    proxy-next-upstream: "off"
+    proxy-read-timeout: "300"
+    proxy-send-timeout: "300"
+    server-name-hash-bucket-size: "128"
+    ssl-session-cache-size: 128m
+    ssl-session-timeout: 60m
+    upstream-keepalive-connections: "1000"
+    upstream-keepalive-timeout: "900"
+    use-gzip: "true"
+    use-http2: "true"
+    variables-hash-bucket-size: "1025"
+    worker-cpu-affinity: auto
+    worker-processes: "2"
+    use-forwarded-headers: "true"
+    compute-full-forwarded-for: "true"
+    forwarded-for-header: "X-Forwarded-For"
+    real-ip-header: "X-Forwarded-For"
+    set-real-ip-from: "0.0.0.0/0"
+
+  proxySetHeaders:
+    x-ssl-protocol: "$ssl_protocol"
+
+  addHeaders:
+    x-env-name: kylin
+    x-env-release: "20251127"
+    x-env-upgrade: "20251127"
+
+  # hostNetwork: true
+  hostPort:
+    enabled: true
+    ports:
+      http: 80
+      https: 443
+
+  electionID: ingress-controller-external-leader
+
+  ingressClassResource:
+    name: external
+    enabled: true
+    default: false
+    controllerValue: "k8s.io/ingress-external"
+
+  resources:
+    limits:
+      cpu: 1
+      memory: 1Gi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+  extraVolumeMounts:
+    - name: log
+      mountPath: /var/log/nginx
+
+  extraVolumes:
+    - name: log
+      hostPath:
+        path: /data1/log/nginx/external
+        type: ""
+
+  extraInitContainers:
+    - name: init
+      image: hub.8ops.top/third/busybox:1.28.0
+      command: ['sh', '-c', '/bin/chown -R 101 /var/log/nginx']
+
+      volumeMounts:
+      - name: log
+        mountPath: /var/log/nginx
+
+  kind: Deployment
+  replicaCount: 2
+
+  keda:
+    enabled: false
+
+  service:
+    enabled: true
+    loadBalancerIP: "10.101.11.242"
+    externalTrafficPolicy: Local
+    type: LoadBalancer
+
+  opentelemetry:
+    enabled: false
+
+  metrics:
+    port: 10254
+    enabled: true
+
+    service:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "10254"
+      servicePort: 10254
+      type: ClusterIP
+
+#    serviceMonitor:
+#      enabled: true
+
+#    prometheusRule:
+#      enabled: true
+
+  admissionWebhooks:
+    enabled: false
+
+revisionHistoryLimit: 2
+
+defaultBackend:
+  enabled: true
+  name: defaultbackend
+  image:
+    registry: hub.8ops.top
+    image: google_containers/defaultbackend
+    tag: "1.5"
+  resources:
+    limits:
+      cpu: 10m
+      memory: 20Mi
+    requests:
+      cpu: 10m
+      memory: 20Mi
+

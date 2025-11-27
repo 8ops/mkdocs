@@ -1282,6 +1282,7 @@ helm upgrade --install metallb metallb/metallb \
 ### 4.2 Ingress-nginx
 
 ```bash
+INGRESS_NGINX_VERSION=4.13.3
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 helm repo update ingress-nginx
 helm search repo ingress-nginx
@@ -1302,13 +1303,14 @@ helm show values ingress-nginx/ingress-nginx \
 #     forwarded-for-header: "X-Forwarded-For"
 #     real-ip-header: "X-Forwarded-For"
 #     set-real-ip-from: "0.0.0.0/0"
-
+  
 helm upgrade --install ingress-nginx-external-controller \
   ingress-nginx/ingress-nginx \
-  -f ingress-nginx.yaml-4.13.3 \
+  -f ingress-nginx.yaml-${INGRESS_NGINX_VERSION} \
   -n kube-server \
-  --version 4.13.3 --debug
+  --version ${INGRESS_NGINX_VERSION} --debug
 
+curl -k -H "Host: echoserver.8ops.top" https://10.101.11.242/echoserver
 ```
 
 
@@ -1316,12 +1318,13 @@ helm upgrade --install ingress-nginx-external-controller \
 ### 4.3 kubernetes-dashboard
 
 ```bash
+KUBERNETES_DASHBOARD_VERSION=7.13.0
 helm repo add kubernetes-dashboard https://kubernetes.github.io/dashboard/
 helm repo update kubernetes-dashboard
 helm search repo kubernetes-dashboard
 
 helm show values kubernetes-dashboard/kubernetes-dashboard \
-  --version 7.13.0  > kubernetes-dashboard.yaml-v7.13.0-default
+  --version ${KUBERNETES_DASHBOARD_VERSION}  > kubernetes-dashboard.yaml-${KUBERNETES_DASHBOARD_VERSION}-default
 
 # # Containers Images
 # docker.io/kubernetesui/dashboard-auth:1.3.0
@@ -1333,10 +1336,10 @@ helm show values kubernetes-dashboard/kubernetes-dashboard \
 
 helm upgrade --install kubernetes-dashboard \
   kubernetes-dashboard/kubernetes-dashboard \
-  -f kubernetes-dashboard.yaml-7.13.0 \
+  -f kubernetes-dashboard.yaml-${KUBERNETES_DASHBOARD_VERSION} \
   -n kube-server \
   --create-namespace \
-  --version 7.13.0 --debug
+  --version ${KUBERNETES_DASHBOARD_VERSION} --debug
 
 ```
 
@@ -1345,12 +1348,13 @@ helm upgrade --install kubernetes-dashboard \
 ### 4.4 argo-cd
 
 ```bash
+ARGOCD_VERSION=9.0.5
 helm repo add argoproj https://argoproj.github.io/argo-helm
 helm repo update argoproj
 helm search repo argo-cd
 
 helm show values argoproj/argo-cd \
-  --version 9.0.5 > argo-cd.yaml-9.0.5-default
+  --version ${ARGOCD_VERSION} > argo-cd.yaml-${ARGOCD_VERSION}-default
 
 # # Containers Images
 # quay.io/argoproj/argocd:v3.1.9
@@ -1358,8 +1362,8 @@ helm show values argoproj/argo-cd \
 
 helm upgrade --install argo-cd argoproj/argo-cd \
   -n kube-server \
-  -f argo-cd.yaml-9.0.5 \
-  --version 9.0.5 --debug
+  -f argo-cd.yaml-${ARGOCD_VERSION} \
+  --version ${ARGOCD_VERSION} --debug
 
 ```
 
