@@ -5,25 +5,26 @@ alertmanager:
     repository: hub.8ops.top/quay/prometheus-alertmanager
     tag: v0.29.0
 
-  extraConfigmapMounts: 
+  extraConfigmapMounts:
     - name: template-files
       mountPath: /opt/metadata/templates.d
       configMap: alertmanager-template-files
       readOnly: true
 
   ingress:
-    enabled: true
     className: external
-    hosts: 
-      - alertmanager.8ops.top
-    path: /
-    pathType: Prefix
-    tls: 
+    enabled: true
+    hosts:
+    - host: alertmanager.8ops.top
+      paths:
+      - path: /
+        pathType: Prefix
+    tls:
       - secretName: tls-8ops.top
         hosts:
           - alertmanager.8ops.top
 
-  resources: 
+  resources:
     limits:
       cpu: 200m
       memory: 256Mi
@@ -47,7 +48,7 @@ configmapReload:
       repository: hub.8ops.top/quay/prometheus-configmap-reload
       tag: v0.87.0
 
-    resources: 
+    resources:
       limits:
         cpu: 30m
         memory: 32Mi
@@ -63,7 +64,7 @@ configmapReload:
       repository: hub.8ops.top/quay/prometheus-configmap-reload
       tag: v0.87.0
 
-    resources: 
+    resources:
       limits:
         cpu: 30m
         memory: 32Mi
@@ -98,7 +99,7 @@ prometheus-node-exporter:
   tolerations:
     - operator: "Exists"
 
-  resources: 
+  resources:
     limits:
       cpu: 100m
       memory: 128Mi
@@ -111,7 +112,7 @@ server:
     repository: hub.8ops.top/quay/prometheus
     tag: v3.7.3
 
-  extraConfigmapMounts: 
+  extraConfigmapMounts:
     - name: metadata-rules
       mountPath: /opt/metadata/rules.d
       configMap: prometheus-metadata-rules
@@ -134,12 +135,12 @@ server:
       - prometheus.8ops.top
     path: /
     pathType: Prefix
-    tls: 
+    tls:
       - secretName: tls-8ops.top
         hosts:
           - prometheus.8ops.top
 
-  resources: 
+  resources:
     limits:
       cpu: 2000m
       memory: 2048Mi
@@ -164,16 +165,16 @@ prometheus-pushgateway:
   ingress:
     enabled: true
     ingressClassName: external
-    hosts: 
+    hosts:
       - pushgateway.8ops.top
     path: /
     pathType: Prefix
-    tls: 
+    tls:
       - secretName: tls-8ops.top
         hosts:
           - pushgateway.8ops.top
 
-  resources: 
+  resources:
     limits:
       cpu: 100m
       memory: 128Mi
