@@ -12,6 +12,8 @@ getconf LONG_BIT
 openssl rand -base64 20
 openssl rand -hex 20
 
+# shell 大写转小写
+date | tr '[:upper:]' '[:lower:]'
 ```
 
 

@@ -495,3 +495,32 @@ kubectl -n kube-server get secrets dashboard-guest-secret -o=jsonpath={.data.tok
 
 
 
+### 4.6 prometheus
+
+```bash
+PROMETHEUS_VERSION=27.47.0
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update prometheus-community
+helm search repo prometheus
+helm show values prometheus-community/prometheus \
+  --version ${PROMETHEUS_VERSION} > prometheus.yaml-${PROMETHEUS_VERSION}-default
+
+helm install prometheus prometheus-community/prometheus \
+    -f prometheus.yaml-${PROMETHEUS_VERSION} \
+    -f prometheus-extra.yaml \
+    -f prometheus-alertmanager.yaml \
+    -n kube-server \
+    --create-namespace \
+    --version ${PROMETHEUS_VERSION} \
+    --debug | tee debug.out
+    
+helm upgrade --install prometheus prometheus-community/prometheus \
+    -f prometheus.yaml-${PROMETHEUS_VERSION} \
+    -f prometheus-extra.yaml \
+    -f prometheus-alertmanager.yaml \
+    -n kube-server \
+    --create-namespace \
+    --version ${PROMETHEUS_VERSION} \
+    --debug | tee debug.out    
+```
+

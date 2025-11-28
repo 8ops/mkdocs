@@ -157,6 +157,7 @@ nav:
       - daily/46-nginx.md
       - daily/47-elastic.md
       - daily/48-mysql.md
+      - daily/49-kube-burner.md
       - daily/50-denyhosts.md
       - daily/51-sentry.md
       - daily/52-mitmproxy.md
