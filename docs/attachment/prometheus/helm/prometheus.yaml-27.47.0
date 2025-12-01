@@ -78,7 +78,8 @@ configmapReload:
 kube-state-metrics:
   enabled: true
   image:
-    repository: hub.8ops.top/google_containers/kube-state-metrics
+    registry: hub.8ops.top
+    repository: google_containers/kube-state-metrics
     tag: v2.17.0
 
   resources:
@@ -93,7 +94,8 @@ prometheus-node-exporter:
   enabled: true
 
   image:
-    repository: hub.8ops.top/quay/prometheus-node-exporter
+    registry: hub.8ops.top
+    repository: quay/prometheus-node-exporter
     tag: v1.10.2
 
   tolerations:
@@ -164,7 +166,7 @@ prometheus-pushgateway:
 
   ingress:
     enabled: true
-    ingressClassName: external
+    className: external
     hosts:
       - pushgateway.8ops.top
     path: /

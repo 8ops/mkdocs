@@ -1,0 +1,41 @@
+clusterName: "elastic"
+nodeGroup: "single"
+
+roles:
+  master: "true"
+  ingest: "true"
+  data: "true"
+
+image: hub.8ops.top/elastic/elasticsearch
+imageTag: 7.17.3
+
+replicas: 3
+
+esJavaOpts: "-Xmx1g -Xms1g"
+
+resources:
+  requests:
+    cpu: "500m"
+    memory: "1536Mi"
+  limits:
+    cpu: "500m"
+    memory: "1536Mi"
+
+persistence:
+  enabled: false
+
+protocol: http
+antiAffinity: "soft"
+
+ingress:
+  enabled: true
+  className: "external"
+  hosts:
+    - host: elasticsearch.8ops.top
+      paths:
+        - path: /
+  tls:
+    - secretName: tls-8ops.top
+      hosts:
+        - elasticsearch.8ops.top
+

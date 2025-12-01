@@ -506,21 +506,51 @@ helm show values prometheus-community/prometheus \
   --version ${PROMETHEUS_VERSION} > prometheus.yaml-${PROMETHEUS_VERSION}-default
 
 helm install prometheus prometheus-community/prometheus \
-    -f prometheus.yaml-${PROMETHEUS_VERSION} \
-    -f prometheus-extra.yaml \
-    -f prometheus-alertmanager.yaml \
-    -n kube-server \
-    --create-namespace \
-    --version ${PROMETHEUS_VERSION} \
-    --debug | tee debug.out
+  -f prometheus.yaml-${PROMETHEUS_VERSION} \
+  -f prometheus-extra.yaml \
+  -f prometheus-alertmanager.yaml \
+  -n kube-server \
+  --create-namespace \
+  --version ${PROMETHEUS_VERSION} \
+  --debug | tee /tmp/debug.out
     
 helm upgrade --install prometheus prometheus-community/prometheus \
-    -f prometheus.yaml-${PROMETHEUS_VERSION} \
-    -f prometheus-extra.yaml \
-    -f prometheus-alertmanager.yaml \
-    -n kube-server \
-    --create-namespace \
-    --version ${PROMETHEUS_VERSION} \
-    --debug | tee debug.out    
+  -f prometheus.yaml-${PROMETHEUS_VERSION} \
+  -f prometheus-extra.yaml \
+  -f prometheus-alertmanager.yaml \
+  -n kube-server \
+  --create-namespace \
+  --version ${PROMETHEUS_VERSION} \
+  --debug | tee /tmp/debug.out
+
+kubectl apply -f 90-prometheus-metadata-rules.yaml
+kubectl apply -f 91-prometheus-metadata-hosts.yaml
+```
+
+
+
+### 4.7 elasticsearch
+
+```bash
+ELASTICSEARCH_VERSION=7.17.3
+helm repo add elastic https://helm.elastic.co
+helm repo update elastic
+helm search repo elastic
+helm search repo elastic/elasticsearch --versions # 查看支持的所有版本
+
+helm install elastic-single elastic/elasticsearch \
+  -f elastic-single.yaml-${ELASTICSEARCH_VERSION} \
+  -n elastic-system\
+  --create-namespace \
+  --version ${ELASTICSEARCH_VERSION} \
+  --debug | tee /tmp/debug.out
+
+helm upgrade --install elastic-single elastic/elasticsearch \
+  -f elastic-single.yaml-${ELASTICSEARCH_VERSION} \
+  -n elastic-system\
+  --create-namespace \
+  --version ${ELASTICSEARCH_VERSION} \
+  --debug | tee /tmp/debug.out
+
 ```
 
