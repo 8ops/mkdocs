@@ -51,12 +51,17 @@ sysctl net.ipv4.ip_forward
 }
 
 function op_source(){
-cat <<EOF > /etc/yum.repos.d/kubernetes.repo
+yum install -y yum-utils
+yum-config-manager --add-repo https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
+
+cat <<EOF | tee /etc/yum.repos.d/kubernetes.repo
 [kubernetes]
 name=Kubernetes
-baseurl=https://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-x86_64/
+baseurl=https://mirrors.aliyun.com/kubernetes-new/core/stable/v1.34/rpm/
 enabled=1
-gpgcheck=0
+gpgcheck=1
+gpgkey=https://mirrors.aliyun.com/kubernetes-new/core/stable/v1.34/rpm/repodata/repomd.xml.key
+exclude=kubelet kubeadm kubectl cri-tools kubernetes-cni
 EOF
 }
 

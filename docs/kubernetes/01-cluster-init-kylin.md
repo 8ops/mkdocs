@@ -220,6 +220,27 @@ kubectl -n kube-system edit cm kube-proxy
 
 ## 三、Kylin
 
+### 3.1 
+
+```bash
+curl -s https://books.8ops.top/attachment/kubernetes/bin/01-init-kylin.sh | bash
+```
+
+
+
+### 3.2 
+
+```bash
+
+yum info kubectl --disableexcludes=kubernetes
+yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
+
+yum repolist all
+yum --enablerepo=docker-ce-stable info containerd
+```
+
+
+
 
 
 ## 四、addons
