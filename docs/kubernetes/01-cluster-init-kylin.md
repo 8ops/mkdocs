@@ -220,7 +220,16 @@ kubectl -n kube-system edit cm kube-proxy
 
 ## 三、Kylin
 
-### 3.1 
+4.19.90-89.17.v2401.ky10.x86_64
+
+| Kylin | 发布时间 | kernel version |
+| ----- | -------- | -------------- |
+| V10   | 2024     | 4.19.90        |
+| V11   | 2025     | 6.6            |
+
+
+
+### 3.1 初始化环境
 
 ```bash
 curl -s https://books.8ops.top/attachment/kubernetes/bin/01-init-kylin.sh | bash
@@ -228,15 +237,90 @@ curl -s https://books.8ops.top/attachment/kubernetes/bin/01-init-kylin.sh | bash
 
 
 
-### 3.2 
+### 3.2 调整lib目录
 
 ```bash
+# containerd
+mkdir -p /data1/lib/containerd && \
+    ([ -e /var/lib/containerd ] && mv /var/lib/containerd{,-$(date +%Y%m%d)} || /bin/true) && \
+    ln -s /data1/lib/containerd /var/lib/containerd
+ls -l /var/lib/containerd
+
+# kubelet
+mkdir -p /data1/lib/kubelet && \
+    ([ -e /var/lib/kubelet ] && mv /var/lib/kubelet{,-$(date +%Y%m%d)} || /bin/true) && \
+    ln -s /data1/lib/kubelet /var/lib/kubelet
+ls -l /var/lib/kubelet   
+
+# etcd（仅需要在 control-plane）
+mkdir -p /data1/lib/etcd && \
+    ([ -e /var/lib/etcd ] && mv /var/lib/etcd{,-$(date +%Y%m%d)} || /bin/true) && \
+    ln -s /data1/lib/etcd /var/lib/etcd
+ls -l /var/lib/etcd
+```
+
+
+
+### 3.3 安装容器运行时
+
+```bash
+CONTAINERD_VERSION=1.2.0-213.p04.ky10
+yum info containerd-${CONTAINERD_VERSION}
+yum install -y containerd-${CONTAINERD_VERSION}
+
+containerd --version
+
+apt-mark hold containerd
+apt-mark showhold
+dpkg -l | grep containerd
+
+# 替换 ctr 运行时
+mkdir -p /etc/containerd
+containerd config default > /etc/containerd/config.toml-default
+cp /etc/containerd/config.toml-default /etc/containerd/config.toml
+
+sed -i 's#sandbox_image.*$#sandbox_image = "hub.8ops.top/google_containers/pause:3.10.1"#' /etc/containerd/config.toml  
+sed -i 's#SystemdCgroup = false#SystemdCgroup = true#' /etc/containerd/config.toml 
+grep -P 'sandbox_image|SystemdCgroup' /etc/containerd/config.toml  
+sed -i '/.registry.mirrors/a \        [plugins."io.containerd.grpc.v1.cri".registry.mirrors."hub.8ops.top"]\n          endpoint = ["https://hub.8ops.top"]' /etc/containerd/config.toml
+sed -i '/.registry.configs/a \         [plugins."io.containerd.grpc.v1.cri".registry.configs."hub.8ops.top".tls]\n          insecure_skip_verify = true ' /etc/containerd/config.toml
+systemctl restart containerd
+systemctl status containerd
+```
+
+
+
+> 番外
+
+```bash
+yum repolist all
+yum --enablerepo=docker-ce-stable info containerd.io
+yum --showduplicates list containerd.io --all
+
+CONTAINERD_VERSION=2.2.0-2.el10
+yum info containerd.io-${CONTAINERD_VERSION} --enablerepo=docker-ce-stable
+yum install -y containerd.io-${CONTAINERD_VERSION} --enablerepo=docker-ce-stable # --allowerasing
+
+containerd version
+containerd: /usr/lib64/libc.so.6: version `GLIBC_2.32' not found (required by containerd)
+containerd: /usr/lib64/libc.so.6: version `GLIBC_2.34' not found (required by containerd)
+yum erase containerd -y
+
+# 查看当前 glibc 版本
+rpm -q glibc
+# 或
+ldd --version
+
+# 检查 containerd 二进制需要哪些 GLIBC 符号（如果你已下载容器运行时二进制）
+readelf -V /usr/local/bin/containerd 2>/dev/null || readelf -V $(which containerd) 2>/dev/null
+
+# 或用 strings（更直观地查找符号）
+strings $(which containerd) | grep GLIBC || true
+
 
 yum info kubectl --disableexcludes=kubernetes
 yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
 
-yum repolist all
-yum --enablerepo=docker-ce-stable info containerd
 ```
 
 

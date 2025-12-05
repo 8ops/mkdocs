@@ -239,6 +239,30 @@ location / {
 }
 ```
 
+
+
+### 2.7 htpasswd 
+
+```bash
+apt-get install apache2-utils # For Debian/Ubuntu
+# OR
+yum install httpd-tools # For RHEL/CentOS
+
+htpasswd -c /etc/nginx/.htpasswd your_username
+
+htpasswd /etc/nginx/.htpasswd another_username
+
+    location /protected_path {
+        auth_basic "Restricted Area";
+        auth_basic_user_file /etc/nginx/.htpasswd;
+        # Other directives for this location
+    }
+```
+
+
+
+
+
 ## 三、RTMP
 
  自建直播
