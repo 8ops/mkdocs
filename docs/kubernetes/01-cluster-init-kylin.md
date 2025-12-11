@@ -104,6 +104,7 @@ sed -i 's#SystemdCgroup = false#SystemdCgroup = true#' /etc/containerd/config.to
 grep -P 'sandbox_image|SystemdCgroup' /etc/containerd/config.toml  
 sed -i '/.registry.mirrors/a \        [plugins."io.containerd.grpc.v1.cri".registry.mirrors."hub.8ops.top"]\n          endpoint = ["https://hub.8ops.top"]' /etc/containerd/config.toml
 sed -i '/.registry.configs/a \         [plugins."io.containerd.grpc.v1.cri".registry.configs."hub.8ops.top".tls]\n          insecure_skip_verify = true ' /etc/containerd/config.toml
+
 systemctl restart containerd
 systemctl status containerd
 ```
@@ -151,13 +152,13 @@ mkdir -p /opt/kubernetes && cd /opt/kubernetes
 
 kubeadm config print init-defaults > kubeadm-init.yaml-${KUBE_VERSION}-default
 cp kubeadm-init.yaml-${KUBE_VERSION}-default kubeadm-init.yaml-${KUBE_VERSION}
-kubeadm init --config kubeadm-init.yaml-${KUBE_VERSION} --upload-certs -v 5
-# https://books.8ops.top/attachment/kubernetes/kubeadm-init.yaml-v1.34.1
 
 kubeadm config images list
-kubeadm config images list --config kubeadm-init.yaml
-kubeadm config images pull --config kubeadm-init.yaml
+kubeadm config images list --config kubeadm-init.yaml-${KUBE_VERSION}
+kubeadm config images pull --config kubeadm-init.yaml-${KUBE_VERSION}
 
+# kubeadm init --config kubeadm-init.yaml-${KUBE_VERSION} --upload-certs -v 5
+# https://books.8ops.top/attachment/kubernetes/kubeadm-init.yaml-v1.34.1
 kubeadm init --config kubeadm-init.yaml --upload-certs
 
 mkdir -p ~/.kube && ln -s /etc/kubernetes/admin.conf ~/.kube/config 
@@ -220,12 +221,10 @@ kubectl -n kube-system edit cm kube-proxy
 
 ## 三、Kylin
 
-4.19.90-89.17.v2401.ky10.x86_64
-
-| Kylin | 发布时间 | kernel version |
-| ----- | -------- | -------------- |
-| V10   | 2024     | 4.19.90        |
-| V11   | 2025     | 6.6            |
+| Kylin | 发布时间 | kernel short version | kernel version                  |
+| ----- | -------- | -------------------- | ------------------------------- |
+| V10   | 2024     | 4.19.90              | 4.19.90-89.17.v2401.ky10.x86_64 |
+| V11   | 2025     | 6.6.0                | 6.6.0-32.7.v2505.ky11.x86_64    |
 
 
 
@@ -264,26 +263,27 @@ ls -l /var/lib/etcd
 ### 3.3 安装容器运行时
 
 ```bash
-CONTAINERD_VERSION=1.2.0-213.p04.ky10
-yum info containerd-${CONTAINERD_VERSION}
-yum install -y containerd-${CONTAINERD_VERSION}
+# 类CentOS系统
+CONTAINERD_VERSION=2.2.0
+yum info containerd.io-${CONTAINERD_VERSION}
+yum install -y containerd.io-${CONTAINERD_VERSION}
 
 containerd --version
-
-apt-mark hold containerd
-apt-mark showhold
-dpkg -l | grep containerd
 
 # 替换 ctr 运行时
 mkdir -p /etc/containerd
 containerd config default > /etc/containerd/config.toml-default
 cp /etc/containerd/config.toml-default /etc/containerd/config.toml
 
-sed -i 's#sandbox_image.*$#sandbox_image = "hub.8ops.top/google_containers/pause:3.10.1"#' /etc/containerd/config.toml  
+sed -i 's#registry.k8s.io/pause:#hub.8ops.top/google_containers/pause:#' /etc/containerd/config.toml
 sed -i 's#SystemdCgroup = false#SystemdCgroup = true#' /etc/containerd/config.toml 
-grep -P 'sandbox_image|SystemdCgroup' /etc/containerd/config.toml  
-sed -i '/.registry.mirrors/a \        [plugins."io.containerd.grpc.v1.cri".registry.mirrors."hub.8ops.top"]\n          endpoint = ["https://hub.8ops.top"]' /etc/containerd/config.toml
-sed -i '/.registry.configs/a \         [plugins."io.containerd.grpc.v1.cri".registry.configs."hub.8ops.top".tls]\n          insecure_skip_verify = true ' /etc/containerd/config.toml
+grep -P 'sandbox |SystemdCgroup' /etc/containerd/config.toml  	
+
+yum install -y ca-certificates
+curl -s -o /etc/pki/ca-trust/source/anchors/xx.crt http://m.8ops.top/cert/xx.crt
+md5sum /etc/pki/ca-trust/source/anchors/xx.crt
+update-ca-trust extract
+
 systemctl restart containerd
 systemctl status containerd
 ```
@@ -301,7 +301,7 @@ CONTAINERD_VERSION=2.2.0-2.el10
 yum info containerd.io-${CONTAINERD_VERSION} --enablerepo=docker-ce-stable
 yum install -y containerd.io-${CONTAINERD_VERSION} --enablerepo=docker-ce-stable # --allowerasing
 
-containerd version
+containerd version # v10 会报下面的错误
 containerd: /usr/lib64/libc.so.6: version `GLIBC_2.32' not found (required by containerd)
 containerd: /usr/lib64/libc.so.6: version `GLIBC_2.34' not found (required by containerd)
 yum erase containerd -y
@@ -317,13 +317,87 @@ readelf -V /usr/local/bin/containerd 2>/dev/null || readelf -V $(which container
 # 或用 strings（更直观地查找符号）
 strings $(which containerd) | grep GLIBC || true
 
-
 yum info kubectl --disableexcludes=kubernetes
 yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
 
+systemctl restart containerd && systemctl restart kubelet
 ```
 
 
+
+
+
+### 3.4 安装 kube 环境
+
+```bash
+# kubeadm
+yum --showduplicates list kubeadm --all --disableexcludes=kubernetes
+KUBERNETES_VERSION=1.34.2
+yum install -y kubeadm-${KUBERNETES_VERSION} kubectl-${KUBERNETES_VERSION} kubelet-${KUBERNETES_VERSION} \
+  --disableexcludes=kubernetes
+
+rpm -qa | grep kube
+
+# 用于运行 crictl
+cat > /etc/crictl.yaml <<EOF
+runtime-endpoint: unix:///run/containerd/containerd.sock
+image-endpoint: unix:///run/containerd/containerd.sock
+timeout: 10
+debug: false
+EOF
+
+systemctl restart containerd
+crictl images
+crictl ps -a
+
+# 初始集群（仅需要在其中一台 control-plane 节点操作）
+export KUBE_VERSION=v1.34.2
+mkdir -p /opt/kubernetes && cd /opt/kubernetes
+
+kubeadm config print init-defaults > kubeadm-init.yaml-${KUBE_VERSION}-default
+cp kubeadm-init.yaml-${KUBE_VERSION}-default kubeadm-init.yaml-${KUBE_VERSION}
+
+kubeadm config images list
+kubeadm config images list --config kubeadm-init.yaml-${KUBE_VERSION}
+kubeadm config images pull --config kubeadm-init.yaml-${KUBE_VERSION}
+# registry.k8s.io/kube-apiserver:v1.34.3
+# registry.k8s.io/kube-controller-manager:v1.34.3
+# registry.k8s.io/kube-scheduler:v1.34.3
+# registry.k8s.io/kube-proxy:v1.34.3
+# registry.k8s.io/coredns/coredns:v1.12.1
+# registry.k8s.io/pause:3.10.1
+# registry.k8s.io/etcd:3.6.5-0
+
+# kubeadm init --config kubeadm-init.yaml-${KUBE_VERSION} --upload-certs -v 5
+kubeadm init --config kubeadm-init.yaml-${KUBE_VERSION} --upload-certs
+
+mkdir -p ~/.kube && ln -s /etc/kubernetes/admin.conf ~/.kube/config 
+
+# join control-plane
+kubeadm join 10.127.4.2:6443 --token abcdef.0123456789abcdef \
+    --discovery-token-ca-cert-hash sha256:65a25ce5f03aad42b7469b80d18c0dbdb09e2076fd64615190814583158fdbee \
+    --control-plane --certificate-key 154603190150de8244640c4f4cf53ce43ced2aceb43bd51baae139e0c4eb48e3
+
+# join work-node
+kubeadm join 10.127.4.2:6443 --token abcdef.0123456789abcdef \
+    --discovery-token-ca-cert-hash sha256:65a25ce5f03aad42b7469b80d18c0dbdb09e2076fd64615190814583158fdbee	
+```
+
+
+
+### 3.5 优化配置
+
+```bash
+# kylin 系统和软件源的特殊性
+systemctl enable containerd kubelet
+systemctl start containerd kubelet
+systemctl is-enabled containerd kubelet
+
+systemctl status containerd kubelet
+
+ls /usr/libexec/cni /opt/cni/bin/ # 若目录没有刚拷贝
+cp -a /usr/libexec/cni/* /opt/cni/bin/
+```
 
 
 
@@ -336,6 +410,11 @@ systemctl restart kubelet && sleep 5 && systemctl restart containerd
 kubectl taint nodes gat-devofc-xc-k8s-01 node-role.kubernetes.io/control-plane:NoSchedule-
 kubectl taint nodes gat-devofc-xc-k8s-02 node-role.kubernetes.io/control-plane:NoSchedule-
 kubectl taint nodes gat-devofc-xc-k8s-03 node-role.kubernetes.io/control-plane:NoSchedule-
+
+# 去除 control-plane 污点
+kubectl taint nodes gat-sangfor-xc-k8s-01 node-role.kubernetes.io/control-plane:NoSchedule-
+kubectl taint nodes gat-sangfor-xc-k8s-02 node-role.kubernetes.io/control-plane:NoSchedule-
+kubectl taint nodes gat-sangfor-xc-k8s-03 node-role.kubernetes.io/control-plane:NoSchedule-
 ```
 
 

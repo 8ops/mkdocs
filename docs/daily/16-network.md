@@ -53,7 +53,7 @@ ln -s frp_${FRP_VERSION}_linux_amd64 frp
 
 > frps.ini
 
-Deprecated
+[Reference](https://github.com/fatedier/frp/blob/dev/conf/legacy/frpc_legacy_full.ini)
 
 ```bash
 # config frps.ini

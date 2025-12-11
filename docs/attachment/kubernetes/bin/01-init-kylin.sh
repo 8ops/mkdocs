@@ -53,6 +53,7 @@ sysctl net.ipv4.ip_forward
 function op_source(){
 yum install -y yum-utils
 yum-config-manager --add-repo https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
+sed -i 's/$releasever/10/g' /etc/yum.repos.d/docker-ce.repo
 
 cat <<EOF | tee /etc/yum.repos.d/kubernetes.repo
 [kubernetes]
@@ -66,7 +67,21 @@ EOF
 }
 
 function op_package(){
-apt install -y -q apt-transport-https ca-certificates curl software-properties-common tree socat
+systemctl disable bluetooth || true
+systemctl disable NetworkManager || true
+systemctl disable NetworkManager-dispatcher || true
+systemctl disable NetworkManager-wait-online || true
+systemctl disable restorecond || true
+systemctl disable ModemManager || true
+systemctl disable rtkit-daemon || true
+systemctl disable accounts-daemon || true
+systemctl disable lightdm || true
+systemctl disable ukui-input-gather || true
+systemctl disable upower || true
+systemctl disable firewalld || true
+rm -f /usr/lib/systemd/system/ctrl-alt-del.target || true
+rm -f /etc/systemd/system/ctrl-alt-del.service || true
+systemctl daemon-reload
 }
 
 function op_kubectl(){
@@ -83,7 +98,7 @@ op_swap
 op_module
 op_sysctl
 op_source
-# op_package
+op_package
 op_kubectl
 
 printf '\n\n ---- Completed ---- \n'

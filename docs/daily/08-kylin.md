@@ -90,6 +90,26 @@ systemctl disable dbus-org.freedesktop.ModemManager1.service # 3G/4G Modem
 systemctl disable xinetd.service          # 老旧的超级守护进程
 systemctl disable rtkit-daemon.service    # 实时调度（桌面多媒体）
 
+# OR
+systemctl disable bluetooth || true
+systemctl disable restorecond || true
+systemctl disable ModemManager || true
+systemctl disable rtkit-daemon || true
+systemctl disable accounts-daemon || true
+systemctl disable lightdm || true
+systemctl disable ukui-input-gather || true
+systemctl disable upower || true
+systemctl disable firewalld || true
+systemctl disable kylin-kms-activation || true
+rm -f /usr/lib/systemd/system/ctrl-alt-del.target || true
+rm -f /etc/systemd/system/ctrl-alt-del.service || true
+systemctl daemon-reload
+
+# 停掉后会导致机器重启不挂载网卡
+systemctl enable NetworkManager || true
+systemctl enable NetworkManager-dispatcher || true
+systemctl enable NetworkManager-wait-online || true
+
 # 设置文件打开数
 cat >> /etc/security/limits.conf <<EOF
 * soft nofile 655350
