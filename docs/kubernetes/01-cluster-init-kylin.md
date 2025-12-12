@@ -643,7 +643,7 @@ curl -k -v -H "Host: echo.u3c.ai" https://10.101.11.244/echoserver
 
 ```bash
 # https://books.8ops.top/attachment/kubernetes/helm/kubernetes-dashboard.yaml-7.13.0
-INGRESS_NGINX_VERSION=4.13.3
+KUBERNETES_DASHBOARD_VERSION=7.13.0
 helm repo add kubernetes-dashboard https://kubernetes.github.io/dashboard/
 helm repo update
 helm search repo kubernetes-dashboard
@@ -656,25 +656,24 @@ helm install kubernetes-dashboard \
   --create-namespace \
   --version ${KUBERNETES_DASHBOARD_VERSION}
 
-kubectl create serviceaccount dashboard-guest -n kube-server
+kubectl create serviceaccount dashboard-ops -n kube-server
 
-kubectl create clusterrolebinding dashboard-guest-binding \
-  --clusterrole=view \
-  --serviceaccount=kube-server:dashboard-guest
+kubectl create clusterrolebinding dashboard-ops-binding \
+  --clusterrole=cluster-admin \
+  --serviceaccount=kube-server:dashboard-ops
   
 kubectl apply -f - <<EOF
 apiVersion: v1
 kind: Secret
 metadata:
-  name: dashboard-guest-secret
+  name: dashboard-ops-secret
   namespace: kube-server
   annotations:
-    kubernetes.io/service-account.name: dashboard-guest
+    kubernetes.io/service-account.name: dashboard-ops
 type: kubernetes.io/service-account-token
 EOF
 
-kubectl -n kube-server get secrets dashboard-guest-secret -o=jsonpath={.data.token} | base64 -d; echo
-
+kubectl -n kube-server get secrets dashboard-ops-secret -o=jsonpath={.data.token} | base64 -d; echo
 ```
 
 
@@ -737,4 +736,53 @@ helm upgrade --install elastic-single elastic/elasticsearch \
   --debug | tee /tmp/debug.out
 
 ```
+
+
+
+## 五、番外
+
+### 5.1 Endpoints升级
+
+`< 1.33 使用 Endpoints`
+
+```yaml
+# Endpoints
+- apiVersion: v1
+  kind: Endpoints
+  metadata:
+    name: haproxy
+    namespace: kube-server
+  subsets:
+  - addresses:
+    - ip: 10.127.4.2
+    ports:
+    - name: tcp
+      port: 9200
+      protocol: TCP
+```
+
+`> 1.33 使用 EndpointSlice`
+
+```yaml
+# EndpointSlice
+- apiVersion: discovery.k8s.io/v1
+  kind: EndpointSlice
+  addressType: IPv4
+  metadata:
+    name: haproxy
+    namespace: kube-server
+    labels:
+      kubernetes.io/service-name: haproxy
+  ports:
+  - name: tcp
+    port: 9200
+    protocol: TCP
+  endpoints:
+  - addresses:
+    - 10.127.4.2
+    conditions:
+      ready: true
+```
+
+
 
