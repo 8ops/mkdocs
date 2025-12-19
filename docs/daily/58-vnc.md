@@ -11,7 +11,7 @@ Ubuntu的VNC远程连接仅在本地登录桌面时可用，这通常与VNC服�
 
 ------
 
-### **解决方案**
+### 一、VNCServer
 
 #### 1. **配置VNC服务为独立进程（推荐）**
 
@@ -35,11 +35,24 @@ Ubuntu的VNC远程连接仅在本地登录桌面时可用，这通常与VNC服�
 
 ------
 
-### **补充说明**
+### **二、Xvnc-session**
 
-- **会话持久化**：若需保持桌面环境在无用户登录时运行，可配置`gnome-session`或`xfce4-session`自动启动。
-- **日志排查**：查看服务日志定位问题： `journalctl -u vncserver@:1.service -f`
+#### 1. **修复Xvnc-session脚本**
 
-------
+- **步骤1：备份并修改脚本** `sudo mv /etc/X11/Xvnc-session /etc/X11/Xvnc-session.bak sudo tee /etc/X11/Xvnc-session <<EOF #!/bin/sh unset SESSION_MANAGER unset DBUS_SESSION_BUS_ADDRESS export XKL_XMODMAP_DISABLE=1 export SHELL=/bin/bash [ -r $HOME/.Xresources ] && xrdb $HOME/.Xresources exec startxfce4  # 改用XFCE轻量桌面 vncconfig -iconic & EOF`**关键修改**：替换GNOME为XFCE桌面，并禁用会话管理器。
+- **步骤2：赋予执行权限** `sudo chmod +x /etc/X11/Xvnc-session`
 
-通过上述配置，VNC服务将独立于用户本地会话运行，实现无本地登录时的远程连接。若仍存在问题，请提供`systemctl status`和`netstat`输出进一步分析。
+#### 2. **安装轻量级桌面环境**
+
+- **安装XFCE** `sudo apt install xfce4 xfce4-goodies`
+- **验证xstartup文件** 确保用户目录下的`.vnc/xstartup`文件包含： `#!/bin/sh unset SESSION_MANAGER unset DBUS_SESSION_BUS_ADDRESS exec startxfce4`赋予权限： `chmod +x ~/.vnc/xstartup`
+
+#### 3. **修复字体与依赖库**
+
+- **安装必要字体包** `sudo apt install xfonts-75dpi xfonts-100dpi xfonts-base sudo ln -s /usr/share/fonts/X11 /usr/X11R6/lib/X11/fonts  # 创建字体软链接[2,12](@ref)`
+- **安装缺失的共享库** `sudo apt install pixman-1 pixman-1-dev libxfont2  # 解决symbol lookup error[7,13](@ref)`
+
+#### 4. **重建VNC服务配置**
+
+- **编辑systemd服务文件** `sudo systemctl edit vncserver@:1.service`确保配置如下（替换`vncuser`）： `[Service] Type=forking User=vncuser Group=vncuser ExecStart=/usr/bin/vncserver :1 -geometry 1920x1080 -localhost no ExecStop=/usr/bin/vncserver -kill :1 Environment=DISPLAY=:1`
+- **重载并重启服务** `sudo systemctl daemon-reload sudo systemctl restart vncserver@:1.service`
