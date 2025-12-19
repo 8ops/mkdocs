@@ -167,6 +167,7 @@ nav:
       - daily/55-highon-coffee.md
       - daily/56-proxyswitch.md
       - daily/57-lvm.md
+      - daily/58-vnc.md
   - Kubernetes:
     - 【快速搭建】: 
       - kubernetes/01-cluster-init.md
