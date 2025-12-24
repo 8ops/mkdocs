@@ -4,6 +4,8 @@
 
 ### 1.1 安装
 
+#### 1.1.1 CentOS
+
 ```bash
 # CentOS Linux release 7.5.1804 (Core)
 
@@ -108,15 +110,104 @@ echo 10.1.2.50 | \
     printf("\n")}'
     
 # 常用命令
-virsh list --all        查看所有虚拟机状态
-virsh start vm_name     开机 
-virsh shutdown vm_name  关机
-virsh destroy vm_name   强制关闭电源 
-virsh undefine vm_name  移除虚拟机
-virsh suspend vm_name   暂停虚拟机
-virsh resume vm_name    恢复虚拟机
-virsh autostart vm_name 设置随开机启动 # 生成成软链 /etc/libvirt/qemu/autostart/vm_server.xml 
-virsh autostart --disable vm_name 取消随开机启动
+virsh list --all        # 查看所有虚拟机状态
+virsh start vm_name     # 开机 
+virsh shutdown vm_name  # 关机
+virsh destroy vm_name   # 强制关闭电源 
+virsh undefine vm_name  # 移除虚拟机
+virsh suspend vm_name   # 暂停虚拟机
+virsh resume vm_name    # 恢复虚拟机
+virsh autostart vm_name # 设置随开机启动 # 生成成软链 /etc/libvirt/qemu/autostart/vm_server.xml 
+virsh autostart --disable vm_name # 取消随开机启动
+```
+
+
+
+#### 1.1.2 Ubuntu
+
+```bash
+# 网卡配置
+cat /etc/netplan/interface.yaml
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    ge1:
+      dhcp4: no
+      dhcp6: no
+      optional: true
+    ge2:
+      dhcp4: no
+      dhcp6: no
+      optional: true
+  bonds:
+    bond0:
+      interfaces: [ge2,ge1]
+      parameters:
+        mode: active-backup
+        mii-monitor-interval: 100
+      dhcp4: no
+      dhcp6: no
+  bridges:
+    br0:
+      interfaces: [bond0]
+      addresses: [10.101.9.40/24]
+      routes:
+        - to: default
+          via: 10.101.9.254
+      nameservers:
+        addresses: [10.101.9.252]
+        
+netplan apply
+
+ip link add br0 type bridge
+brctl addif br0 bond0
+
+# kvm
+apt install qemu-kvm libvirt-daemon-system bridge-utils virtinst libvirt-clients -y
+
+# 查看系统版本代号
+lsb_release -cs
+
+# cloudstack is ok
+echo "
+deb [arch=amd64] https://download.cloudstack.org/ubuntu noble 4.22" | tee /etc/apt/sources.list.d/cloudstack.list
+wget -qO - http://download.cloudstack.org/release.asc | sudo apt-key add -
+
+apt update
+apt install cloudstack-management cloudstack-agent cs -y
+
+cat /etc/cloudstack/agent/agent.properties
+hypervisor.type=kvm
+libvirt.vif.driver=com.cloud.hypervisor.kvm.resource.DirectVifDriver
+
+systemctl restart cloudstack-agent
+
+# CloudStack UI 部署需先安装管理服务器，其核心组件为 cloudstack-management（含UI）。
+CREATE USER 'cloud'@'localhost' IDENTIFIED BY 'cloud';
+FLUSH PRIVILEGES;
+cloudstack-setup-databases cloud:passport@localhost --deploy-as=root:jifenpay
+cloudstack-setup-management
+
+systemctl restart cloudstack-management
+
+cat /etc/environment
+JAVA_HOME="/usr/lib/jvm/java-17-openjdk-amd64" # add
+
+# http://10.101.9.40:8080/client 访问UI，默认账号 admin/password
+
+# 10.101.9.8/29 (8-15)【预占用】测试CloudStack
+
+qemu-img create -f qcow2 /data1/lib/libvirt/qemu/template-ubuntu24.04.qcow2 50G
+
+# 示例：通过CLI创建虚拟机
+cloudstack createVirtualMachine \
+  --name ubuntu-vm \
+  --template ubuntu-2404-template \
+  --service-offering default \
+  --network cloudbr0 \
+  --diskoffering default
+
 ```
 
 
@@ -363,6 +454,59 @@ virsh start PRD-KUBENODE-103
 virsh console PRD-KUBENODE-103
 xfs_growfs /dev/sda
 ```
+
+
+
+### 1.5 Console
+
+```bash
+# 1，VM 中配置修改GRUB配置。在虚拟机内编辑/etc/default/grub，添加console=ttyS0参数：
+GRUB_CMDLINE_LINUX_DEFAULT="quiet splash console=ttyS0"
+
+# 更新GRUB并重启（此步骤确保内核输出重定向到ttyS0串口）
+update-grub
+reboot
+
+# 2，启用串口设备。在虚拟机的XML配置文件中（通过virsh edit <虚拟机名>编辑），添加以下内容（确保虚拟机分配了串口资源）
+<serial type='pty'>
+  <target port='0'/>
+</serial>
+<console type='pty'>
+  <target type='serial' port='0'/>
+</console>
+
+# 3，创建Systemd服务。Ubuntu 24.04默认使用Systemd，需创建自定义服务启用agetty
+tee /etc/systemd/system/getty@ttyS0.service <<EOF
+[Unit]
+Description=Serial Getty on %I
+Documentation=man:agetty(8) man:systemd-getty-generator(8)
+After=systemd-user-sessions.service plymouth-quit-wait.service
+
+[Service]
+ExecStart=-/sbin/agetty --keep-baud 115200,38400,9600 ttyS0 $TERM
+Type=idle
+Restart=always
+UtmpIdentifier=%I
+TTYPath=/dev/%I
+TTYReset=yes
+TTYVHangup=yes
+KillMode=process
+IgnoreSIGPIPE=no
+SendSIGHUP=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# 4，允许root登录。编辑/etc/securetty，添加ttyS0
+echo "ttyS0" | tee -a /etc/securetty
+
+# 5，尝试重新连接。在宿主机执行
+virsh console template-ubuntu24.04
+
+```
+
+
 
 
 
