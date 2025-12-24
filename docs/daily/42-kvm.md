@@ -208,6 +208,7 @@ cloudstack createVirtualMachine \
   --network cloudbr0 \
   --diskoffering default
 
+# TODO 添加主机
 ```
 
 
