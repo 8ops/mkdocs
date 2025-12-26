@@ -172,6 +172,7 @@ nav:
     - 【快速搭建】: 
       - kubernetes/01-cluster-init.md
       - kubernetes/01-cluster-init-flannel.md
+      - kubernetes/01-cluster-init-flannel-1.35.md
       - kubernetes/01-cluster-init-cilium.md
       - kubernetes/01-cluster-init-calico.md
       - kubernetes/01-cluster-init-calico-1.31.md

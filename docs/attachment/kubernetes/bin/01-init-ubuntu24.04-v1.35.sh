@@ -56,18 +56,32 @@ sysctl net.ipv4.ip_forward
 function op_source(){
 apt install -y -q gnupg
 
-cat > /etc/apt/sources.list <<EOF
-deb https://mirrors.aliyun.com/ubuntu/ noble main restricted universe multiverse
-deb-src https://mirrors.aliyun.com/ubuntu/ noble main restricted universe multiverse
-deb https://mirrors.aliyun.com/ubuntu/ noble-security main restricted universe multiverse
-deb-src https://mirrors.aliyun.com/ubuntu/ noble-security main restricted universe multiverse
-deb https://mirrors.aliyun.com/ubuntu/ noble-updates main restricted universe multiverse
-deb-src https://mirrors.aliyun.com/ubuntu/ noble-updates main restricted universe multiverse
-# deb https://mirrors.aliyun.com/ubuntu/ noble-proposed main restricted universe multiverse
-# deb-src https://mirrors.aliyun.com/ubuntu/ noble-proposed main restricted universe multiverse
-deb https://mirrors.aliyun.com/ubuntu/ noble-backports main restricted universe multiverse
-deb-src https://mirrors.aliyun.com/ubuntu/ noble-backports main restricted universe multiverse
-EOF
+# cat > /etc/apt/sources.list.d/ubuntu.sources <<EOF
+# Types: deb
+# URIs: https://mirrors.aliyun.com/ubuntu/
+# Suites: noble noble-updates noble-backports
+# Components: main restricted universe multiverse
+# Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+# 
+# Types: deb
+# URIs: http://security.ubuntu.com/ubuntu/
+# Suites: noble-security
+# Components: main restricted universe multiverse
+# Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+# EOF
+
+# cat > /etc/apt/sources.list <<EOF
+# deb https://mirrors.aliyun.com/ubuntu/ noble main restricted universe multiverse
+# deb-src https://mirrors.aliyun.com/ubuntu/ noble main restricted universe multiverse
+# deb https://mirrors.aliyun.com/ubuntu/ noble-security main restricted universe multiverse
+# deb-src https://mirrors.aliyun.com/ubuntu/ noble-security main restricted universe multiverse
+# deb https://mirrors.aliyun.com/ubuntu/ noble-updates main restricted universe multiverse
+# deb-src https://mirrors.aliyun.com/ubuntu/ noble-updates main restricted universe multiverse
+# # deb https://mirrors.aliyun.com/ubuntu/ noble-proposed main restricted universe multiverse
+# # deb-src https://mirrors.aliyun.com/ubuntu/ noble-proposed main restricted universe multiverse
+# deb https://mirrors.aliyun.com/ubuntu/ noble-backports main restricted universe multiverse
+# deb-src https://mirrors.aliyun.com/ubuntu/ noble-backports main restricted universe multiverse
+# EOF
 export KUBE_VERSION_FOR_APT=v1.35
 mkdir -p /etc/apt/keyrings
 curl -kfsSL https://mirrors.aliyun.com/kubernetes-new/core/stable/${KUBE_VERSION_FOR_APT}/deb/Release.key | \
