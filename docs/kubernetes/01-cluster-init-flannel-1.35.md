@@ -1,4 +1,4 @@
-# Quick Start - Flannel
+# Quick Start - Flannel - v1.35.1
 
 [Reference](01-cluster-init.md)
 

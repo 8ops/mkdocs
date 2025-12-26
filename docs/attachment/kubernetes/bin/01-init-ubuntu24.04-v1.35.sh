@@ -56,6 +56,7 @@ sysctl net.ipv4.ip_forward
 function op_source(){
 apt install -y -q gnupg
 
+# # ubuntu
 # cat > /etc/apt/sources.list.d/ubuntu.sources <<EOF
 # Types: deb
 # URIs: https://mirrors.aliyun.com/ubuntu/
@@ -82,11 +83,23 @@ apt install -y -q gnupg
 # deb https://mirrors.aliyun.com/ubuntu/ noble-backports main restricted universe multiverse
 # deb-src https://mirrors.aliyun.com/ubuntu/ noble-backports main restricted universe multiverse
 # EOF
+
+# kubernetes
 export KUBE_VERSION_FOR_APT=v1.35
 mkdir -p /etc/apt/keyrings
 curl -kfsSL https://mirrors.aliyun.com/kubernetes-new/core/stable/${KUBE_VERSION_FOR_APT}/deb/Release.key | \
     gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
 echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://mirrors.aliyun.com/kubernetes-new/core/stable/${KUBE_VERSION_FOR_APT}/deb/ /" | tee /etc/apt/sources.list.d/kubernetes.list
+
+# containerd.io
+apt install ca-certificates curl gnupg
+curl -fsSL https://mirrors.aliyun.com/docker-ce/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+chmod a+r /etc/apt/keyrings/docker.gpg
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://mirrors.aliyun.com/docker-ce/linux/ubuntu \
+  "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | \
+  tee /etc/apt/sources.list.d/docker.list
+
 apt update
 }
 
