@@ -55,7 +55,7 @@
 ### 2.1 初始化环境
 
 ```bash
-curl -s https://books.8ops.top/attachment/kubernetes/bin/01-init-v1.34.sh | bash
+curl -s https://books.8ops.top/attachment/kubernetes/bin/01-init-ubuntu20.04-v1.34.sh | bash
 ```
 
 
@@ -231,7 +231,7 @@ kubectl -n kube-system edit cm kube-proxy
 ### 3.1 初始化环境
 
 ```bash
-curl -s https://books.8ops.top/attachment/kubernetes/bin/01-init-kylin.sh | bash
+curl -s https://books.8ops.top/attachment/kubernetes/bin/01-init-kylin11-v1.34.sh | bash
 ```
 
 
