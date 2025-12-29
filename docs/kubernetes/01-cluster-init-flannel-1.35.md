@@ -144,7 +144,7 @@ crictl rmi hub.8ops.top/google_containers/pause:3.10.1
 # systemd-resolved 会干扰解析
 systemctl stop systemd-resolved && systemctl disable systemd-resolved
 sed -i -e '/^nameserver /i\nameserver 10.101.9.252' -e '/^nameserver 127.0.0.53/d' /etc/resolv.conf
-
+cat /etc/resolv.conf && ping -c 2 hub.8ops.top
 ```
 
 
