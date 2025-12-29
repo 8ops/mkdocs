@@ -137,10 +137,6 @@ echo 'ACTION=="add|change", SUBSYSTEM=="block", ENV{ID_FS_USAGE}!="crypto", GOTO
 echo 'LABEL="persistent_storage_end"' | tee -a /etc/udev/rules.d/99-persistent-storage.rules
 udevadm control --reload-rules && udevadm trigger
 
-# trust ca
-mkdir -p /etc/containerd/certs.d/registry.wuxingdev.cn
-curl -k -s -o /etc/containerd/certs.d/registry.wuxingdev.cn/ca.crt https://filestorage.wuxingdev.cn/ops/GuanaitongCA.crt
-
 }
 
 ########################################################################################
