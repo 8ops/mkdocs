@@ -83,23 +83,68 @@ ls -l /var/lib/etcd
 ### 2.3 安装容器运行时
 
 ```bash
-CONTAINERD_VERSION=1.5.9-0ubuntu1~20.04.4
-apt install -y containerd=${CONTAINERD_VERSION}
+CONTAINERD_VERSION=2.2.1-1~ubuntu.24.04~noble
+apt install -y containerd.io=${CONTAINERD_VERSION}
 
-apt-mark hold containerd
+apt-mark hold containerd.io
 apt-mark showhold
-dpkg -l | grep containerd
+dpkg -l | grep containerd.io
 
 # 替换 ctr 运行时
 mkdir -p /etc/containerd
 containerd config default > /etc/containerd/config.toml-default
 cp /etc/containerd/config.toml-default /etc/containerd/config.toml
 
-sed -i 's#sandbox_image.*$#sandbox_image = "hub.8ops.top/google_containers/pause:3.6"#' /etc/containerd/config.toml  
-sed -i 's#SystemdCgroup = false#SystemdCgroup = true#' /etc/containerd/config.toml 
-grep -P 'sandbox_image|SystemdCgroup' /etc/containerd/config.toml  
-systemctl restart containerd
-systemctl status containerd
+sed -i 's#registry.k8s.io/pause:3.10.1#hub.8ops.top/google_containers/pause:3.10.1#' /etc/containerd/config.toml
+sed -i 's#SystemdCgroup = false#SystemdCgroup = true#' /etc/containerd/config.toml
+sed -i 's#/etc/containerd/certs.d:/etc/docker/certs.d#/etc/containerd/certs.d#' /etc/containerd/config.toml
+grep -P 'pause:|SystemdCgroup' /etc/containerd/config.toml
+
+systemctl restart containerd && systemctl status containerd
+```
+
+
+
+> 受信私有CA
+
+```bash
+# 1
+mkdir -p /etc/containerd/certs.d/hub.8ops.top
+cp ca.crt /etc/containerd/certs.d/hub.8ops.top/ca.crt 
+
+systemctl restart containerd && systemctl status containerd
+
+crictl pull hub.8ops.top/google_containers/pause:3.10.1
+
+# 2
+mkdir -p /etc/containerd/certs.d/hub.8ops.top
+cat > /etc/containerd/certs.d/hub.8ops.top/hosts.toml <<EOF
+server = "https://hub.8ops.top"
+
+[host."https://hub.8ops.top"]
+  capabilities = ["pull", "resolve", "push"]
+  skip_verify = true
+EOF
+
+# 临时验证
+ctr -n k8s.io images pull \
+  hub.8ops.top/google_containers/pause:3.10.1
+ctr -n k8s.io images pull \
+  --hosts-dir /etc/containerd/certs.d \
+  hub.8ops.top/google_containers/pause:3.10.1
+ctr -n k8s.io images rm hub.8ops.top/google_containers/pause:3.10.1
+ctr -n k8s.io images ls
+
+systemctl restart containerd && systemctl status containerd
+
+crictl pull hub.8ops.top/google_containers/pause:3.10.1
+crictl img
+crictl rmi hub.8ops.top/google_containers/pause:3.10.1
+
+# systemd-resolved 会干扰解析
+systemctl stop systemd-resolved && systemctl disable systemd-resolved
+sed -i -e '/^nameserver /i\nameserver 10.101.9.252' -e '/^nameserver 127.0.0.53/d' /etc/resolv.conf
+
 ```
 
 
@@ -108,7 +153,7 @@ systemctl status containerd
 
 ```bash
 # kubeadm
-KUBERNETES_VERSION=1.25.0-00
+KUBERNETES_VERSION=1.35.0-1.1
 apt install -y -q kubeadm=${KUBERNETES_VERSION} kubectl=${KUBERNETES_VERSION} kubelet=${KUBERNETES_VERSION}
 
 apt-mark hold kubeadm kubectl kubelet
@@ -129,11 +174,23 @@ crictl ps -a
 
 # 初始集群（仅需要在其中一台 control-plane 节点操作）
 # config
-kubeadm config print init-defaults > kubeadm-init.yaml-default
+export KUBE_VERSION=v1.35.0
+mkdir -p /opt/kubernetes && cd /opt/kubernetes
+
+kubeadm config print init-defaults > kubeadm-init.yaml-${KUBE_VERSION}-default
+cp kubeadm-init.yaml-${KUBE_VERSION}-default kubeadm-init.yaml-${KUBE_VERSION}
 
 kubeadm config images list
 kubeadm config images list --config kubeadm-init.yaml
 kubeadm config images pull --config kubeadm-init.yaml
+
+# registry.k8s.io/kube-apiserver:v1.35.0
+# registry.k8s.io/kube-controller-manager:v1.35.0
+# registry.k8s.io/kube-scheduler:v1.35.0
+# registry.k8s.io/kube-proxy:v1.35.0
+# registry.k8s.io/coredns/coredns:v1.13.1
+# registry.k8s.io/pause:3.10.1
+# registry.k8s.io/etcd:3.6.6-0
 
 kubeadm init --config kubeadm-init.yaml --upload-certs
 

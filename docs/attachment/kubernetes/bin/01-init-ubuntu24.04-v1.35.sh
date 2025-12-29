@@ -104,7 +104,7 @@ apt update
 }
 
 function op_package(){
-apt install -y -q apt-transport-https ca-certificates curl software-properties-common tree socat
+apt install -y -q apt-transport-https ca-certificates curl software-properties-common tree socat vim iputils-ping
 systemctl disable --now \
   plymouth-quit-wait.service \
   plymouth-quit.service \
@@ -116,6 +116,7 @@ systemctl disable --now snapd.apparmor.service snapd.seeded.service
 systemctl disable --now bluetooth.service
 systemctl disable --now cups.service cups.socket
 systemctl disable --now apt-daily.timer apt-daily-upgrade.timer
+systemctl disable --now systemd-resolved.service
 }
 
 function op_kubectl(){
@@ -135,6 +136,11 @@ EOF
 echo 'ACTION=="add|change", SUBSYSTEM=="block", ENV{ID_FS_USAGE}!="crypto", GOTO="persistent_storage_end"' | tee /etc/udev/rules.d/99-persistent-storage.rules
 echo 'LABEL="persistent_storage_end"' | tee -a /etc/udev/rules.d/99-persistent-storage.rules
 udevadm control --reload-rules && udevadm trigger
+
+# trust ca
+mkdir -p /etc/containerd/certs.d/registry.wuxingdev.cn
+curl -k -s -o /etc/containerd/certs.d/registry.wuxingdev.cn/ca.crt https://filestorage.wuxingdev.cn/ops/GuanaitongCA.crt
+
 }
 
 ########################################################################################
