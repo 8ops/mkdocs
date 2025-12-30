@@ -1,4 +1,4 @@
-# Quick Start - Kylin
+# Quick Start - Kylin - 1.34
 
 [Reference](01-cluster-init.md)
 

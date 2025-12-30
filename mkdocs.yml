@@ -174,9 +174,10 @@ nav:
       - kubernetes/01-cluster-init-flannel.md
       - kubernetes/01-cluster-init-flannel-1.35.md
       - kubernetes/01-cluster-init-cilium.md
+      - kubernetes/01-cluster-init-cilium-1.35.md
       - kubernetes/01-cluster-init-calico.md
       - kubernetes/01-cluster-init-calico-1.31.md
-      - kubernetes/01-cluster-init-kylin.md
+      - kubernetes/01-cluster-init-kylin-1.34.md
       - kubernetes/02-cluster-reset.md
     - 【升级版本】:
       - kubernetes/06-cluster-renew-certs.md

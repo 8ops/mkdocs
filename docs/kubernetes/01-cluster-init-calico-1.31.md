@@ -1,4 +1,4 @@
-# Quick Start - Calico - v1.31.1
+# Quick Start - Calico - 1.31
 
 [Init](01-cluster-init-calico.md)
 

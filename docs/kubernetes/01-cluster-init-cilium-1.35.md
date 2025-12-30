@@ -1,4 +1,4 @@
-# Quick Start - Flannel - 1.35
+# Quick Start - Cilium - 1.35
 
 [Reference](01-cluster-init.md)
 
@@ -31,9 +31,9 @@
 | control-plane | K-KUBE-LAB-01  | 10.101.11.240 |
 | control-plane | K-KUBE-LAB-02  | 10.101.11.114 |
 | control-plane | K-KUBE-LAB-03  | 10.101.11.154 |
-| work-node     | K-KUBE-LAB-08  | 10.101.11.196 |
-| work-node     | K-KUBE-LAB-11  | 10.101.11.157 |
-| work-node     | K-KUBE-LAB-012 | 10.101.11.250 |
+| worker-node   | K-KUBE-LAB-08  | 10.101.11.196 |
+| worker-node   | K-KUBE-LAB-11  | 10.101.11.157 |
+| worker-node   | K-KUBE-LAB-012 | 10.101.11.250 |
 
 
 
@@ -289,11 +289,179 @@ scheduler: {}
 
 ### 2.5 优化配置
 
+*required*
+
+#### 2.5.1 cgroup2
+
+为什么必须升级到 cgroup v2
+
+- v1.25+ **官方默认推荐 cgroup v2**
+
+- systemd 已统一使用 v2
+
+- CPU / Memory / IO 调度更精准
+
+- eBPF、Cilium、Sidecar 性能显著提升
+
+```bash
+# 1，检测是否支持cgroup2（cgroupfs → v1、cgroup2fs → v2）
+stat -fc %T /sys/fs/cgroup
+
+# 2，OS 启用 cgroup v2
+sed -i 's#GRUB_CMDLINE_LINUX=""#GRUB_CMDLINE_LINUX="systemd.unified_cgroup_hierarchy=1 cgroup_no_v1=all"#' /etc/default/grub
+grep GRUB_CMDLINE_LINUX= /etc/default/grub
+update-grub
+reboot
+
+# 3，containerd 配置
+# /etc/containerd/config.toml
+[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
+  SystemdCgroup = true
+systemctl restart containerd
+
+# 4，kubelet 启用 systemd cgroup driver
+# /var/lib/kubelet/config.yaml
+cgroupDriver: systemd
+
+# 5，验证
+kubectl describe node | grep -i Cgroup
+ls /sys/fs/cgroup/kubepods.slice/
+```
+
+
+
+#### 2.5.2 nftables
+
+iptables → nftables 背景
+
+- Ubuntu 22.04 默认 **iptables-nft**
+- kube-proxy 支持 nftables backend
+- iptables-legacy 与 nft 混用 = **灾难**
+
+```bash
+# 1，统一系统防火墙后端
+update-alternatives --set iptables /usr/sbin/iptables-nft
+update-alternatives --set ip6tables /usr/sbin/ip6tables-nft
+update-alternatives --set arptables /usr/sbin/arptables-nft
+update-alternatives --set ebtables /usr/sbin/ebtables-nft
+
+update-alternatives --list iptables
+
+update-alternatives --display iptables
+
+iptables -V
+iptables v1.8.10 (nf_tables) # v1.8.0+ 自动识别 nf_tables
+
+# 2，kube-proxy nftables 模式
+kubectl -n kube-system edit configmap kube-proxy
+---
+kubeletConfiguration:
+  cgroupDriver: systemd
+---
+apiVersion: kubeproxy.config.k8s.io/v1alpha1
+kind: KubeProxyConfiguration
+mode: "iptables"
+iptables:
+  backend: "nft"
+
+# 3，nftables 基础放行规则（示例）
+table inet filter {
+  chain input {
+    type filter hook input priority 0;
+    policy drop;
+
+    iif lo accept
+    ct state established,related accept
+
+    tcp dport {22, 6443, 10250, 10257, 10259} accept
+    udp dport {4789} accept   # CNI VXLAN（如 Flannel）
+  }
+}
+
+# v1.35 使用 Cilium（eBPF 模式）
+# → 几乎不依赖 iptables/nftables，性能和稳定性最好。
+
+kubectl apply -f kube-proxy.yaml
+kubectl -n kube-system rollout restart ds kube-proxy
+
+# 4，应用后验证
+# 4.1 
+kubectl -n kube-system logs ds/kube-proxy | grep nft
+# Using iptables-nft backend
+
+# 4.2 nftables 规则是否存在（确认在使用nftables的判断依据）
+nft list ruleset | grep KUBE-SERVICES
+
+# 4.3 确认未混用 legacy
+iptables-legacy -L
+
+```
+
+与 CNI 的关系（重点）
+
+| CNI        | nftables 要求               |
+| ---------- | --------------------------- |
+| Flannel    | VXLAN UDP 4789              |
+| Calico     | BGP TCP 179                 |
+| Cilium     | **无需 kube-proxy（eBPF）** |
+| MetalLB L2 | ARP / NDP 放行              |
+
+
+
+kube-proxy ConfigMap 关键配置
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kube-proxy
+  namespace: kube-system
+  labels:
+    app: kube-proxy
+data:
+  config.conf: |-
+    apiVersion: kubeproxy.config.k8s.io/v1alpha1
+    kind: KubeProxyConfiguration
+
+    mode: iptables
+
+    bindAddress: 0.0.0.0
+    bindAddressHardFail: false
+
+    clusterCIDR: 172.19.0.0/16
+
+    iptables:
+      masqueradeAll: false
+      masqueradeBit: 14
+      minSyncPeriod: 1s
+      syncPeriod: 30s              # ✅ 降低 nft churn
+
+    conntrack:
+      maxPerCore: 32768            # ✅ 适合 6 节点
+      min: 131072
+      tcpEstablishedTimeout: 24h
+      tcpCloseWaitTimeout: 1h
+
+    configSyncPeriod: 30s          # ✅ 从 5s → 30s
+
+    clientConnection:
+      kubeconfig: /var/lib/kube-proxy/kubeconfig.conf
+      qps: 0
+      burst: 0
+
+    metricsBindAddress: 127.0.0.1:10249
+    healthzBindAddress: 0.0.0.0:10256
+
+```
+
+
+
 *optional*
 
 ```bash
 # kubelet
-kubectl -n kube-system edit cm kubelet-config
+kubectl -n kube-system get  configmap kubelet-config -o yaml > configmap-kubelet-config.yaml
+kubectl -n kube-system edit configmap kubelet-config
 ……
     # GC
     imageGCLowThresholdPercent: 40
@@ -314,63 +482,61 @@ kubectl -n kube-system edit cm kubelet-config
 kind: ConfigMap                            # relative
 ……
 
-# kube-proxy 
-# 当flannel采用host-gw时，需要开启ipvs
-kubectl -n kube-system edit cm kube-proxy
+# kube-proxy 升级为 iptables -> nftables
+kubectl -n kube-system get  configmap kube-proxy -o yaml > configmap-kube-proxy.yaml
+kubectl -n kube-system edit configmap kube-proxy
 
-……
-    configSyncPeriod: 5s # upgrade
-    mode: "ipvs"         # upgrade
-    ipvs:                # relative
-      tcpTimeout: 900s   # upgrade
-      syncPeriod: 5s     # upgrade
-      minSyncPeriod: 5s  # upgrade
-……
 ```
 
 
 
-## 三、应用 Flannel
+## 三、应用 Cilium
 
 ```bash
-#
-# Example
-#   https://books.8ops.top/attachment/kubernetes/kube-flannel.yaml-v0.19.1
-#
+CILIUM_VERSION=1.18.5
+helm repo add cilium https://helm.cilium.io/
+helm repo update cilium
+helm search repo cilium
+helm show values cilium/cilium \
+  --version ${CILIUM_VERSION} > cilium.yaml-${CILIUM_VERSION}-default
 
-kubectl apply -f kube-flannel.yaml
-```
+cp cilium.yaml-${CILIUM_VERSION}-default cilium.yaml-${CILIUM_VERSION}
+vim cilium.yaml-${CILIUM_VERSION}
 
-> 编辑配置
+helm install cilium cilium/cilium \
+  -f cilium.yaml-${CILIUM_VERSION} \
+  --namespace=kube-system \
+  --version ${CILIUM_VERSION} \
+  --debug
 
-```bash
-……
-  net-conf.json: | # relative
-    {
-      "Network": "172.20.0.0/16",
-      "Backend": {
-        "Type": "host-gw"
-      }
-    }
-……
-    # 镜像替换为私有地址
-      initContainers:
-      - name: install-cni-plugin
-        image: hub.8ops.top/google_containers/flannel-cni-plugin:v1.1.0
-        ……
-      - name: install-cni
-        image: hub.8ops.top/google_containers/flannel:v0.19.1
-        ……
-      containers:
-      - name: kube-flannel
-        image: hub.8ops.top/google_containers/flannel:v0.19.1
 ```
 
 
 
 ## 四、Addon
 
-### 4.1 Ingress-Nginx
+### 4.1 MetalLB
+
+```bash
+METALLB_VERSION=0.15.3
+
+helm repo add metallb https://metallb.github.io/metallb
+helm repo update metallb
+helm search repo metallb
+helm show values metallb/metallb \
+  --version ${METALLB_VERSION} > metallb.yaml-${METALLB_VERSION}-default
+
+helm install metallb metallb/metallb \
+  -f metallb.yaml-${METALLB_VERSION} \
+  --namespace=kube-server \
+  --create-namespace \
+  --version ${METALLB_VERSION}
+
+```
+
+
+
+### 4.2 Ingress-Nginx
 
 ```bash
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
@@ -463,7 +629,7 @@ systemctl daemon-reload && sleep 5 && systemctl status logrotate.timer
 
 
 
-### 4.2 Dashboard
+### 4.3 Dashboard
 
 ```bash
 helm repo add kubernetes-dashboard https://kubernetes.github.io/dashboard/

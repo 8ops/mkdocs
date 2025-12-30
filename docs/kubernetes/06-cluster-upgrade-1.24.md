@@ -1,4 +1,4 @@
-# Upgrade - v1.24.0
+# Upgrade - 1.24
 
 [Reference](06-cluster-upgrade.md)
 
