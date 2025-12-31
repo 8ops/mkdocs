@@ -441,8 +441,8 @@ kubectl taint nodes gat-sangfor-xc-k8s-03 node-role.kubernetes.io/control-plane:
 
 ```bash
 # https://books.8ops.top/attachment/kubernetes/kube-flannel.yaml-v0.27.4
-
-kubectl apply -f kube-flannel.yaml-v0.27.4
+FLANNEL_VERSION=v0.27.4
+kubectl apply -f kube-flannel.yaml-${FLANNEL_VERSION}
 
 ```
 
@@ -474,7 +474,8 @@ kubectl apply -f kube-flannel.yaml-v0.27.4
 > 卸载
 
 ```bash
-kubectl delete -f kube-flannel.yml-v0.27.4
+FLANNEL_VERSION=v0.27.4
+kubectl delete -f kube-flannel.yml-${FLANNEL_VERSION}
 
 # remove link
 ip link delete cni0
@@ -489,7 +490,6 @@ rm -rf /var/lib/cni/ /run/flannel/ /etc/cni/net.d
 # ip route delete 172.18.0.0/16
 
 systemctl restart kubelet && sleep 5 && systemctl restart containerd
-
 ```
 
 
@@ -497,16 +497,17 @@ systemctl restart kubelet && sleep 5 && systemctl restart containerd
 #### 4.1.2 calico
 
 ```bash
-# [未成功]
+# 【未成功】
 # https://books.8ops.top/attachment/kubernetes/calico.yaml-v3.30.4
-
-kubectl apply -f calico.yaml-v3.30.4
+CALICO_VERSION=v3.30.4
+kubectl apply -f calico.yaml-${CALICO_VERSION}
 ```
 
 > 卸载
 
 ```bash
-kubectl delete -f calico.yaml-v3.30.4
+CALICO_VERSION=v3.30.4
+kubectl delete -f calico.yaml-${CALICO_VERSION}
 
 kubectl delete crd bgppeers.crd.projectcalico.org bgpconfigurations.crd.projectcalico.org \
 ippools.crd.projectcalico.org felixconfigurations.crd.projectcalico.org \
@@ -526,7 +527,6 @@ systemctl restart kubelet && sleep 5 && systemctl restart containerd
 ```bash
 # https://books.8ops.top/attachment/kubernetes/helm/cilium.yaml-1.17.9
 CILIUM_VERSION=1.17.9
-
 helm repo add cilium https://helm.cilium.io/
 helm repo update cilium
 helm search repo cilium
@@ -567,7 +567,6 @@ systemctl restart kubelet && sleep 5 && systemctl restart containerd
 ```bash
 # https://books.8ops.top/attachment/kubernetes/helm/metallb.yaml-0.15.2
 METALLB_VERSION=0.15.2
-
 helm repo add metallb https://metallb.github.io/metallb
 helm repo update metallb
 helm search repo metallb
@@ -585,6 +584,9 @@ helm upgrade --install metallb metallb/metallb \
   --namespace=kube-server \
   --create-namespace \
   --version ${METALLB_VERSION}
+
+kubectl apply -f 10-metallb-ipaddresspool.yaml
+kubectl apply -f 10-metallb-l2advertisement.yaml
 
 helm -n kube-server uninstall metallb
 ```

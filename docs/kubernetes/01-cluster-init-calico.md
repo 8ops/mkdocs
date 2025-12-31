@@ -357,27 +357,28 @@ kubectl apply -f calico.yaml-v3.24.1
 采用 <u>Deployment</u> 资源类型部署，结合 <u>LoadBalancer</u> 方式暴露流量
 
 ```bash
+INGRESS_NGINX_VERSION=4.2.5
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
-helm repo update
+helm repo update ingress-nginx
 helm search repo ingress-nginx
-helm show values ingress-nginx/ingress-nginx > ingress-nginx.yaml-v4.2.5-default
+helm show values ingress-nginx/ingress-nginx > ingress-nginx.yaml-${INGRESS_NGINX_VERSION}-default
 
 # external
-# vim ingress-nginx-external.yaml-v4.2.5
-# e.g. https://books.8ops.top/attachment/kubernetes/helm/ingress-nginx-external.yaml-v4.2.5
+# vim ingress-nginx-external.yaml-4.2.5
+# e.g. https://books.8ops.top/attachment/kubernetes/helm/ingress-nginx-external.yaml-4.2.5
 #
 
 helm install ingress-nginx-external-controller ingress-nginx/ingress-nginx \
-    -f ingress-nginx-external.yaml-v4.2.5 \
+    -f ingress-nginx-external.yaml-${INGRESS_NGINX_VERSION} \
     -n kube-server \
     --create-namespace \
-    --version 4.2.5
+    --version ${INGRESS_NGINX_VERSION}
     
 helm upgrade --install ingress-nginx-external-controller ingress-nginx/ingress-nginx \
-    -f ingress-nginx-external.yaml-v4.2.5 \
+    -f ingress-nginx-external.yaml-${INGRESS_NGINX_VERSION} \
     -n kube-server \
     --create-namespace \
-    --version 4.2.5
+    --version ${INGRESS_NGINX_VERSION}
 
 ```
 
@@ -440,26 +441,27 @@ systemctl daemon-reload && sleep 5 && systemctl status logrotate.timer
 ### 4.3 Dashboard
 
 ```bash
+KUBERNETES_DASHBOARD_VERSION=5.10.0
 helm repo add kubernetes-dashboard https://kubernetes.github.io/dashboard/
-helm repo update
+helm repo update kubernetes-dashboard
 helm search repo kubernetes-dashboard
-helm show values kubernetes-dashboard/kubernetes-dashboard > kubernetes-dashboard.yaml-v5.10.0-default
+helm show values kubernetes-dashboard/kubernetes-dashboard > kubernetes-dashboard.yaml-${KUBERNETES_DASHBOARD_VERSION}-default
 
-# vim kubernetes-dashboard.yaml-v5.10.0
-# e.g. https://books.8ops.top/attachment/kubernetes/helm/kubernetes-dashboard.yaml-v5.10.0
+# vim kubernetes-dashboard.yaml-5.10.0
+# e.g. https://books.8ops.top/attachment/kubernetes/helm/kubernetes-dashboard.yaml-5.10.0
 # 
 
 helm install kubernetes-dashboard kubernetes-dashboard/kubernetes-dashboard \
-    -f kubernetes-dashboard.yaml-v5.10.0 \
+    -f kubernetes-dashboard.yaml-${KUBERNETES_DASHBOARD_VERSION} \
     -n kube-server \
     --create-namespace \
-    --version 5.10.0
+    --version ${KUBERNETES_DASHBOARD_VERSION}
 
 helm upgrade --install kubernetes-dashboard kubernetes-dashboard/kubernetes-dashboard \
-    -f kubernetes-dashboard.yaml-v5.10.0 \
+    -f kubernetes-dashboard.yaml-${KUBERNETES_DASHBOARD_VERSION} \
     -n kube-server \
     --create-namespace \
-    --version 5.10.0
+    --version ${KUBERNETES_DASHBOARD_VERSION}
     
 #----
 # create sa for ops

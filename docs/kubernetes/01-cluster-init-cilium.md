@@ -519,4 +519,3 @@ replicaset.apps/hubble-ui-64d4995d57         1         1         1       136m
 
 ![hubble-ui](../images/kubernetes/hubble.png)
 
-### 

@@ -1275,8 +1275,6 @@ helm upgrade --install metallb metallb/metallb \
 
 
 
-
-
 ### 4.2 Ingress-nginx
 
 ```bash

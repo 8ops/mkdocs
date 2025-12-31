@@ -532,6 +532,8 @@ helm install metallb metallb/metallb \
   --create-namespace \
   --version ${METALLB_VERSION}
 
+kubectl apply -f 10-metallb-ipaddresspool.yaml
+kubectl apply -f 10-metallb-l2advertisement.yaml
 ```
 
 

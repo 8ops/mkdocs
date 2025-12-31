@@ -99,17 +99,18 @@ wget https://raw.githubusercontent.com/projectcalico/calico/v3.28.2/manifests/ca
 
 ```bash
 # metallb
+METALLB_VERSION=0.14.8
 helm repo add metallb https://metallb.github.io/metallb
 helm repo update metallb
 helm search repo metallb
 helm show values metallb/metallb \
-  --version 0.14.8 > metallb.yaml-0.14.8-default
+  --version ${METALLB_VERSION} > metallb.yaml-METALLB_VERSION-default
 
 helm upgrade --install metallb metallb/metallb \
-  -f metallb.yaml-0.14.8 \
+  -f metallb.yaml-${METALLB_VERSION} \
   --namespace=kube-server \
   --create-namespace \
-  --version 0.14.8 \
+  --version ${METALLB_VERSION} \
   --debug
 
 helm -n kube-server uninstall metallb
@@ -121,15 +122,16 @@ helm -n kube-server uninstall metallb
 
 ```bash
 # ingress-nginx
+INGRESS_NGINX_VERSION=4.11.3
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 helm repo update ingress-nginx
 helm search repo ingress-nginx
-helm show values ingress-nginx/ingress-nginx --version 4.11.3 > ingress-nginx.yaml-4.11.3-default
+helm show values ingress-nginx/ingress-nginx --version ${INGRESS_NGINX_VERSION} > ingress-nginx.yaml-${INGRESS_NGINX_VERSION}-default
 
 helm upgrade --install ingress-nginx-external-controller ingress-nginx/ingress-nginx \
-  -f ingress-nginx.yaml-4.11.3 \
+  -f ingress-nginx.yaml-${INGRESS_NGINX_VERSION} \
   -n kube-server \
-  --version 4.11.3 \
+  --version ${INGRESS_NGINX_VERSION} \
   --debug
 
 helm -n kube-server uninstall ingress-nginx-external-controller
@@ -147,16 +149,18 @@ curl -k -vv --tlsv1.1 --tls-max 1.2  https://echoserver.8ops.top
 
 ```bash
 # dashboard
+KUBERNETES_DASHBOARD_VERSION
 helm repo add kubernetes-dashboard https://kubernetes.github.io/dashboard/
 helm repo update kubernetes-dashboard
 helm search repo kubernetes-dashboard
-helm show values kubernetes-dashboard/kubernetes-dashboard --version 7.8.0 > kubernetes-dashboard.yaml-7.8.0-default
+helm show values kubernetes-dashboard/kubernetes-dashboard \
+  --version ${KUBERNETES_DASHBOARD_VERSION} > kubernetes-dashboard.yaml-${KUBERNETES_DASHBOARD_VERSION}-default
 
 helm upgrade --install kubernetes-dashboard kubernetes-dashboard/kubernetes-dashboard \
-  -f kubernetes-dashboard.yaml-7.8.0 \
+  -f kubernetes-dashboard.yaml-${KUBERNETES_DASHBOARD_VERSION} \
   -n kube-server \
   --create-namespace \
-  --version 7.8.0 \
+  --version ${KUBERNETES_DASHBOARD_VERSION} \
   --debug
 
 kubectl -n kube-server create secret tls tls-8ops.top \
@@ -190,15 +194,16 @@ kubectl describe secrets \
 ### 1.5 argo
 
 ```bash
+ARGO_VERSION=7.6.8
 helm repo add argoproj https://argoproj.github.io/argo-helm
 helm repo update argoproj
 helm search repo argo-cd
-helm show values argoproj/argo-cd --version 7.6.8 > argo-cd.yaml-7.6.8-default
+helm show values argoproj/argo-cd --version ${ARGO_VERSION} > argo-cd.yaml-${ARGO_VERSION}-default
 
 helm upgrade --install argo-cd argoproj/argo-cd \
   -n kube-server \
-  -f argo-cd.yaml-7.6.8 \
-  --version 7.6.8 \
+  -f argo-cd.yaml-${ARGO_VERSION} \
+  --version ${ARGO_VERSION} \
   --debug
 
 helm -n kube-server uninstall argo-cd

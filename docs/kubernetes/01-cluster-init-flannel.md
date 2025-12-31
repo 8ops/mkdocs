@@ -263,8 +263,8 @@ kubectl -n kube-system edit cm kube-proxy
 # Example
 #   https://books.8ops.top/attachment/kubernetes/kube-flannel.yaml-v0.19.1
 #
-
-kubectl apply -f kube-flannel.yaml
+FLANNEL_VERSION=v0.19.1
+kubectl apply -f kube-flannel.yaml-${FLANNEL_VERSION}
 ```
 
 > 编辑配置
@@ -299,37 +299,38 @@ kubectl apply -f kube-flannel.yaml
 ### 4.1 Ingress-Nginx
 
 ```bash
+INGRESS_NGINX_VERSION=4.2.3
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
-helm repo update
+helm repo update ingress-nginx
 helm search repo ingress-nginx
-helm show values ingress-nginx/ingress-nginx > ingress-nginx.yaml-v4.2.3-default
+helm show values ingress-nginx/ingress-nginx > ingress-nginx.yaml-${INGRESS_NGINX_VERSION}-default
 
 # external
-# vim ingress-nginx-external.yaml-v4.2.3
-# e.g. https://books.8ops.top/attachment/kubernetes/helm/ingress-nginx-external.yaml-v4.2.3
+# vim ingress-nginx-external.yaml-4.2.3
+# e.g. https://books.8ops.top/attachment/kubernetes/helm/ingress-nginx-external.yaml-4.2.3
 #
 kubectl label node gat-gslab-k8s-node-01 edge=external
 helm install ingress-nginx-external-controller ingress-nginx/ingress-nginx \
-    -f ingress-nginx-external.yaml-v4.2.3 \
+    -f ingress-nginx-external.yaml-${INGRESS_NGINX_VERSION} \
     -n kube-server \
     --create-namespace \
-    --version 4.2.3
+    --version ${INGRESS_NGINX_VERSION}
     
 helm upgrade --install ingress-nginx-external-controller ingress-nginx/ingress-nginx \
-    -f ingress-nginx-external.yaml-v4.2.3 \
+    -f ingress-nginx-external.yaml-${INGRESS_NGINX_VERSION} \
     -n kube-server \
     --create-namespace \
-    --version 4.2.3
+    --version ${INGRESS_NGINX_VERSION}
     
 # intrnal
 # vim ingress-nginx-internal.yaml-v4.2.3
-# e.g. https://books.8ops.top/attachment/kubernetes/helm/ingress-nginx-internal.yaml-v4.2.3
+# e.g. https://books.8ops.top/attachment/kubernetes/helm/ingress-nginx-internal.yaml-4.2.3
 #
 kubectl label node gat-gslab-k8s-node-02 edge=internal
 helm install ingress-nginx-internal-controller ingress-nginx/ingress-nginx \
-    -f ingress-nginx-internal.yaml-v4.2.3 \
+    -f ingress-nginx-internal.yaml-${INGRESS_NGINX_VERSION} \
     -n kube-server \
-    --version 4.2.3
+    --version ${INGRESS_NGINX_VERSION}
 
 ```
 
@@ -392,26 +393,27 @@ systemctl daemon-reload && sleep 5 && systemctl status logrotate.timer
 ### 4.2 Dashboard
 
 ```bash
+KUBERNETES_DASHBOARD_VERSION=5.10.0
 helm repo add kubernetes-dashboard https://kubernetes.github.io/dashboard/
 helm repo update
 helm search repo kubernetes-dashboard
-helm show values kubernetes-dashboard/kubernetes-dashboard > kubernetes-dashboard.yaml-v5.10.0-default
+helm show values kubernetes-dashboard/kubernetes-dashboard > kubernetes-dashboard.yaml--default
 
-# vim kubernetes-dashboard.yaml-v5.10.0
-# e.g. https://books.8ops.top/attachment/kubernetes/helm/kubernetes-dashboard.yaml-v5.10.0
+# vim kubernetes-dashboard.yaml-5.10.0
+# e.g. https://books.8ops.top/attachment/kubernetes/helm/kubernetes-dashboard.yaml-5.10.0
 # 
 
 helm install kubernetes-dashboard kubernetes-dashboard/kubernetes-dashboard \
-    -f kubernetes-dashboard.yaml-v5.10.0 \
+    -f kubernetes-dashboard.yaml-${KUBERNETES_DASHBOARD_VERSION} \
     -n kube-server \
     --create-namespace \
-    --version 5.10.0
+    --version ${KUBERNETES_DASHBOARD_VERSION}
 
 helm upgrade --install kubernetes-dashboard kubernetes-dashboard/kubernetes-dashboard \
-    -f kubernetes-dashboard.yaml-v5.10.0 \
+    -f kubernetes-dashboard.yaml-${KUBERNETES_DASHBOARD_VERSION} \
     -n kube-server \
     --create-namespace \
-    --version 5.10.0
+    --version ${KUBERNETES_DASHBOARD_VERSION}
     
 # create sa for guest
 kubectl create serviceaccount dashboard-guest -n kube-server
