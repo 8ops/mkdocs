@@ -520,6 +520,14 @@ kubeadm init phase certs all
 mv manifests manifests-b && sleep 60 && mv manifests-b manifests
 systemctl restart kubelet
 
+rm -f pki/apiserver-etcd-client.*
+kubeadm init phase certs apiserver-etcd-client
+
+rm -f /etc/kubernetes/controller-manager.conf
+rm -f /etc/kubernetes/scheduler.conf
+kubeadm init phase kubeconfig controller-manager
+kubeadm init phase kubeconfig scheduler
+
 # check
 kubeadm certs check-expiration
 
