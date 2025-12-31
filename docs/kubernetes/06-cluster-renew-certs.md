@@ -323,7 +323,12 @@ Environment="NO_PROXY=localhost,127.0.0.1,.8ops.top,*.8ops.top"
 systemctl daemon-reload
 systemctl restart docker
 
-TAG_NAME=v1.23.0-go1.19.6-bullseye.0 
+# 国内加速
+# registry.cn-beijing.aliyuncs.com/pshizh/kube-cross:v1.23.0-go1.17.6-bullseye.0
+
+TAG_NAME=v1.23.0-go1.19.6-bullseye.0
+TAG_NAME=v1.25.0-go1.20.10-bullseye.0
+TAG_NAME=v1.35.0-go1.25.5-bullseye.0
 docker pull hub.8ops.top/google_containers/kube-cross:${TAG_NAME}
 docker tag  hub.8ops.top/google_containers/kube-cross:${TAG_NAME} registry.k8s.io/build-image/kube-cross:${TAG_NAME}
 
@@ -331,6 +336,12 @@ docker version # 19.03+
 docker buildx version
 
 build/run.sh make kubeadm KUBE_BUILD_PLATFORMS=linux/amd64
+
+# ---
+docker run --rm -it \
+  -v $(pwd):/go/src/k8s.io/kubernetes \
+  registry.k8s.io/kube-cross:v1.35.0-go1.25.5-bullseye \
+  bash
 
 ```
 

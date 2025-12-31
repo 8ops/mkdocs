@@ -490,6 +490,35 @@ kubectl -n kube-system edit configmap kube-proxy
 
 
 
+### 2.6 续签组件证书
+
+```bash
+kubeadm certs check-expiration
+
+# backup
+cp -r /etc/kubernetes/pki{,-$(date +%Y%m%d)}
+cp -r /etc/kubernetes/manifests{,-$(date +%Y%m%d)}
+mv /usr/bin/kubeadm{,-$(kubeadm version -o short)}
+
+# upgrade binary
+
+
+# renew
+kubeadm certs renew all
+mv manifests manifests-b && sleep 60 && mv manifests-b manifests
+systemctl restart kubelet
+
+# check
+kubeadm certs check-expiration
+
+# release
+crictl ps -a | awk '/Exited/{printf("crictl rm %s\n",$1)}' | sh
+```
+
+
+
+
+
 ## 三、应用 Cilium
 
 ```bash
@@ -503,9 +532,12 @@ helm show values cilium/cilium \
 helm install cilium cilium/cilium \
   -f cilium.yaml-${CILIUM_VERSION} \
   --namespace=kube-system \
-  --version ${CILIUM_VERSION} \
-  --debug
+  --version ${CILIUM_VERSION}
 
+helm upgrade --install cilium cilium/cilium \
+  -f cilium.yaml-${CILIUM_VERSION} \
+  --namespace=kube-system \
+  --version ${CILIUM_VERSION}
 ```
 
 
@@ -687,4 +719,88 @@ kubectl -n kube-server get secrets dashboard-ops-secret -o=jsonpath={.data.token
 ```
 
 
+
+## 五、异常
+
+### 5.1 QXL
+
+报错
+
+```bash
+Dec 31 13:44:12 K-KUBE-LAB-11 kernel: [TTM] Buffer eviction failed Dec 31 13:44:12 K-KUBE-LAB-11 kernel: qxl 0000:00:02.0: object_init failed for (4096, 0x00000001) Dec 31 13:44:12 K-KUBE-LAB-11 kernel: [drm:qxl_alloc_bo_reserved [qxl]] *ERROR* failed to allocate VRAM BO
+```
+
+原因
+
+```bash
+这是 Linux DRM 子系统 + QXL 显卡驱动 报错：
+qxl：👉 QEMU / KVM / SPICE 虚拟显卡
+TTM：👉 显存内存管理模块
+failed to allocate VRAM BO：👉 虚拟显存不足或不该被使用
+
+典型出现环境
+✅ 几乎 100% 出现在：
+KVM / Proxmox / OpenStack
+虚拟机 没有图形界面
+但仍加载了 qxl / drm 驱动
+
+与kubernetes无关
+```
+
+修复
+
+```bash
+# 禁用 qxl 驱动
+cat <<EOF >/etc/modprobe.d/blacklist-qxl.conf
+blacklist qxl
+blacklist drm_kms_helper
+EOF
+update-initramfs -u
+reboot
+```
+
+### 5.2  Cilium / MetalLB日志报错
+
+报错
+
+```bash
+Dec 31 13:43:49 K-KUBE-LAB-11 kubelet[840]: E1231 13:43:49.503389 840 prober_manager.go:209] "Readiness probe already exists for container" pod="kube-system/cilium-operator-54bfddc4b-cjvcx" containerName="cilium-operator" Dec 31 13:43:55 K-KUBE-LAB-11 kubelet[840]: E1231 13:43:55.503070 840 prober_manager.go:209] "Readiness probe already exists for container" pod="kube-server/metallb-speaker-xfb6v" containerName="speaker"
+```
+
+原因
+
+```bash
+# 这是 kubelet 的一个已知行为日志，含义是：
+kubelet 在 pod 重建 / 状态回收时
+尝试重复注册 readiness probe
+发现 probe 已存在 → 打一条 Error 日志
+
+# ⚠️ 注意
+不是 Pod 错误
+不是 Readiness 失败
+不是 Probe 冲突
+只是 kubelet 内部状态机日志
+
+# 为什么集中出现在 Cilium / MetalLB？
+原因非常清楚：
+🔹 Cilium Operator
+leader election
+operator pod 会频繁 reconcile
+readiness probe 生命周期复杂
+🔹 MetalLB Speaker
+DaemonSet
+与 node 网络事件强绑定
+Node 状态变化时 probe 重建概率高
+
+# 是否影响服务可用性？
+完全不影响
+```
+
+修复
+
+```bash
+# 忽略
+# OR
+# 降低 kubelet 输出日志级别由--v=4到--v=2（不建议）
+```
 
