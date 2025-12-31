@@ -500,9 +500,6 @@ helm search repo cilium
 helm show values cilium/cilium \
   --version ${CILIUM_VERSION} > cilium.yaml-${CILIUM_VERSION}-default
 
-cp cilium.yaml-${CILIUM_VERSION}-default cilium.yaml-${CILIUM_VERSION}
-vim cilium.yaml-${CILIUM_VERSION}
-
 helm install cilium cilium/cilium \
   -f cilium.yaml-${CILIUM_VERSION} \
   --namespace=kube-system \
@@ -541,47 +538,37 @@ kubectl apply -f 10-metallb-l2advertisement.yaml
 ### 4.2 Ingress-Nginx
 
 ```bash
+INGRESS_NGINX=4.14.1
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
-helm repo update
+helm repo update ingress-nginx
 helm search repo ingress-nginx
-helm show values ingress-nginx/ingress-nginx > ingress-nginx.yaml-v4.2.3-default
+helm show values ingress-nginx/ingress-nginx \
+  --version ${INGRESS_NGINX} > ingress-nginx.yaml-${INGRESS_NGINX}-default
 
-# external
-# vim ingress-nginx-external.yaml-v4.2.3
-# e.g. https://books.8ops.top/attachment/kubernetes/helm/ingress-nginx-external.yaml-v4.2.3
-#
-kubectl label node gat-gslab-k8s-node-01 edge=external
 helm install ingress-nginx-external-controller ingress-nginx/ingress-nginx \
-    -f ingress-nginx-external.yaml-v4.2.3 \
-    -n kube-server \
-    --create-namespace \
-    --version 4.2.3
-    
-helm upgrade --install ingress-nginx-external-controller ingress-nginx/ingress-nginx \
-    -f ingress-nginx-external.yaml-v4.2.3 \
-    -n kube-server \
-    --create-namespace \
-    --version 4.2.3
-    
-# intrnal
-# vim ingress-nginx-internal.yaml-v4.2.3
-# e.g. https://books.8ops.top/attachment/kubernetes/helm/ingress-nginx-internal.yaml-v4.2.3
-#
-kubectl label node gat-gslab-k8s-node-02 edge=internal
-helm install ingress-nginx-internal-controller ingress-nginx/ingress-nginx \
-    -f ingress-nginx-internal.yaml-v4.2.3 \
-    -n kube-server \
-    --version 4.2.3
+  -f ingress-nginx.yaml-${INGRESS_NGINX} \
+  -n kube-server \
+  --create-namespace \
+  --version ${INGRESS_NGINX}
+
+kubectl -n kube-server create secret tls tls-8ops.top \
+  --cert=8ops.top.crt \
+   --key=8ops.top.key \
+  --dry-run=client -o yaml > tls-8ops.top.yaml
+
+kubectl -n kube-server exec -it ingress-nginx-external-controller-external-77947d57f4-4mspp -c controller -- bash
 
 ```
 
 > 切割日志
 
 ```bash
+# ubuntu 24.04 uid=101 is messagebus
 # /etc/logrotate.d/nginx
 /var/log/nginx/access.log
+/data1/log/nginx/*/access.log
  {
-    su systemd-resolve nginx-ingress
+    su messagebus nginx-ingress
     hourly
     rotate 180
     dateext
@@ -598,8 +585,9 @@ helm install ingress-nginx-internal-controller ingress-nginx/ingress-nginx \
     endscript
 }
 /var/log/nginx/error.log
+/data1/log/nginx/*/error.log
  {
-    su systemd-resolve nginx-ingress
+    su messagebus nginx-ingress
     daily
     rotate 7
     dateext
@@ -618,15 +606,17 @@ helm install ingress-nginx-internal-controller ingress-nginx/ingress-nginx \
 
 # 确保uid=101,gid=82的用户和组存在
 groupadd -g 82 nginx-ingress
-cd /data1/log/nginx
-
-chown 101.82 * && ls -l 
+mkdir -p /data1/log/nginx && cd /data1/log/nginx
+chown 101:82 * && ls -l 
 
 systemctl start logrotate && ls -l && sleep 5 && systemctl status logrotate
 
 # 调整定时器为小时
+command -v logrotate || apt install -y -q logrotate
 sed -i 's/OnCalendar=daily/OnCalendar=hourly/' /lib/systemd/system/logrotate.timer
 systemctl daemon-reload && sleep 5 && systemctl status logrotate.timer
+
+tree /data1/log/nginx
 ```
 
 
@@ -634,27 +624,20 @@ systemctl daemon-reload && sleep 5 && systemctl status logrotate.timer
 ### 4.3 Dashboard
 
 ```bash
+KUBERNETES_DASHBOARD_VERSION=7.14.0
 helm repo add kubernetes-dashboard https://kubernetes.github.io/dashboard/
-helm repo update
+helm repo update kubernetes-dashboard
 helm search repo kubernetes-dashboard
-helm show values kubernetes-dashboard/kubernetes-dashboard > kubernetes-dashboard.yaml-v5.10.0-default
-
-# vim kubernetes-dashboard.yaml-v5.10.0
-# e.g. https://books.8ops.top/attachment/kubernetes/helm/kubernetes-dashboard.yaml-v5.10.0
-# 
+helm show values kubernetes-dashboard/kubernetes-dashboard \
+  --version ${KUBERNETES_DASHBOARD_VERSION}> kubernetes-dashboard.yaml-${KUBERNETES_DASHBOARD_VERSION}-default
 
 helm install kubernetes-dashboard kubernetes-dashboard/kubernetes-dashboard \
-    -f kubernetes-dashboard.yaml-v5.10.0 \
+    -f kubernetes-dashboard.yaml-${KUBERNETES_DASHBOARD_VERSION} \
     -n kube-server \
     --create-namespace \
-    --version 5.10.0
+    --version ${KUBERNETES_DASHBOARD_VERSION}
 
-helm upgrade --install kubernetes-dashboard kubernetes-dashboard/kubernetes-dashboard \
-    -f kubernetes-dashboard.yaml-v5.10.0 \
-    -n kube-server \
-    --create-namespace \
-    --version 5.10.0
-    
+#----
 # create sa for guest
 kubectl create serviceaccount dashboard-guest -n kube-server
 
@@ -664,7 +647,6 @@ kubectl create clusterrolebinding dashboard-guest \
   --serviceaccount=kube-server:dashboard-guest
 
 # create token
-# kubernetes v1.24.0+ newst 需要主动创建 secret
 kubectl apply -f - <<EOF
 apiVersion: v1
 kind: Secret
@@ -677,13 +659,7 @@ type: kubernetes.io/service-account-token
 EOF
 
 # output token
-kubectl -n kube-server describe secrets dashboard-guest-secret
-# 
-# kubectl -n kube-server get secrets dashboard-guest-secret -o=jsonpath={.data.token} | \
-#   base64 -d
-#
-# kubectl describe secrets \
-#   -n kube-server $(kubectl -n kube-server get secret | awk '/dashboard-guest/{print $1}')
+kubectl -n kube-server get secrets dashboard-guest-secret -o=jsonpath={.data.token} | base64 -d && echo
 
 #----
 # create sa for ops
@@ -707,8 +683,7 @@ type: kubernetes.io/service-account-token
 EOF
 
 # output token
-kubectl -n kube-server describe secrets dashboard-ops-secret
-
+kubectl -n kube-server get secrets dashboard-ops-secret -o=jsonpath={.data.token} | base64 -d && echo
 ```
 
 
