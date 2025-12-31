@@ -500,6 +500,7 @@ kubeadm certs check-expiration
 # backup
 cp -r /etc/kubernetes/pki{,-$(date +%Y%m%d)}
 cp -r /etc/kubernetes/manifests{,-$(date +%Y%m%d)}
+cp -r /var/lib/kubelet/pki{,-$(date +%Y%m%d)}
 mv /usr/bin/kubeadm{,-$(kubeadm version -o short)}
 
 # upgrade binary
@@ -507,8 +508,15 @@ curl -k -s -o /usr/bin/kubeadm https://filestorage.8ops.top/ops/kube/kubeadm-v1.
 chmod +x /usr/bin/kubeadm
 
 # renew
-kubeadm certs renew all
+# kubeadm certs renew all #（在证书未过期时会被跳过）
+
+# 先删除原证书
 cd /etc/kubernetes
+rm -f pki/apiserver.* pki/apiserver-kubelet-client.* pki/front-proxy-client.*
+rm -f pki/etcd/server.* pki/etcd/peer.* pki/etcd/healthcheck-client.*
+rm -f /var/lib/kubelet/pki/kubelet.* /var/lib/kubelet/pki/kubelet-client-*
+
+kubeadm init phase certs all
 mv manifests manifests-b && sleep 60 && mv manifests-b manifests
 systemctl restart kubelet
 

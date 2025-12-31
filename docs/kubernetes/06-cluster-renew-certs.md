@@ -346,10 +346,10 @@ cd kubernetes-1.35.0
 vim cmd/kubeadm/app/constants/constants.go
 const CertificateValidity = time.Hour * 24 * 365 * 10
 grep CertificateValidity cmd/kubeadm/app/constants/constants.go
-
-vim staging/src/k8s.io/client-go/util/cert/cert.go
-NotAfter:              now.Add(duration365d * 100).UTC(),
-grep duration365d staging/src/k8s.io/client-go/util/cert/cert.go
+# # 需要变更根CA有效期时，默认10y（下面示例变更为100y）
+# vim staging/src/k8s.io/client-go/util/cert/cert.go
+# NotAfter:              now.Add(duration365d * 100).UTC(),
+# grep duration365d staging/src/k8s.io/client-go/util/cert/cert.go
 
 docker run --rm -it \
   -v $(pwd):/go/src/k8s.io/kubernetes \
