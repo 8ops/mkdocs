@@ -306,7 +306,7 @@ make all WHAT=cmd/kubeadm GOFLAGS=-v
 
 #### 2.3.1 配置环境
 
-[编译要求](https://github.com/kubernetes/kubernetes/blob/v1.23.0/build/README.md)
+[编译要求](https://github.com/kubernetes/kubernetes/blob/v1.35.0/build/build-image/cross/VERSION)
 
 ```bash
 # 查看 kube-cross 的 TAG 版本
@@ -323,6 +323,8 @@ Environment="NO_PROXY=localhost,127.0.0.1,.8ops.top,*.8ops.top"
 systemctl daemon-reload
 systemctl restart docker
 
+# ---
+
 # 国内加速
 # registry.cn-beijing.aliyuncs.com/pshizh/kube-cross:v1.23.0-go1.17.6-bullseye.0
 
@@ -332,17 +334,28 @@ TAG_NAME=v1.35.0-go1.25.5-bullseye.0
 docker pull hub.8ops.top/google_containers/kube-cross:${TAG_NAME}
 docker tag  hub.8ops.top/google_containers/kube-cross:${TAG_NAME} registry.k8s.io/build-image/kube-cross:${TAG_NAME}
 
-docker version # 19.03+
+docker version # 19.03+ , 26.1.4
 docker buildx version
-
 build/run.sh make kubeadm KUBE_BUILD_PLATFORMS=linux/amd64
 
 # ---
+
+ssh 10.101.9.179
+# down kubernetes-1.35.0.tar.gz
+cd kubernetes-1.35.0
+vim cmd/kubeadm/app/constants/constants.go
+const CertificateValidity = time.Hour * 24 * 365 * 10
+grep CertificateValidity cmd/kubeadm/app/constants/constants.go
+
+vim staging/src/k8s.io/client-go/util/cert/cert.go
+NotAfter:              now.Add(duration365d * 100).UTC(),
+grep duration365d staging/src/k8s.io/client-go/util/cert/cert.go
+
 docker run --rm -it \
   -v $(pwd):/go/src/k8s.io/kubernetes \
-  registry.k8s.io/kube-cross:v1.35.0-go1.25.5-bullseye \
+  registry.k8s.io/build-image/kube-cross:v1.35.0-go1.25.5-bullseye.0 \
   bash
-
+cd /go/src/k8s.io/kubernetes && make WHAT=cmd/kubeadm && ls -l _output
 ```
 
 

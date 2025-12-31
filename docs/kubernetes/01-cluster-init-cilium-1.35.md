@@ -492,6 +492,8 @@ kubectl -n kube-system edit configmap kube-proxy
 
 ### 2.6 续签组件证书
 
+[Reference](06-cluster-renew-certs.md)
+
 ```bash
 kubeadm certs check-expiration
 
@@ -501,10 +503,12 @@ cp -r /etc/kubernetes/manifests{,-$(date +%Y%m%d)}
 mv /usr/bin/kubeadm{,-$(kubeadm version -o short)}
 
 # upgrade binary
-
+curl -k -s -o /usr/bin/kubeadm https://filestorage.8ops.top/ops/kube/kubeadm-v1.35.0.amd64-10y
+chmod +x /usr/bin/kubeadm
 
 # renew
 kubeadm certs renew all
+cd /etc/kubernetes
 mv manifests manifests-b && sleep 60 && mv manifests-b manifests
 systemctl restart kubelet
 
@@ -750,7 +754,7 @@ KVM / Proxmox / OpenStack
 修复
 
 ```bash
-# 禁用 qxl 驱动
+# 禁用 qxl 驱动，限在kvm中使用
 cat <<EOF >/etc/modprobe.d/blacklist-qxl.conf
 blacklist qxl
 blacklist drm_kms_helper
@@ -759,7 +763,55 @@ update-initramfs -u
 reboot
 ```
 
-### 5.2  Cilium / MetalLB日志报错
+### 5.2 kernel: workqueue
+
+报错
+
+```bash
+Dec 31 15:23:46 K-KUBE-LAB-01 kernel: workqueue: drm_fb_helper_damage_work hogged CPU for >10000us 32 times, consider switching to WQ_UNBOUND
+```
+
+原因
+
+逐项含义
+
+| 字段                        | 含义                          |
+| --------------------------- | ----------------------------- |
+| `workqueue`                 | 内核工作队列                  |
+| `drm_fb_helper_damage_work` | DRM framebuffer 刷新任务      |
+| `hogged CPU`                | 占用 CPU 时间过长             |
+| `>10000us`                  | 单次 >10ms                    |
+| `32 times`                  | 连续触发                      |
+| `WQ_UNBOUND`                | 建议换成非绑定 CPU 的工作队列 |
+
+```bash
+内核正在尝试刷新一个“根本没人用的虚拟显卡 framebuffer”，
+结果这个任务在 CPU 上反复空转，占用时间过长，于是内核发出警告。
+
+```
+
+解决
+
+```bash
+# 限在kvm中使用
+cat <<EOF >/etc/modprobe.d/blacklist-drm.conf
+blacklist qxl
+blacklist virtio_gpu
+blacklist drm
+blacklist drm_kms_helper
+blacklist fbdev
+blacklist vesafb
+blacklist efifb
+EOF
+update-initramfs -u
+reboot
+```
+
+
+
+
+
+### 5.3  Cilium / MetalLB日志报错
 
 报错
 
