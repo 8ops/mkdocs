@@ -579,11 +579,6 @@ helm install cilium cilium/cilium \
   -f cilium.yaml-${CILIUM_VERSION} \
   --namespace=kube-system \
   --version ${CILIUM_VERSION}
-
-helm upgrade --install cilium cilium/cilium \
-  -f cilium.yaml-${CILIUM_VERSION} \
-  --namespace=kube-system \
-  --version ${CILIUM_VERSION}
 ```
 
 
@@ -594,7 +589,6 @@ helm upgrade --install cilium cilium/cilium \
 
 ```bash
 METALLB_VERSION=0.15.3
-
 helm repo add metallb https://metallb.github.io/metallb
 helm repo update metallb
 helm search repo metallb
@@ -635,7 +629,6 @@ kubectl -n kube-server create secret tls tls-8ops.top \
   --dry-run=client -o yaml > tls-8ops.top.yaml
 
 kubectl -n kube-server exec -it ingress-nginx-external-controller-external-77947d57f4-4mspp -c controller -- bash
-
 ```
 
 > 切割日志
