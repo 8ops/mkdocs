@@ -220,12 +220,12 @@ mkdir -p ~/.kube && ln -s /etc/kubernetes/admin.conf ~/.kube/config
 
 # 添加节点 control-plane
 kubeadm join 10.101.11.110:6443 --token abcdef.0123456789abcdef \
-	--discovery-token-ca-cert-hash sha256:3acfc0056f88d86565bcf482358e62b7729b59192d2faf51f6f553731beb674b \
-	--control-plane --certificate-key 7d7617c7635f4e2e32e16c6616bbe21007a6bafd131f7a2417f89be78a915174
+	--discovery-token-ca-cert-hash sha256:734e0cd6e526c53b9da4cba3f73da117b18b637006b8b1e6b4cd02ac8f417e6d \
+	--control-plane --certificate-key e60d590deba099cd4b722ac95a7dfa43cbeb0591cf90534915912bfc99b936eb
 
 # 添加节点 work-node
 kubeadm join 10.101.11.110:6443 --token abcdef.0123456789abcdef \
-	--discovery-token-ca-cert-hash sha256:3acfc0056f88d86565bcf482358e62b7729b59192d2faf51f6f553731beb674b  
+	--discovery-token-ca-cert-hash sha256:734e0cd6e526c53b9da4cba3f73da117b18b637006b8b1e6b4cd02ac8f417e6d
 ```
 
 > 编辑 kubeadm-init.yaml-v1.35.0
@@ -261,8 +261,8 @@ timeouts:
 ---
 apiServer: {}
 apiVersion: kubeadm.k8s.io/v1beta4
-caCertificateValidityPeriod: 87600h0m0s
-certificateValidityPeriod: 8760h0m0s
+# caCertificateValidityPeriod: 87600h0m0s # 需要使用kubeadm二进制内置有效期
+# certificateValidityPeriod: 8760h0m0s
 certificatesDir: /etc/kubernetes/pki
 clusterName: kubernetes
 controllerManager: {}
@@ -510,29 +510,55 @@ chmod +x /usr/bin/kubeadm
 # renew
 # kubeadm certs renew all #（在证书未过期时会被跳过）
 
+export KUBE_VERSION=v1.35.0
+
 # 先删除原证书
+cp -r /etc/kubernetes{,-$(date +%Y%m%d)}
+cp -r /var/lib/kubelet/pki{,-$(date +%Y%m%d)}
 cd /etc/kubernetes
 rm -f pki/apiserver.* pki/apiserver-kubelet-client.* pki/front-proxy-client.*
 rm -f pki/etcd/server.* pki/etcd/peer.* pki/etcd/healthcheck-client.*
-rm -f /var/lib/kubelet/pki/kubelet.* /var/lib/kubelet/pki/kubelet-client-*
-
+kubeadm init phase certs apiserver --config /opt/kubernetes/kubeadm-init.yaml-${KUBE_VERSION}
 kubeadm init phase certs all
-mv manifests manifests-b && sleep 60 && mv manifests-b manifests
-systemctl restart kubelet
+
+# 存在签名IP的证书有apiserver.crt、etcd/peer.crt、etcd/server.crt
+openssl x509 -noout -ext subjectAltName -in pki/apiserver.crt # 若不引用kubeadm-init.yaml会缺少对VIP的签名
+openssl x509 -noout -ext subjectAltName -in pki/etcd/peer.crt 
+openssl x509 -noout -ext subjectAltName -in pki/etcd/server.crt
+kubectl get --raw /healthz # 验证
+# kubeadm certs renew all # 此时可以触发续签动作了，但会覆盖有效期为1年
 
 rm -f pki/apiserver-etcd-client.*
-kubeadm init phase certs apiserver-etcd-client
+kubeadm init phase certs apiserver-etcd-client --config /opt/kubernetes/kubeadm-init.yaml-${KUBE_VERSION}
 
-rm -f /etc/kubernetes/controller-manager.conf
-rm -f /etc/kubernetes/scheduler.conf
-kubeadm init phase kubeconfig controller-manager
-kubeadm init phase kubeconfig scheduler
+rm -f controller-manager.conf scheduler.conf
+kubeadm init phase kubeconfig controller-manager --config /opt/kubernetes/kubeadm-init.yaml-${KUBE_VERSION}
+kubeadm init phase kubeconfig scheduler --config /opt/kubernetes/kubeadm-init.yaml-${KUBE_VERSION}
+
+mv manifests manifests-b && sleep 30 && mv manifests-b manifests
+systemctl restart containerd
+systemctl restart kubelet
+
+rm -f admin.conf && kubeadm init phase kubeconfig admin
+# # optional
+# rm -f super-admin.conf && kubeadm init phase kubeconfig super-admin 
 
 # check
 kubeadm certs check-expiration
 
 # release
 crictl ps -a | awk '/Exited/{printf("crictl rm %s\n",$1)}' | sh
+
+# view
+tree /etc/kubernetes
+ls -lt /etc/kubernetes /etc/kubernetes/pki
+ls -lt /var/lib/kubelet/pki
+
+# # 重新生成mainfest文件
+# kubeadm init phase control-plane all --config /opt/kubernetes/kubeadm-init.yaml-${KUBE_VERSION}
+
+# 所有worker-node节点
+mkdir -p /etc/kubernetes/manifests
 ```
 
 
