@@ -120,6 +120,10 @@ systemctl restart containerd && systemctl status containerd
 > 受信私有CA
 
 ```bash
+# os
+cp ca.crt /usr/local/share/ca-certificates/ca.crt
+update-ca-certificates
+
 # 1
 mkdir -p /etc/containerd/certs.d/hub.8ops.top
 cp ca.crt /etc/containerd/certs.d/hub.8ops.top/ca.crt 
@@ -317,11 +321,13 @@ reboot
 # /etc/containerd/config.toml
 [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
   SystemdCgroup = true
+grep "io.containerd.grpc.v1.cri" /etc/containerd/config.toml
 systemctl restart containerd
 
 # 4，kubelet 启用 systemd cgroup driver
 # /var/lib/kubelet/config.yaml
 cgroupDriver: systemd
+grep cgroupDriver /var/lib/kubelet/config.yaml
 
 # 5，验证
 kubectl describe node | grep -i Cgroup
@@ -380,8 +386,6 @@ table inet filter {
 
 # v1.35 使用 Cilium（eBPF 模式）
 # → 几乎不依赖 iptables/nftables，性能和稳定性最好。
-
-kubectl apply -f kube-proxy.yaml
 kubectl -n kube-system rollout restart ds kube-proxy
 
 # 4，应用后验证
@@ -408,84 +412,187 @@ iptables-legacy -L
 
 
 
+#### 2.5.3 kube-proxy
+
 kube-proxy ConfigMap 关键配置
 
 ```yaml
+# kube-proxy 升级为 iptables -> nftables
+kubectl -n kube-system get  configmap kube-proxy -o yaml > configmap-kube-proxy.yaml
+kubectl -n kube-system edit configmap kube-proxy
+
 apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: kube-proxy
-  namespace: kube-system
-  labels:
-    app: kube-proxy
 data:
   config.conf: |-
     apiVersion: kubeproxy.config.k8s.io/v1alpha1
-    kind: KubeProxyConfiguration
-
-    mode: iptables
-
-    bindAddress: 0.0.0.0
+    bindAddress: 127.0.0.1
     bindAddressHardFail: false
-
-    clusterCIDR: 172.19.0.0/16
-
+    clientConnection:
+      acceptContentTypes: ""
+      burst: 40
+      contentType: "application/vnd.kubernetes.protobuf"
+      kubeconfig: /var/lib/kube-proxy/kubeconfig.conf
+      qps: 20
+    clusterCIDR: 172.20.0.0/16
+    configSyncPeriod: 30s
+    # conntrack
+    conntrack:
+      maxPerCore: 32768
+      min: 131072
+      tcpBeLiberal: false
+      tcpCloseWaitTimeout: 1h
+      tcpEstablishedTimeout: 24h
+      udpStreamTimeout: 180s
+      udpTimeout: 30s
+    detectLocal:
+      bridgeInterface: ""
+      interfaceNamePrefix: ""
+    detectLocalMode: "ClusterCIDR"
+    enableProfiling: false
+    healthzBindAddress: "127.0.0.1:10256"
+    hostnameOverride: ""
     iptables:
+      localhostNodePorts: null
       masqueradeAll: false
       masqueradeBit: 14
       minSyncPeriod: 1s
-      syncPeriod: 30s              # ✅ 降低 nft churn
-
-    conntrack:
-      maxPerCore: 32768            # ✅ 适合 6 节点
-      min: 131072
-      tcpEstablishedTimeout: 24h
-      tcpCloseWaitTimeout: 1h
-
-    configSyncPeriod: 30s          # ✅ 从 5s → 30s
-
-    clientConnection:
-      kubeconfig: /var/lib/kube-proxy/kubeconfig.conf
-      qps: 0
-      burst: 0
-
-    metricsBindAddress: 127.0.0.1:10249
-    healthzBindAddress: 0.0.0.0:10256
-
+      syncPeriod: 30s
+    ipvs:
+      excludeCIDRs: null
+      minSyncPeriod: 0s
+      scheduler: ""
+      strictARP: false
+      syncPeriod: 0s
+      tcpFinTimeout: 0s
+      tcpTimeout: 0s
+      udpTimeout: 0s
+    kind: KubeProxyConfiguration
+    logging:
+      flushFrequency: 5s
+      options:
+        json:
+          infoBufferSize: "0"
+        text:
+          infoBufferSize: "0"
+      verbosity: 2
+    metricsBindAddress: "127.0.0.1:10249"
+    # nftables
+    mode: "nftables"
+    nftables:
+      masqueradeAll: false
+      masqueradeBit: 14
+      minSyncPeriod: 5s
+      syncPeriod: 30s
+    nodePortAddresses: null
+    oomScoreAdj: -999
+    portRange: ""
+    showHiddenMetricsForVersion: ""
+    winkernel:
+      enableDSR: false
+      forwardHealthCheckVip: false
+      networkName: ""
+      rootHnsEndpointName: ""
+      sourceVip: ""
+  kubeconfig.conf: |-
+    apiVersion: v1
+    kind: Config
+    clusters:
+    - cluster:
+        certificate-authority: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        server: https://10.101.9.111:6443
+      name: default
+    contexts:
+    - context:
+        cluster: default
+        namespace: default
+        user: default
+      name: default
+    current-context: default
+    users:
+    - name: default
+      user:
+        tokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+kind: ConfigMap
 ```
 
 
 
-*optional*
+#### 2.5.4 kubelet
+
+configmap kubelet
 
 ```bash
 # kubelet
 kubectl -n kube-system get  configmap kubelet-config -o yaml > configmap-kubelet-config.yaml
 kubectl -n kube-system edit configmap kubelet-config
-……
-    # GC
-    imageGCLowThresholdPercent: 40
-    imageGCHighThresholdPercent: 50
-    # Resource
+
+apiVersion: v1
+data:
+  kubelet: |
+    apiVersion: kubelet.config.k8s.io/v1beta1
+    authentication:
+      anonymous:
+        enabled: false
+      webhook:
+        cacheTTL: 2m
+        enabled: true
+      x509:
+        clientCAFile: /etc/kubernetes/pki/ca.crt
+    authorization:
+      mode: Webhook
+      webhook:
+        cacheAuthorizedTTL: 5m
+        cacheUnauthorizedTTL: 30s
+    cgroupDriver: systemd
+    clusterDNS:
+    - 192.168.0.10
+    clusterDomain: cluster.local
+    containerRuntimeEndpoint: ""
+    cpuManagerReconcilePeriod: 10s
+    crashLoopBackOff: {}
+    evictionPressureTransitionPeriod: 300s
+    fileCheckFrequency: 20s
+    healthzBindAddress: 127.0.0.1
+    healthzPort: 10248
+    httpCheckFrequency: 20s
+    # gc
+    imageMaximumGCAge: 168h
+    imageMinimumGCAge: 2h
+    imageGCLowThresholdPercent: 70
+    imageGCHighThresholdPercent: 80
+    # reserved
     systemReserved:
       cpu: 500m
       memory: 500m
     kubeReserved:
       cpu: 500m
       memory: 500m
-    evictionPressureTransitionPeriod: 300s # upgrade
-    nodeStatusReportFrequency: 10s         # upgrade
-    nodeStatusUpdateFrequency: 10s         # upgrade
-    cgroupDriver: systemd
-    maxPods: 200
+    kind: KubeletConfiguration
+    # log
+    logging:
+      flushFrequency: 0
+      options:
+        json:
+          infoBufferSize: "512"
+        text:
+          infoBufferSize: "512"
+      verbosity: 2
+    memorySwap: {}
+    # node
+    nodeStatusReportFrequency: 20s
+    nodeStatusUpdateFrequency: 20s
+    rotateCertificates: true
+    runtimeRequestTimeout: 2m
+    shutdownGracePeriod: 30s
+    shutdownGracePeriodCriticalPods: 10s
+    staticPodPath: /etc/kubernetes/manifests
+    streamingConnectionIdleTimeout: 5m
+    syncFrequency: 1m
+    volumeStatsAggPeriod: 1m
+    # pods
+    maxPods: 150
     resolvConf: /etc/resolv.conf
-kind: ConfigMap                            # relative
-……
-
-# kube-proxy 升级为 iptables -> nftables
-kubectl -n kube-system get  configmap kube-proxy -o yaml > configmap-kube-proxy.yaml
-kubectl -n kube-system edit configmap kube-proxy
-
+kind: ConfigMap
 ```
 
 
