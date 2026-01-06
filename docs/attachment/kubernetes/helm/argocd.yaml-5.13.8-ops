@@ -1,0 +1,161 @@
+crds:
+  install: false
+  keep: true
+
+global:
+  image:
+    repository: hub.8ops.top/quay/argocd
+    tag: "v2.5.2"
+
+configs:
+  cm:
+    create: true
+    exec.enabled: true
+    admin.enabled: true
+
+    accounts.jesse: login
+    accounts.jesse.enabled: "true"
+
+  params:
+    controller.status.processors: 20
+    controller.operation.processors: 10
+    controller.self.heal.timeout.seconds: 5
+    controller.repo.server.timeout.seconds: 60
+
+    server.insecure: true
+
+  rbac:
+    create: true
+    policy.csv: |
+      p, jesse, applications, *, */*, allow
+      p, jesse, clusters, *, *, allow
+      p, jesse, certificates, *, *, allow
+      p, jesse, repositories, *, *, allow
+      p, jesse, projects, *, *, allow
+      p, jesse, accounts, get, *, allow
+      p, jesse, gpgkeys, get, *, allow
+      p, jesse, logs, get, *, allow
+      p, jesse, exec, create, */*, allow
+
+controller:
+  metrics:
+    enabled: true
+
+  resources:
+    limits:
+      cpu: 1
+      memory: 2Gi
+    requests:
+      cpu: 200m
+      memory: 256Mi
+
+  replicas: 2
+
+dex:
+  enabled: true
+
+  metrics:
+    enabled: true
+
+  image:
+    repository: hub.8ops.top/google_containers/dexidp-dex
+    tag: v2.35.3
+
+  resources: 
+    limits:
+      cpu: 50m
+      memory: 64Mi
+    requests:
+      cpu: 10m
+      memory: 32Mi
+
+redis:
+  enabled: true
+
+  image:
+    repository: hub.8ops.top/third/redis
+    tag: 7.0.5-alpine
+
+  resources:
+    limits:
+      cpu: 200m
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 64Mi
+
+  metrics:
+    enabled: true
+    image:
+      repository: hub.8ops.top/bitnami/redis-exporter
+      tag: 1.26.0-debian-10-r2
+    resources: 
+      limits:
+        cpu: 50m
+        memory: 64Mi
+      requests:
+        cpu: 10m
+        memory: 32Mi
+
+server:
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+
+  metrics:
+    enabled: true
+
+  ingress:
+    enabled: true
+    ingressClassName: external
+    hosts:
+      - argo-cd-ops.8ops.top
+    tls:
+      - secretName: tls-8ops.top
+        hosts:
+          - argo-cd-ops.8ops.top
+
+repoServer:
+  resources:
+    limits:
+      cpu: 1
+      memory: 1Gi
+    requests:
+      cpu: 10m
+      memory: 64Mi
+
+  metrics:
+    enabled: true
+
+applicationSet:
+  enabled: true
+
+  metrics:
+    enabled: true
+
+  resources: 
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+notifications:
+  enabled: true
+
+  metrics:
+    enabled: true
+
+  resources: 
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+

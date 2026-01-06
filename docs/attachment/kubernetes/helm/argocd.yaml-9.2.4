@@ -1,0 +1,71 @@
+
+global:
+  image:
+    repository: hub.8ops.top/quay/argocd
+    tag: v3.2.3
+
+controller:
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+
+dex:
+  enabled: true
+
+  image:
+    repository: hub.8ops.top/google_containers/dexidp-dex
+    tag: v2.44.0
+
+redis:
+  enabled: true
+
+  image:
+    repository: hub.8ops.top/middleware/redis
+    tag: 8.0.3
+
+  resources:
+    limits:
+      cpu: 200m
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 64Mi
+
+server:
+  extraArgs:
+    - --insecure
+
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+
+  ingress:
+    enabled: true
+    ingressClassName: external
+    hostname: argo-cd.8ops.top
+    tls: true
+    extraTls:
+      - hosts:
+        - argo-cd.8ops.top
+        secretName: tls-8ops.top
+  ingressGrpc:
+    enabled: false
+
+repoServer:
+  resources:
+    limits:
+      cpu: 50m
+      memory: 128Mi
+    requests:
+      cpu: 10m
+      memory: 64Mi
+
+

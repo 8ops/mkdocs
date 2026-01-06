@@ -13,10 +13,10 @@
 ```bash
 # 新用户基本信息
 USER=guest
+NAMESPACE=kube-app
 CA_CRT=/etc/kubernetes/pki/ca.crt
 CA_KEY=/etc/kubernetes/pki/ca.key
-SERVER=https://10.101.11.110:6443
-
+SERVER=https://10.101.9.111:6443
 ```
 
 
@@ -49,6 +49,11 @@ kubectl config set-credentials ${USER} \
 kubectl config set-context ${USER}@kubernetes \
     --cluster=kubernetes \
     --user=${USER} \
+    --kubeconfig=${USER}.kubeconfig
+
+# 设置默认命名空间
+kubectl config set-context \
+    --current --namespace=${NAMESPACE} \
     --kubeconfig=${USER}.kubeconfig
 
 # 设置默认上下文
@@ -85,8 +90,8 @@ kubectl -n ${NAMESPACE} create role user-op-for-${USER} \
 
 # 更多权限
 #- apiGroups: ["", "extensions", "apps"]
-#  verbs: ["create", "delete", "get", "list", "patch", "update", "watch"]
 #  resources: ["*"]
+#  verbs: ["create", "delete", "get", "list", "patch", "update", "watch"]
 
 # 全部权限
 # verbs: ["create", "delete", "get", "list", "patch", "update", "watch"]
@@ -117,7 +122,7 @@ kubectl -n ${NAMESPACE} edit role user-op-for-${USER}
   resources: ["cronjobs","jobs"]
   verbs: ["get", "list", "watch"]
 
-kubectl get all,cm,pvc,ing,hpa,jobs,cronjobs
+kubectl --kubeconfig ${USER}.kubeconfig get all,cm,pvc,ing,hpa,jobs,cronjobs
 
 kubectl -n ${NAMESPACE} create rolebinding user-op-for-${USER}-binding \
   --role=user-op-for-${USER} \

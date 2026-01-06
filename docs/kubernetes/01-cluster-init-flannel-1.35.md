@@ -527,3 +527,25 @@ EOF
 kubectl -n kube-server get secrets dashboard-ops-secret -o=jsonpath={.data.token} | base64 -d && echo
 ```
 
+
+
+### 4.3 ArgoCD
+
+```bash
+ARGOCD_VERSION=9.2.4
+helm repo add argoproj https://argoproj.github.io/argo-helm
+helm repo update argoproj
+helm search repo argo-cd
+helm show values argoproj/argo-cd \
+  --version ${ARGOCD_VERSION} > argocd.yaml-${ARGOCD_VERSION}-default
+
+helm upgrade --install argo-cd argoproj/argo-cd \
+  -n kube-server \
+  -f argocd.yaml-${ARGOCD_VERSION} \
+  --version ${ARGOCD_VERSION}
+
+
+```
+
+
+

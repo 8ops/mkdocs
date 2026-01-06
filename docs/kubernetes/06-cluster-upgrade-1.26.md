@@ -1,4 +1,4 @@
-# Upgrade - 1.26.
+# Upgrade - 1.26
 
 [Reference](06-cluster-upgrade.md)
 
