@@ -158,7 +158,6 @@ nav:
       - daily/46-nginx.md
       - daily/47-elastic.md
       - daily/48-mysql.md
-      - daily/49-kube-burner.md
       - daily/50-denyhosts.md
       - daily/51-sentry.md
       - daily/52-mitmproxy.md
@@ -220,6 +219,7 @@ nav:
       - kubernetes/44-jsonpath.md
       - kubernetes/45-taint-and-toleration.md
       - kubernetes/46-metrics-server.md
+      - kubernetes/49-kube-burner.md
     - 【存储】: 
       - kubernetes/51-minio.md
       - kubernetes/52-nfs-provider.md
