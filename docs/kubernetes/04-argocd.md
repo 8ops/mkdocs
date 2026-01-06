@@ -24,9 +24,9 @@ helm upgrade --install argo-cd argoproj/argo-cd \
 
 helm -n kube-server uninstall argo-cd
 
+# default password
 kubectl -n kube-server get secret argocd-initial-admin-secret \
     -o jsonpath="{.data.password}" | base64 -D; echo 
-
 ```
 
 
@@ -36,7 +36,7 @@ kubectl -n kube-server get secret argocd-initial-admin-secret \
 可以通过 `UI` 界面向导操作，也可以通过 `argocd` 命令操作
 
 ```bash
-curl -sSL -o ~/bin/argocd https://github.com/argoproj/argo-cd/releases/download/v2.5.2/argocd-linux-amd64
+curl -sSL -o ~/bin/argocd https://github.com/argoproj/argo-cd/releases/download/v3.0.21/argocd-linux-amd64
 chmod +x ~/bin/argocd
 ```
 
@@ -50,7 +50,7 @@ kubectl config get-contexts
 
 # 登录 argo-cd
 argocd login argo-cd.8ops.top --username=admin --password=xx --grpc-web
-argocd context --grpc-web
+argocd context
 
 # 添加 kubernetes cluster
 argocd cluster add kubeconfig-guest-name \
@@ -59,7 +59,7 @@ argocd cluster add kubeconfig-guest-name \
     
 # 非安全模式 - token认证
 argocd cluster add kube-context-name --name argocd-context-name --grpc-web
-argocd cluster list --grpc-web
+argocd cluster list
 ```
 
 
@@ -81,7 +81,7 @@ argocd cluster add kube-context-name --name argocd-context-name --grpc-web
 # kubectl -n kube-system get ServiceAccount/argocd-manager ClusterRole/argocd-manager-role ClusterRoleBinding/argocd-manager-role-binding
 
 # 第五步，查看cluster
-argocd cluster list --grpc-web
+argocd cluster list
 ```
 
 
@@ -171,6 +171,10 @@ data:
   ……
   accounts.jesse: login
   accounts.jesse.enabled: "true"
+  accounts.arch: login
+  accounts.arch.enabled: "true"
+  accounts.ops: login
+  accounts.ops.enabled: "true"
 
 # setting account jesse's pass
 # --current-password is admin's pass required
@@ -191,6 +195,24 @@ kubectl -n kube-server edit cm argocd-rbac-cm
     p, jesse, gpgkeys, get, *, allow
     p, jesse, logs, get, *, allow
     p, jesse, exec, create, */*, allow
+
+# 区分不同用户权限
+  policy.csv: |
+    p, arch, applications, *, control-plane-proj/*, allow
+    p, arch, applications, *, gateway/*, allow
+    p, arch, clusters, get, *, allow
+    p, arch, repositories, get, control-plane-proj/*, allow
+    p, arch, logs, get, *, allow
+    p, arch, exec, create, control-plane-proj/*, allow
+    p, ops, applications, *, */*, allow
+    p, ops, clusters, *, *, allow
+    p, ops, certificates, get, *, allow
+    p, ops, repositories, get, *, allow
+    p, ops, projects, get, *, allow
+    p, ops, accounts, get, *, allow
+    p, ops, gpgkeys, get, *, allow
+    p, ops, logs, get, *, allow
+    p, ops, exec, create, */*, allow
 
 argocd login argo-cd.8ops.top --grpc-web
 argocd account list --grpc-web
