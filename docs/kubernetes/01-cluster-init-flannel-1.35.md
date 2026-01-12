@@ -82,6 +82,8 @@ ls -l /var/lib/etcd
 
 ### 2.3 安装容器运行时
 
+#### 2.3.1 apt
+
 ```bash
 CONTAINERD_VERSION=2.2.1-1~ubuntu.24.04~noble
 apt install -y containerd.io=${CONTAINERD_VERSION}
@@ -117,7 +119,63 @@ systemctl restart containerd && systemctl status containerd
 
 
 
-> 受信私有CA
+#### 2.3.2 binary
+
+```bash
+# containerd
+CONTAINERD_VERSION=2.2.1
+wget https://github.com/containerd/containerd/releases/download/v{CONTAINERD_VERSION}/containerd-${CONTAINERD_VERSION}-linux-amd64.tar.gz
+tar -xzf containerd-${CONTAINERD_VERSION}-linux-amd64.tar.gz -C /usr/local/
+
+cat > /etc/systemd/system/containerd.service <<EOF
+[Unit]
+Description=containerd container runtime
+Documentation=https://containerd.io
+After=network.target local-fs.target
+
+[Service]
+ExecStartPre=-/sbin/modprobe overlay
+ExecStart=/usr/local/bin/containerd
+Type=notify
+Delegate=yes
+KillMode=process
+Restart=always
+RestartSec=5
+LimitNPROC=infinity
+LimitCORE=infinity
+LimitNOFILE=infinity
+TasksMax=infinity
+OOMScoreAdjust=-999
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# config.toml
+mkdir -p /etc/containerd
+containerd config default | sudo tee /etc/containerd/config.toml
+
+[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
+  ...
+  [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
+    SystemdCgroup = true #此行为添加
+
+# runc
+RUNC_VERSION=1.4.0
+wget -O /usr/bin/runc https://github.com/opencontainers/runc/releases/download/v${RUNC_VERSION}/runc.amd64
+chmod +x /usr/bin/runc
+
+cat > /etc/crictl.yaml <<EOF
+runtime-endpoint: unix:///run/containerd/containerd.sock
+image-endpoint: unix:///run/containerd/containerd.sock
+timeout: 10
+debug: false
+EOF
+```
+
+
+
+#### 2.3.3 受信私有CA
 
 ```bash
 # 1

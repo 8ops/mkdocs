@@ -82,6 +82,8 @@ ls -l /var/lib/etcd
 
 ### 2.3 安装容器运行时
 
+#### 2.3.1 apt
+
 ```bash
 CONTAINERD_VERSION=2.2.1-1~ubuntu.24.04~noble
 apt install -y containerd.io=${CONTAINERD_VERSION}
@@ -117,7 +119,7 @@ systemctl restart containerd && systemctl status containerd
 
 
 
-> 受信私有CA
+#### 2.3.2 受信私有CA
 
 ```bash
 # os
