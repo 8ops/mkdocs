@@ -509,7 +509,7 @@ argocd app set helm-repo-redis --helm-set replica.persistence.enabled=false
 # argocd app set helm-repo-redis-cluster --helm-set persistence.enabled=false 
 # argocd app set helm-repo-redis-cluster --helm-set redis.useAOFPersistence=false 
 
-# kubernetes v1.35+ 外部EndpointSlice在Argo中被忽略，因为argo认为EndpointSlice是kubernetes自动创建的，无须维护
+# kubernetes v1.35+ 外部EndpointSlice在Argo中被忽略，因为argo认为EndpointSlice是kubernetes自动创建的，无须维护（无效）
 argocd app edit toolkit
 ignoreDifferences:
   - group: discovery.k8s.io
