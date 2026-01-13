@@ -348,7 +348,7 @@ kubectl apply -f calico.yaml-v3.24.1
 
 ### 4.1 MetalLB
 
-[Reference](42-metallb.md)
+[Reference](103-addons-metallb.md)
 
 
 

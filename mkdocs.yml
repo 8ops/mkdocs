@@ -168,7 +168,7 @@ nav:
       - daily/57-lvm.md
       - daily/58-vnc.md
   - Kubernetes:
-    - 【快速搭建】: 
+    - 【搭建】: 
       - kubernetes/01-cluster-init.md
       - kubernetes/01-cluster-init-flannel.md
       - kubernetes/01-cluster-init-flannel-1.35.md
@@ -178,7 +178,7 @@ nav:
       - kubernetes/01-cluster-init-calico-1.31.md
       - kubernetes/01-cluster-init-kylin-1.34.md
       - kubernetes/02-cluster-reset.md
-    - 【升级版本】:
+    - 【升级】:
       - kubernetes/06-cluster-renew-certs.md
       - kubernetes/06-cluster-upgrade.md
       - kubernetes/06-cluster-upgrade-1.24.md
@@ -186,45 +186,53 @@ nav:
       - kubernetes/06-cluster-upgrade-1.26.md
       - kubernetes/06-cluster-upgrade-1.32.md
       - kubernetes/06-cluster-upgrade-qa.md
-      - kubernetes/07-app-migrate.md
-      - kubernetes/08-docker.md
-    - 【常用组件】:
-      - kubernetes/04-argocd.md
-      - kubernetes/05-helm.md
-      - kubernetes/20-prometheus.md
-      - kubernetes/21-mysql.md
-      - kubernetes/22-mongo.md
-      - kubernetes/23-grafana.md
-      - kubernetes/24-redis.md
-      - kubernetes/25-elastic.md
-      - kubernetes/26-harbor.md
-      - kubernetes/27-kong.md
-      - kubernetes/28-rabbitmq.md
-      - kubernetes/42-metallb.md
-      - kubernetes/29-dashboard.md
-      - kubernetes/29-controller.md
-      - kubernetes/43-envoy.md
-      - kubernetes/29-rancher.md
-    - 【日常应用】:
-      - kubernetes/30-resource.md
-      - kubernetes/30-readme.md
-      - kubernetes/09-account.md
-      - kubernetes/10-access-image.md
-      - kubernetes/20-promql.md
-      - kubernetes/20-promql-func.md
-      - kubernetes/31-kubeconfig.md
-      - kubernetes/32-daemonset.md
-      - kubernetes/33-statefulset.md
-      - kubernetes/39-etcd.md
-      - kubernetes/44-jsonpath.md
-      - kubernetes/45-taint-and-toleration.md
-      - kubernetes/46-metrics-server.md
-      - kubernetes/49-kube-burner.md
-    - 【存储】: 
-      - kubernetes/51-minio.md
-      - kubernetes/52-nfs-provider.md
+    - 【Addons】:
+      - kubernetes/100-addons-readme.md
+      - kubernetes/101-addons-harbor.md
+      - kubernetes/102-addons-helm.md
+      - kubernetes/103-addons-metallb.md
+      - kubernetes/104-addons-controller.md
+      - kubernetes/105-addons-envoy.md
+      - kubernetes/110-addons-argocd.md
+      - kubernetes/111-addons-dashboard.md
+      - kubernetes/112-addons-prometheus.md
+      - kubernetes/113-addons-elastic.md
+      - kubernetes/114-addons-grafana.md
+      - kubernetes/120-addons-mysql.md
+      - kubernetes/121-addons-mongo.md
+      - kubernetes/122-addons-redis.md
+      - kubernetes/123-addons-kong.md
+      - kubernetes/124-addons-rabbitmq.md
+      - kubernetes/125-addons-rancher.md
+      - kubernetes/126-addons-cert-manager.md
+    - 【CRI】:
+      - kubernetes/200-cri-readme.md
+    - 【CNI】:
+      - kubernetes/300-cni-readme.md
+    - 【CSI】:
+      - kubernetes/400-csi-readme.md
+      - kubernetes/401-csi-minio.md
+      - kubernetes/402-csi-nfs-provider.md
+    - 【应用】:
+      - kubernetes/500-app-readme.md
+      - kubernetes/501-app-promql.md
+      - kubernetes/502-app-promql-func.md
+      - kubernetes/503-app-account.md
+      - kubernetes/504-app-kubeconfig.md
+      - kubernetes/505-app-metrics-server.md
+      - kubernetes/506-app-resource.md
+      - kubernetes/507-app-access-image.md
+      - kubernetes/508-app-docker.md
+      - kubernetes/509-app-migrate.md
+      - kubernetes/510-app-daemonset.md
+      - kubernetes/511-app-statefulset.md
+      - kubernetes/512-app-etcd.md
+      - kubernetes/513-app-jsonpath.md
+      - kubernetes/514-app-taint-and-toleration.md
+      - kubernetes/515-app-kube-burner.md
     - 【安全】: 
-      - kubernetes/61-audit.md
+      - kubernetes/601-sec-readme.md
+      - kubernetes/601-sec-audit.md
   - 运维进阶: 
     - ops/01-devops.md
     - ops/02-dataops.md

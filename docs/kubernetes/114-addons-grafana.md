@@ -1,6 +1,6 @@
 # Helm + Grafana
 
-先准备mysql存储grafana的metedata信息[实战 | 基于Kubernetes使用MySQL](21-mysql.md)
+先准备mysql存储grafana的metedata信息[MySQL](120-addons-mysql.md)
 
 | name     | value   |
 | -------- | ------- |

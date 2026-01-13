@@ -59,13 +59,13 @@ kubernetes 集群性能评测
 
 ### 1.1 prometheus
 
-[Referernce](20-prometheus.md)
+[Referernce](112-addons-prometheus.md)
 
 
 
 ### 1.2 elasticsearch
 
-[Reference](25-elastic.md)
+[Reference](113-addons-elastic.md)
 
 
 

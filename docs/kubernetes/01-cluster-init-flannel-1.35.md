@@ -589,8 +589,6 @@ kubectl -n kube-server get secrets dashboard-ops-secret -o=jsonpath={.data.token
 
 ### 4.3 ArgoCD
 
-[Reference](04-argocd.md)
-
 ```bash
 ARGOCD_VERSION=9.2.4
 helm repo add argoproj https://argoproj.github.io/argo-helm
@@ -604,6 +602,4 @@ helm upgrade --install argo-cd argoproj/argo-cd \
   -f argocd.yaml-${ARGOCD_VERSION} \
   --version ${ARGOCD_VERSION}
 ```
-
-
 

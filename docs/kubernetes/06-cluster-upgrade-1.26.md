@@ -60,10 +60,6 @@ apt update && apt info kubeadm
 
 
 
-[优化访问镜像](10-access-image.md)
-
-
-
 ## 一、升级二进制
 
 ```bash

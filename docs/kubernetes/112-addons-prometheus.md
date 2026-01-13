@@ -181,7 +181,7 @@ helm -n kube-server uninstall blackbox-exporter
 
 ### 1.3 grafana
 
-[Reference](23-grafana.md)
+[Reference](114-addons-grafana.md)
 
 ```bash
 # templ

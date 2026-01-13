@@ -47,10 +47,6 @@ apt update && apt info kubeadm
 
 
 
-[优化访问镜像](10-access-image.md)
-
-
-
 ## 一、升级二进制
 
 ```bash
@@ -1243,8 +1239,6 @@ W1021 17:12:34.221411 1036588 postupgrade.go:116] Using temporary directory /etc
 
 
 ## 四、addons
-
-参考[Helm](05-helm.md)
 
 
 

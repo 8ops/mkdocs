@@ -47,10 +47,6 @@ Kubernetes Cluster 升级是一件必要的事情。
 
 
 
-[优化访问镜像](10-access-image.md)
-
-
-
 ## 一、升级二进制
 
 ```bash

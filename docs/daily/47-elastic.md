@@ -73,7 +73,7 @@ vm.max_map_count = 262144
 
 [Reference](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/index-lifecycle-management.html)
 
-[一次使用](../kubernetes/25-elastic.md#42-ilm)
+[一次使用](../kubernetes/113-addons-elastic.md#42-ilm)
 
 
 

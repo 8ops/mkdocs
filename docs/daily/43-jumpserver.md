@@ -28,8 +28,8 @@ ssh -p2222 jesse@10.101.11.236
 
 `unsucess`
 
-- [MySQL](../kubernetes/21-mysql.md)
-- [Redis](../kubernetes/24-redis.md)
+- [MySQL](../kubernetes/120-addons-mysql.md)
+- [Redis](../kubernetes/122-addons-redis.md)
 
 
 ```bash

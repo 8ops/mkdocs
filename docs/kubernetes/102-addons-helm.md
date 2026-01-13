@@ -14,8 +14,6 @@ Helm 是 Kubernetes 的包管理器，从CNCF毕业。
 
 Helm是个很意思的工具，简化了kubernetes上常用组件的管理。
 
-[优化访问镜像](10-access-image.md)
-
 使用Helm后会生成相应的缓存文件，使用过程中必要时可以主动清空。目录如下
 
 - ~/.config/helm
@@ -281,7 +279,7 @@ kubectl describe secrets \
 
 Reference
 
-- [kubeconfig](31-kubeconfig.md)
+- [kubeconfig](504-app-kubeconfig.md)
 
 
 

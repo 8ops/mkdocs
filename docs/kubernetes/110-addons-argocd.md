@@ -339,7 +339,7 @@ argocd cluster add \
     --upsert                       # 强制覆盖
 ```
 
-[目标集群授权](31-kubeconfig.md)
+[目标集群授权](504-app-kubeconfig.md)
 
 ```bash
 # 临时授权，用于创建role
@@ -846,8 +846,6 @@ argocd app set metallb-extention --sync-policy automated
 
 ### 3.3 ingress-nginx
 
-[Reference](05-helm.md#ingress-nginx)
-
 ```bash
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 helm repo update ingress-nginx
@@ -874,8 +872,6 @@ argocd app create ingress-nginx \
 
 
 ### 3.4 dashboard
-
-[Reference](05-helm.md#dashboard)
 
 ```bash
 helm repo add kubernetes-dashboard https://kubernetes.github.io/dashboard/
@@ -1010,8 +1006,6 @@ helm upgrade --install minio minio/minio \
 
 [Reference](https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner)
 
-[sample](52-nfs-provider.md)
-
 ```bash
 helm repo add nfs-provider https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner
 helm repo update nfs-provider
@@ -1055,8 +1049,6 @@ argocd app create nfs-extention \
 
 
 ### 3.9 cert
-
-[Reference](05-helm.md#cert-manager)
 
 #### 3.9.1 cert-manager
 
@@ -1136,8 +1128,6 @@ argocd app create cert-manager-extention \
 
 ### 3.10 prometheus
 
-[Reference](20-prometheus.md#11-prometheus)
-
 #### 3.10.1 prometheus
 
 ```bash
@@ -1214,8 +1204,6 @@ argocd app create prometheus-blackbox-exporter \
 
 #### 3.10.4 grafana
 
-[mysql](#36-mysql)
-
 [auth.gitlab](https://grafana.com/docs/grafana/latest/setup-grafana/configure-security/configure-authentication/gitlab/)
 
 ```bash
@@ -1283,7 +1271,6 @@ grafana.ini:
 
 ### 3.11 elastic
 
-[Reference](05-helm.md#elastic)
 
 #### 3.11.1 elastic
 
