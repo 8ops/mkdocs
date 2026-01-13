@@ -231,7 +231,7 @@ nav:
       - kubernetes/514-app-taint-and-toleration.md
       - kubernetes/515-app-kube-burner.md
     - 【安全】: 
-      - kubernetes/601-sec-readme.md
+      - kubernetes/600-sec-readme.md
       - kubernetes/601-sec-audit.md
   - 运维进阶: 
     - ops/01-devops.md
