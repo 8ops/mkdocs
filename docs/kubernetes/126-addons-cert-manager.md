@@ -1,0 +1,535 @@
+# Cert-Manager
+
+## 一、Self Root CA
+
+[Reference](https://jamielinux.com/docs/openssl-certificate-authority/introduction.html)
+
+### 1.1 Root CA
+
+算法使用 RSA4096 或 SHA512 。
+
+```bash
+# 1，init
+ROOT_DIR=/opt/ca/root
+mkdir -p ${ROOT_DIR}
+
+# 2，openssl.cnf
+cat > ${ROOT_DIR}/openssl.cnf <<EOF
+[ ca ]
+default_ca  = CA_default
+
+[ CA_default ]
+dir             = ${ROOT_DIR}
+certs           = \$dir/certs
+crl_dir         = \$dir/crl
+database        = \$dir/index.txt
+new_certs_dir   = \$dir/newcerts
+certificate     = \$dir/key/cacert.crt
+serial          = \$dir/serial
+crlnumber       = \$dir/crlnumber
+crl             = \$dir/crl.pem
+private_key     = \$dir/key/cakey.pem
+RANDFILE        = \$dir/key/.rand
+unique_subject  = no
+
+x509_extensions = usr_cert
+copy_extensions = copy
+
+name_opt    = ca_default
+cert_opt    = ca_default
+
+default_days     = 36500 # 100 years
+default_crl_days = 30
+default_md       = sha512
+preserve         = no
+policy           = policy_ca
+
+[ policy_ca ]
+countryName             = supplied
+stateOrProvinceName     = supplied
+organizationName        = supplied
+organizationalUnitName  = supplied
+commonName              = supplied
+emailAddress            = optional
+
+[ req ]
+default_bits        = 4096
+default_keyfile     = privkey.pem
+distinguished_name  = req_distinguished_name
+attributes          = req_attributes
+x509_extensions     = v3_ca
+string_mask         = utf8only
+utf8                = yes
+prompt              = no
+
+[ req_distinguished_name ]
+countryName             = CN
+stateOrProvinceName     = Shanghai
+localityName            = Shanghai 
+organizationName        = 8OPS Technology Co Ltd
+organizationalUnitName  = 8OPS Root CA
+commonName              = Global 8OPS Root CA
+
+[ usr_cert ]
+basicConstraints = CA:TRUE
+
+[ v3_ca ]
+basicConstraints        = critical, CA:TRUE
+subjectKeyIdentifier    = hash
+authorityKeyIdentifier  = keyid:always, issuer:always
+keyUsage                = critical, cRLSign, digitalSignature, keyCertSign
+
+[ v3_intermediate_ca ]
+basicConstraints        = critical, CA:TRUE, pathlen:0 # Can not sign other CAs/ICAs if pathlen: is set to 0
+subjectKeyIdentifier    = hash
+authorityKeyIdentifier  = keyid:always, issuer:always
+keyUsage                = critical, cRLSign, digitalSignature, keyCertSign  
+
+[ req_attributes ]
+EOF
+
+# 3，create cakey.pem
+mkdir -p ${ROOT_DIR}/newcerts ${ROOT_DIR}/key
+touch ${ROOT_DIR}/index.txt ${ROOT_DIR}/index.txt.attr
+echo 01 > ${ROOT_DIR}/serial
+openssl genrsa -out ${ROOT_DIR}/key/cakey.pem 4096
+
+# 4，create ca.csr
+openssl req -new -key ${ROOT_DIR}/key/cakey.pem -out ${ROOT_DIR}/key/ca.csr \
+  -config ${ROOT_DIR}/openssl.cnf
+
+# 5，create cacert.crt
+openssl ca -selfsign -in ${ROOT_DIR}/key/ca.csr -out ${ROOT_DIR}/key/cacert.crt \
+  -config ${ROOT_DIR}/openssl.cnf -extensions v3_ca
+
+# 6，view
+openssl x509 -text -in ${ROOT_DIR}/key/cacert.crt
+
+# 生成了根CA的相关证书和私钥，可以用于签发其他的CA（二级CA），不可签发服务器证书
+```
+
+
+
+### 1.2 Intermediate CA
+
+此二级CA不能继续签发出三级CA。
+
+```bash
+# init
+ROOT_DIR=/opt/ca/root
+AGENT_DIR=/opt/ca/agent
+mkdir -p ${AGENT_DIR}
+
+# openssl.cnf
+cat > ${AGENT_DIR}/openssl.cnf <<EOF
+[ ca ]
+default_ca  = CA_default
+
+[ CA_default ]
+dir             = ${AGENT_DIR}
+certs           = \$dir/certs
+crl_dir         = \$dir/crl
+database        = \$dir/index.txt
+new_certs_dir   = \$dir/newcerts
+certificate     = \$dir/key/cacert.crt
+serial          = \$dir/serial
+crlnumber       = \$dir/crlnumber
+crl             = \$dir/crl.pem
+private_key     = \$dir/key/cakey.pem
+RANDFILE        = \$dir/key/.rand
+unique_subject  = no
+
+x509_extensions = usr_cert
+copy_extensions = copy
+
+name_opt    = ca_default
+cert_opt    = ca_default
+
+default_days     = 3650 # 10 years
+default_crl_days = 30
+default_md       = sha512
+preserve         = no
+policy           = policy_ca
+
+[ policy_ca ]
+countryName             = supplied
+stateOrProvinceName     = supplied
+organizationName        = supplied
+organizationalUnitName  = supplied
+commonName              = supplied
+emailAddress            = optional
+
+[ req ]
+default_bits        = 4096
+default_keyfile     = privkey.pem
+distinguished_name  = req_distinguished_name
+attributes          = req_attributes
+x509_extensions     = v3_ca
+string_mask         = utf8only
+utf8                = yes
+prompt              = no
+
+[ req_distinguished_name ]
+countryName             = CN
+stateOrProvinceName     = Shanghai 
+localityName            = Shanghai
+organizationName        = 8OPS Technology Co Ltd
+organizationalUnitName  = IT Department
+commonName              = GLOBAL 8OPS Intermediate CA X1
+
+[ usr_cert ]
+basicConstraints = CA:FALSE
+
+[ v3_ca ]
+basicConstraints        = critical, CA:FALSE
+subjectKeyIdentifier    = hash
+authorityKeyIdentifier  = keyid:always, issuer:always
+keyUsage                = critical, nonRepudiation, digitalSignature, keyEncipherment, keyAgreement 
+extendedKeyUsage        = critical, serverAuth
+
+[ req_attributes ]
+
+EOF
+
+# 3，create dir
+mkdir -p ${AGENT_DIR}/newcerts ${AGENT_DIR}/key
+touch ${AGENT_DIR}/index.txt ${AGENT_DIR}/index.txt.attr
+echo 01 > ${AGENT_DIR}/serial
+
+# 4，create cakey.pem
+openssl genrsa -out ${AGENT_DIR}/key/cakey.pem 4096
+
+# 5，create ca.csr
+openssl req -new -key ${AGENT_DIR}/key/cakey.pem -out ${AGENT_DIR}/key/ca.csr \
+  -config /${AGENT_DIR}/openssl.cnf
+
+# 6，create cacert.crt
+openssl ca -in ${AGENT_DIR}/key/ca.csr -out ${AGENT_DIR}/key/cacert.crt \
+  -days=3650 -md sha512  -config ${ROOT_DIR}/openssl.cnf \
+  -extensions v3_intermediate_ca
+
+# 7，view
+openssl x509 -text -in ${AGENT_DIR}/key/cacert.crt
+
+# 生成了一个二级CA，这个二级CA可以签发服务器证书（不能签发其他的CA）
+```
+
+
+
+### 1.3 签发域名证书
+
+使用二级CA签发。
+
+```bash
+# init
+DOMAIN=8ops.top
+ROOT_DIR=/opt/ca/root
+AGENT_DIR=/opt/ca/agent
+DV_DIR=/opt/ca/8ops
+mkdir -p ${DV_DIR} 
+
+# openssl.cnf
+cat > ${DV_DIR}/openssl.cnf <<EOF
+[ req ]
+prompt             = no
+distinguished_name = server_distinguished_name
+req_extensions     = req_ext
+x509_extensions    = v3_req
+attributes         = req_attributes
+
+[ server_distinguished_name ]
+stateOrProvinceName     = Shanghai
+countryName             = CN
+organizationName        = 8OPS Technology Co Ltd
+organizationalUnitName  = IT Department
+commonName              = 8OPS 8ops.top
+
+[ v3_req ]
+basicConstraints = CA:FALSE
+keyUsage         = nonRepudiation, digitalSignature, keyEncipherment
+
+[ req_attributes ]
+
+[ req_ext ]
+subjectAltName   = @alternate_names
+
+[ alternate_names ]
+DNS.1 = ${DOMAIN}
+DNS.2 = *.${DOMAIN}
+
+EOF
+
+# 3，create domain.key
+openssl genrsa -out ${DV_DIR}/${DOMAIN}.key 4096
+
+# 4，create domain.csr
+openssl req -new -key ${DV_DIR}/${DOMAIN}.key -out ${DV_DIR}/${DOMAIN}.csr \
+  -config ${DV_DIR}/openssl.cnf
+
+# 5，create domain.crt
+# 根据CA/B论坛规定单张证书最长有效期已缩短至398天（约13个月），并计划在2029年缩短至47天
+openssl ca -in ${DV_DIR}/${DOMAIN}.csr -out ${DV_DIR}/${DOMAIN}.crt \
+  -days=398 -config ${AGENT_DIR}/openssl.cnf -extensions v3_ca
+
+# 6，merge domain.pem
+cat ${DV_DIR}/${DOMAIN}.crt ${AGENT_DIR}/key/cacert.crt ${ROOT_DIR}/key/cacert.crt > ${DV_DIR}/${DOMAIN}.cer
+cat ${DV_DIR}/${DOMAIN}.key ${DV_DIR}/${DOMAIN}.cer > ${DV_DIR}/${DOMAIN}.pem 
+
+# 7，view
+openssl x509 -text -in ${DV_DIR}/${DOMAIN}.pem
+
+```
+
+
+
+>  签发CA证书和终端证书区别
+
+1. 生成证书请求文件的时候。可查看openssl.cnf中[req]字段中扩展字段是v3_req，在v3_req中有个basicConstraints变量。
+   1. 当basicConstraints=CA:TRUE时，表明要生成的证书请求是CA证书请求文件；
+   2. 当basicConstraints=CA:FALSE时，表明要生成的证书请求文件是终端证书请求文件。
+
+2. 在签发终端证书的时候使用默认扩展字段usr_cert，当签发CA证书的时候再命令行使用了extensions选项指定v3_ca字段。
+   1. 在默认的usr_cert字段中 basicConstraints=CA:FALSE，表明要签发终端证书；
+   2. 在v3_ca字段中 basicConstraints=CA:TRUE，表明要签发CA证书。
+
+CA和终端证书是有区别的，CA是用来颁发终端证书和签发二级CA的，且两者是互斥的。
+
+
+
+## 二、Cert-Manager
+
+[Reference](https://cert-manager.io/docs/configuration/ca/)
+
+```bash
+CERT_MANAGER_VERSION=v1.19.2
+helm repo add jetstack https://charts.jetstack.io
+helm repo update jetstack
+helm search repo cert-manager
+
+# cert-manager
+helm show values jetstack/cert-manager \
+  --version=${CERT_MANAGER_VERSION} > cert-manager.yaml-${CERT_MANAGER_VERSION}-default
+
+# Example 
+#   https://books.8ops.top/attachment/cert-manager/helm/cert-manager.yaml-v1.9.1
+#   https://books.8ops.top/attachment/cert-manager/helm/cert-manager.yaml-v1.11.0
+#   
+
+helm upgrade --install cert-manager jetstack/cert-manager \
+  -f cert-manager.yaml-v1.9.1 \
+  -n cert-manager \
+  --create-namespace \
+  --version v1.9.1 --debug
+    
+helm upgrade --install cert-manager jetstack/cert-manager \
+  -f cert-manager.yaml-v1.11.0 \
+  -n cert-manager \
+  --create-namespace \
+  --version v1.11.0 --debug
+
+#  --set 'extraArgs={--dns01-recursive-nameservers-only,--dns01-recursive-nameservers=119.29.29.29:53\,114.114.114.114:53}' \
+
+helm -n cert-manager uninstall cert-manager
+```
+
+
+
+### 2.1 私有CA签发
+
+```bash
+# Example
+# https://books.8ops.top/attachment/cert-manager/clusterissuer-private.yaml
+# https://books.8ops.top/attachment/cert-manager/certificate-private.yaml
+# https://books.8ops.top/attachment/cert-manager/ingress-private.yaml
+#
+
+# 1. ROOT CA
+kubectl -n cert-manager create secret generic ca-key-pair \
+  --from-file=tls.crt=xx.crt \
+  --from-file=tls.key=xx.key
+
+# 2. ClusterIssuer 可切换成 Issuer
+kubectl apply -f - << EOF
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: ca-cluster-issuer
+  namespace: cert-manager
+spec:
+  ca:
+    secretName: ca-key-pair
+    crlDistributionPoints: # 域名证书吊销列表
+    - "http://example.com"
+EOF
+
+# 3. Ingress
+kubectl apply -f - << EOF
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    cert-manager.io/cluster-issuer: ca-cluster-issuer # 自动签发注解
+  labels:
+    app: ingress-private
+  name: ingress-private
+  namespace: default
+spec:
+  ingressClassName: external
+  rules:
+  - host: echoserver.abc.org
+    http:
+      paths:
+      - backend:
+          service:
+            name: echoserver
+            port:
+              number: 8080
+        path: /
+        pathType: Prefix
+  tls:
+  - hosts:
+    - www.abc.org
+    - echoserver.abc.org
+    - "*.abc.org"
+    secretName: tls-abc.org # 自动生成 secret 名称
+EOF    
+
+# 4. view
+~$ kubectl get ing,secret
+NAME                                        CLASS      HOSTS                 ADDRESS         PORTS     AGE
+ingress.networking.k8s.io/ingress-private   external   echoserver.abc.org    10.101.11.216   80, 443   8m13s
+
+NAME                  TYPE                DATA   AGE
+secret/tls-abc.org    kubernetes.io/tls   3      7m10s
+```
+
+
+
+### 2.2 LetsEncrypt
+
+> 实测效果
+
+| 顶级域名 | 成功与否 |
+| -------- | -------- |
+| *.top    | x        |
+| *.cn     | √        |
+| *.tech   | √        |
+| *.com    | √        |
+
+[Reference](https://cert-manager.io/docs/configuration/acme/dns01/#webhook)
+
+cert-manager also supports out of tree DNS providers using an external webhook. Links to these supported providers along with their documentation are below:
+
+- [`AliDNS-Webhook`](https://github.com/pragkent/alidns-webhook)
+- [`cert-manager-alidns-webhook`](https://github.com/DEVmachine-fr/cert-manager-alidns-webhook)
+- [`cert-manager-webhook-civo`](https://github.com/okteto/cert-manager-webhook-civo)
+- [`cert-manager-webhook-dnspod`](https://github.com/qqshfox/cert-manager-webhook-dnspod)
+- [`cert-manager-webhook-dnsimple`](https://github.com/neoskop/cert-manager-webhook-dnsimple)
+- [`cert-manager-webhook-gandi`](https://github.com/bwolf/cert-manager-webhook-gandi)
+- [`cert-manager-webhook-infomaniak`](https://github.com/Infomaniak/cert-manager-webhook-infomaniak)
+- [`cert-manager-webhook-inwx`](https://gitlab.com/smueller18/cert-manager-webhook-inwx)
+- [`cert-manager-webhook-linode`](https://github.com/slicen/cert-manager-webhook-linode)
+- [`cert-manager-webhook-oci`](https://gitlab.com/dn13/cert-manager-webhook-oci) (Oracle Cloud Infrastructure)
+- [`cert-manager-webhook-scaleway`](https://github.com/scaleway/cert-manager-webhook-scaleway)
+- [`cert-manager-webhook-selectel`](https://github.com/selectel/cert-manager-webhook-selectel)
+- [`cert-manager-webhook-softlayer`](https://github.com/cgroschupp/cert-manager-webhook-softlayer)
+- [`cert-manager-webhook-ibmcis`](https://github.com/jb-dk/cert-manager-webhook-ibmcis)
+- [`cert-manager-webhook-loopia`](https://github.com/Identitry/cert-manager-webhook-loopia)
+- [`cert-manager-webhook-arvan`](https://github.com/kiandigital/cert-manager-webhook-arvan)
+- [`bizflycloud-certmanager-dns-webhook`](https://github.com/bizflycloud/bizflycloud-certmanager-dns-webhook)
+- [`cert-manager-webhook-hetzner`](https://github.com/vadimkim/cert-manager-webhook-hetzner)
+- [`cert-manager-webhook-yandex-cloud`](https://github.com/malinink/cert-manager-webhook-yandex-cloud)
+- [`cert-manager-webhook-netcup`](https://github.com/aellwein/cert-manager-webhook-netcup)
+- [`cert-manager-webhook-pdns`](https://github.com/zachomedia/cert-manager-webhook-pdns)
+
+#### 2.2.1 imroc
+
+```bash
+# cert-manager-webhook-dnspod
+helm repo add imroc https://charts.imroc.cc
+helm repo update imroc
+helm search repo cert-manager-webhook-dnspod
+
+helm show values imroc/cert-manager-webhook-dnspod --version=1.2.0 > cert-manager-webhook-dnspod-imroc.yaml-1.2.0-default
+
+# Example 
+#   https://books.8ops.top/attachment/cert-manager/helm/cert-manager-webhook-dnspod-imroc.yaml-1.2.0
+#   https://books.8ops.top/attachment/cert-manager/certificate-dnspod-imroc.yaml
+#   https://books.8ops.top/attachment/cert-manager/ingress-dnspod-imroc.yaml
+#   
+
+helm upgrade --install cert-manager-webhook-dnspod-imroc imroc/cert-manager-webhook-dnspod \
+    -f cert-manager-webhook-dnspod-imroc.yaml-1.2.0 \
+    -n cert-manager \
+    --create-namespace \
+    --version 1.2.0 --debug
+
+# uninstall
+helm -n cert-manager uninstall cert-manager-webhook-dnspod-imroc
+
+kubectl -n cert-manager delete \
+    secret/cert-manager-webhook-dnspod-ca \
+    secret/cert-manager-webhook-dnspod-letsencrypt \
+    secret/cert-manager-webhook-dnspod-webhook-tls
+
+# view
+kubectl -n cert-manager get \
+    all,ing,cm,secret,issuer,clusterissuer,certificate,CertificateRequest,cert-manager
+
+kubectl -n default get \
+    ingress,secret,issuer,clusterissuer,certificate,CertificateRequest,cert-manager
+
+# 自动生成
+# kubectl apply -f certificate-dnspod-imroc.yaml
+
+# Ingress 中 secret 签发
+kubectl apply -f ingress-dnspod-imroc.yaml
+```
+
+
+
+#### 2.2.2 qqshfox
+
+[Reference](https://github.com/qqshfox/cert-manager-webhook-dnspod)
+
+```bash
+git clone https://github.com/qqshfox/cert-manager-webhook-dnspod.git abc
+mv abc/deploy/cert-manager-webhook-dnspod  cert-manager-webhook-dnspod
+
+# Example 
+#   https://books.8ops.top/attachment/cert-manager/helm/cert-manager-webhook-dnspod-qqshfox.yaml
+#   # 用于单独测试生成签名证书
+#   https://books.8ops.top/attachment/cert-manager/certificate-dnspod-qqshfox.yaml 
+#   https://books.8ops.top/attachment/cert-manager/ingress-dnspod-qqshfox.yaml
+#
+
+helm upgrade --install cert-manager-webhook-dnspod-qqshfox ./cert-manager-webhook-dnspod-qqshfox \
+    --namespace cert-manager \
+    -f cert-manager-webhook-dnspod-qqshfox.yaml \
+    --debug
+
+# 自动生成
+# kubectl apply -f certificate-dnspod-qqshfox.yaml
+
+# Ingress 中 secret 签发
+kubectl apply -f ingress-dnspod-qqshfox.yaml
+
+# uninstall
+helm -n cert-manager uninstall cert-manager-webhook-dnspod-qqshfox
+
+# 注意
+# 当集群中有两个 dnspod webhook 时
+# 两个 webhook 的 groupName 不能相同
+# 但 certificate 必须和 cert-manager 一致，默认是 cert-manager.io
+```
+
+
+
+[dns-self-check](https://cert-manager.io/docs/configuration/acme/dns01/#setting-nameservers-for-dns01-self-check)
+
+
+
+#### 2.2.3 smallstep
+
+[Reference](https://github.com/smallstep/certificates)
+
