@@ -313,21 +313,14 @@ helm show values jetstack/cert-manager \
 # Example 
 #   https://books.8ops.top/attachment/cert-manager/helm/cert-manager.yaml-v1.9.1
 #   https://books.8ops.top/attachment/cert-manager/helm/cert-manager.yaml-v1.11.0
+#   https://books.8ops.top/attachment/cert-manager/helm/cert-manager.yaml-v1.19.2
 #   
 
-helm upgrade --install cert-manager jetstack/cert-manager \
-  -f cert-manager.yaml-v1.9.1 \
+helm install cert-manager jetstack/cert-manager \
+  -f cert-manager.yaml-${CERT_MANAGER_VERSION} \
   -n cert-manager \
   --create-namespace \
-  --version v1.9.1 --debug
-    
-helm upgrade --install cert-manager jetstack/cert-manager \
-  -f cert-manager.yaml-v1.11.0 \
-  -n cert-manager \
-  --create-namespace \
-  --version v1.11.0 --debug
-
-#  --set 'extraArgs={--dns01-recursive-nameservers-only,--dns01-recursive-nameservers=119.29.29.29:53\,114.114.114.114:53}' \
+  --version ${CERT_MANAGER_VERSION}
 
 helm -n cert-manager uninstall cert-manager
 ```
@@ -336,6 +329,8 @@ helm -n cert-manager uninstall cert-manager
 
 ### 2.1 私有CA签发
 
+[Reference](https://cert-manager.io/docs/usage/ingress/)
+
 ```bash
 # Example
 # https://books.8ops.top/attachment/cert-manager/clusterissuer-private.yaml
@@ -343,40 +338,40 @@ helm -n cert-manager uninstall cert-manager
 # https://books.8ops.top/attachment/cert-manager/ingress-private.yaml
 #
 
-# 1. ROOT CA
-kubectl -n cert-manager create secret generic ca-key-pair \
+# 1，ROOT CA
+kubectl -n cert-manager create secret generic 8ops-root-ca-keypair \
   --from-file=tls.crt=xx.crt \
   --from-file=tls.key=xx.key
 
-# 2. ClusterIssuer 可切换成 Issuer
+# 2，ClusterIssuer 可切换成 namespace+Issuer
 kubectl apply -f - << EOF
 apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
 metadata:
-  name: ca-cluster-issuer
-  namespace: cert-manager
+  name: 8ops-clusterissuer
 spec:
   ca:
-    secretName: ca-key-pair
+    secretName: 8ops-root-ca-keypair
     crlDistributionPoints: # 域名证书吊销列表
-    - "http://example.com"
+    - "http://crl.8ops.top"
 EOF
+kubectl get ClusterIssuer 8ops-clusterissuer
 
-# 3. Ingress
+# 3，Ingress auto issue
 kubectl apply -f - << EOF
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   annotations:
-    cert-manager.io/cluster-issuer: ca-cluster-issuer # 自动签发注解
+    cert-manager.io/cluster-issuer: 8ops-clusterissuer # 自动签发注解
   labels:
-    app: ingress-private
-  name: ingress-private
+    app: ingress-tls-auto
+  name: ingress-tls-auto
   namespace: default
 spec:
   ingressClassName: external
   rules:
-  - host: echoserver.abc.org
+  - host: ingress-tls-auto.8ops.top
     http:
       paths:
       - backend:
@@ -388,19 +383,54 @@ spec:
         pathType: Prefix
   tls:
   - hosts:
-    - www.abc.org
-    - echoserver.abc.org
-    - "*.abc.org"
-    secretName: tls-abc.org # 自动生成 secret 名称
+    - 8ops.top
+    - www.8ops.top
+    - ingress-tls-auto.8ops.top
+    - "*.8ops.top"
+    secretName: tls-8ops.top-auto # 自动生成 secret 名称
 EOF    
 
-# 4. view
+# 4，wildcard-cert
+kubectl apply -f - << EOF
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: tls-8ops.top-wildcard
+  namespace: default
+spec:
+  secretName: tls-8ops.top-wildcard
+  issuerRef:
+    name: 8ops-clusterissuer
+    kind: ClusterIssuer
+  subject:
+    organizations:
+      - 8OPS Technology Co Ltd
+    organizationalUnits:
+      - IT Department
+    countries:
+      - CN
+    provinces:
+      - Shanghai
+    localities:
+      - Shanghai
+  commonName: "8OPS *.8ops.top"
+  dnsNames:
+    - "8ops.top"
+    - "*.8ops.top"
+    - "*.lab.8ops.top"
+EOF
+
+# 5，view
 ~$ kubectl get ing,secret
 NAME                                        CLASS      HOSTS                 ADDRESS         PORTS     AGE
-ingress.networking.k8s.io/ingress-private   external   echoserver.abc.org    10.101.11.216   80, 443   8m13s
+ingress.networking.k8s.io/ingress-private   external   tls-8ops.top-auto    10.101.11.216   80, 443   8m13s
 
 NAME                  TYPE                DATA   AGE
-secret/tls-abc.org    kubernetes.io/tls   3      7m10s
+secret/tls-8ops.top-wildcard    kubernetes.io/tls   3      7m10s
+
+openssl x509 -in tls.crt -noout -subject -issuer
+openssl x509 -in tls.crt -noout -ext subjectAltName
+
 ```
 
 
