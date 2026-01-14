@@ -306,7 +306,6 @@ helm repo add jetstack https://charts.jetstack.io
 helm repo update jetstack
 helm search repo cert-manager
 
-# cert-manager
 helm show values jetstack/cert-manager \
   --version=${CERT_MANAGER_VERSION} > cert-manager.yaml-${CERT_MANAGER_VERSION}-default
 
@@ -514,11 +513,11 @@ kubectl -n cert-manager get \
 kubectl -n default get \
     ingress,secret,issuer,clusterissuer,certificate,CertificateRequest,cert-manager
 
-# 自动生成
-# kubectl apply -f 71-certificate-dnspod-imroc.yaml
+kubectl get challenge,order -A
 
-# Ingress 中 secret 签发
-kubectl apply -f ingress-dnspod-imroc.yaml
+# 自动生成 -auto, -wildcard
+kubectl apply -f 71-certificate-dnspod-imroc.yaml
+
 ```
 
 
@@ -555,13 +554,7 @@ helm -n cert-manager uninstall cert-manager-webhook-dnspod-qqshfox
 # 但 certificate 必须和 cert-manager 一致，默认是 cert-manager.io
 ```
 
-
-
 [dns-self-check](https://cert-manager.io/docs/configuration/acme/dns01/#setting-nameservers-for-dns01-self-check)
 
 
-
-#### 2.2.3 smallstep
-
-[Reference](https://github.com/smallstep/certificates)
 
