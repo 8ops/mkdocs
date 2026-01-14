@@ -333,29 +333,28 @@ helm -n cert-manager uninstall cert-manager
 
 ```bash
 # Example
-# https://books.8ops.top/attachment/cert-manager/clusterissuer-private.yaml
-# https://books.8ops.top/attachment/cert-manager/certificate-private.yaml
-# https://books.8ops.top/attachment/cert-manager/ingress-private.yaml
+# https://books.8ops.top/attachment/cert-manager/70-clusterissuer.yaml
 #
 
 # 1，ROOT CA
-kubectl -n cert-manager create secret generic 8ops-root-ca-keypair \
-  --from-file=tls.crt=xx.crt \
-  --from-file=tls.key=xx.key
+kubectl -n cert-manager create Secrets generic 8ops-root-ca-keypair \
+  --from-file=tls.crt=8ops-ca.crt \
+  --from-file=tls.key=8ops-ca.key
+kubectl -n cert-manager get Secrets 8ops-root-ca-keypair
 
 # 2，ClusterIssuer 可切换成 namespace+Issuer
 kubectl apply -f - << EOF
 apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
 metadata:
-  name: 8ops-clusterissuer
+  name: 8ops-root-ca-clusterissuer
 spec:
   ca:
     secretName: 8ops-root-ca-keypair
     crlDistributionPoints: # 域名证书吊销列表
     - "http://crl.8ops.top"
 EOF
-kubectl get ClusterIssuer 8ops-clusterissuer
+kubectl get ClusterIssuer 8ops-root-ca-clusterissuer # clusterissuer 不区分命名空间
 
 # 3，Ingress auto issue
 kubectl apply -f - << EOF
@@ -363,7 +362,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   annotations:
-    cert-manager.io/cluster-issuer: 8ops-clusterissuer # 自动签发注解
+    cert-manager.io/cluster-issuer: 8ops-root-ca-clusterissuer # 自动签发注解
   labels:
     app: ingress-tls-auto
   name: ingress-tls-auto
@@ -388,7 +387,8 @@ spec:
     - ingress-tls-auto.8ops.top
     - "*.8ops.top"
     secretName: tls-8ops.top-auto # 自动生成 secret 名称
-EOF    
+EOF
+kubectl -n default get Ingress ingress-tls-auto
 
 # 4，wildcard-cert
 kubectl apply -f - << EOF
@@ -398,10 +398,14 @@ metadata:
   name: tls-8ops.top-wildcard
   namespace: default
 spec:
-  secretName: tls-8ops.top-wildcard
+  secretName: tls-8ops.top-wildcard # 显示声明secrets的名称
   issuerRef:
-    name: 8ops-clusterissuer
+    name: 8ops-root-ca-clusterissuer
     kind: ClusterIssuer
+  privateKey: # 显示声明Key的轮询方式
+    algorithm: RSA
+    size: 4096
+    rotationPolicy: Always
   subject:
     organizations:
       - 8OPS Technology Co Ltd
@@ -419,9 +423,10 @@ spec:
     - "*.8ops.top"
     - "*.lab.8ops.top"
 EOF
+kubectl -n default get Certificate tls-8ops.top-wildcard
 
 # 5，view
-~$ kubectl get ing,secret
+kubectl get ing,secret
 NAME                                        CLASS      HOSTS                 ADDRESS         PORTS     AGE
 ingress.networking.k8s.io/ingress-private   external   tls-8ops.top-auto    10.101.11.216   80, 443   8m13s
 
@@ -441,7 +446,7 @@ openssl x509 -in tls.crt -noout -ext subjectAltName
 
 | 顶级域名 | 成功与否 |
 | -------- | -------- |
-| *.top    | x        |
+| *.top    | √        |
 | *.cn     | √        |
 | *.tech   | √        |
 | *.com    | √        |
@@ -475,28 +480,28 @@ cert-manager also supports out of tree DNS providers using an external webhook. 
 #### 2.2.1 imroc
 
 ```bash
-# cert-manager-webhook-dnspod
-helm repo add imroc https://charts.imroc.cc
+DNSPOD_WEBHOOK_IMROC_VERSION=1.5.2
+helm repo add imroc https://imroc.github.io/cert-manager-webhook-dnspod
 helm repo update imroc
-helm search repo cert-manager-webhook-dnspod
+helm search repo imroc
 
-helm show values imroc/cert-manager-webhook-dnspod --version=1.2.0 > cert-manager-webhook-dnspod-imroc.yaml-1.2.0-default
+helm show values imroc/cert-manager-webhook-dnspod \
+  --version ${DNSPOD_WEBHOOK_IMROC_VERSION} > cert-manager-webhook-dnspod-imroc.yaml-${DNSPOD_WEBHOOK_IMROC_VERSION}-default
 
 # Example 
 #   https://books.8ops.top/attachment/cert-manager/helm/cert-manager-webhook-dnspod-imroc.yaml-1.2.0
-#   https://books.8ops.top/attachment/cert-manager/certificate-dnspod-imroc.yaml
-#   https://books.8ops.top/attachment/cert-manager/ingress-dnspod-imroc.yaml
+#   https://books.8ops.top/attachment/cert-manager/helm/cert-manager-webhook-dnspod-imroc.yaml-1.5.2
+#   https://books.8ops.top/attachment/cert-manager/71-certificate-dnspod-imroc.yaml
 #   
 
-helm upgrade --install cert-manager-webhook-dnspod-imroc imroc/cert-manager-webhook-dnspod \
-    -f cert-manager-webhook-dnspod-imroc.yaml-1.2.0 \
+helm install cert-manager-webhook-dnspod-imroc imroc/cert-manager-webhook-dnspod \
+    -f cert-manager-webhook-dnspod-imroc.yaml-${DNSPOD_WEBHOOK_IMROC_VERSION} \
     -n cert-manager \
     --create-namespace \
-    --version 1.2.0 --debug
+    --version ${DNSPOD_WEBHOOK_IMROC_VERSION}
 
 # uninstall
 helm -n cert-manager uninstall cert-manager-webhook-dnspod-imroc
-
 kubectl -n cert-manager delete \
     secret/cert-manager-webhook-dnspod-ca \
     secret/cert-manager-webhook-dnspod-letsencrypt \
@@ -510,7 +515,7 @@ kubectl -n default get \
     ingress,secret,issuer,clusterissuer,certificate,CertificateRequest,cert-manager
 
 # 自动生成
-# kubectl apply -f certificate-dnspod-imroc.yaml
+# kubectl apply -f 71-certificate-dnspod-imroc.yaml
 
 # Ingress 中 secret 签发
 kubectl apply -f ingress-dnspod-imroc.yaml
@@ -523,20 +528,17 @@ kubectl apply -f ingress-dnspod-imroc.yaml
 [Reference](https://github.com/qqshfox/cert-manager-webhook-dnspod)
 
 ```bash
-git clone https://github.com/qqshfox/cert-manager-webhook-dnspod.git abc
-mv abc/deploy/cert-manager-webhook-dnspod  cert-manager-webhook-dnspod
+git clone https://github.com/qqshfox/cert-manager-webhook-dnspod.git cert-manager-webhook-dnspod-git
+mv cert-manager-webhook-dnspod-git/deploy/cert-manager-webhook-dnspod cert-manager-webhook-dnspod
 
 # Example 
 #   https://books.8ops.top/attachment/cert-manager/helm/cert-manager-webhook-dnspod-qqshfox.yaml
-#   # 用于单独测试生成签名证书
-#   https://books.8ops.top/attachment/cert-manager/certificate-dnspod-qqshfox.yaml 
-#   https://books.8ops.top/attachment/cert-manager/ingress-dnspod-qqshfox.yaml
+#   https://books.8ops.top/attachment/cert-manager/72-certificate-dnspod-qqshfox.yaml 
 #
 
 helm upgrade --install cert-manager-webhook-dnspod-qqshfox ./cert-manager-webhook-dnspod-qqshfox \
     --namespace cert-manager \
-    -f cert-manager-webhook-dnspod-qqshfox.yaml \
-    --debug
+    -f cert-manager-webhook-dnspod-qqshfox.yaml
 
 # 自动生成
 # kubectl apply -f certificate-dnspod-qqshfox.yaml
