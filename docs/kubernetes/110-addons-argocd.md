@@ -381,10 +381,14 @@ argocd proj get argo-example-proj
 # argocd proj allow-cluster-resource
 argocd proj allow-cluster-resource argo-example-proj '*' '*' -l allow
 argocd proj allow-cluster-resource argo-example-proj '*' 'PersistentVolume' -l allow
+argocd proj allow-cluster-resource argo-example-proj '*' 'ClusterIssuer' -l allow
 argocd proj  deny-cluster-resource argo-example-proj '*' 'PersistentVolume' -l allow
 
-# argocd proj allow-namespace-resource
-argocd proj allow-namespace-resource argo-example-proj '*' '*' -l allow
+# argocd proj add-source-namespace
+argocd proj add-source-namespace argo-example-proj '*'
+
+# # argocd proj allow-namespace-resource
+# argocd proj allow-namespace-resource argo-example-proj '*' '*' -l allow
 
 # ---
 argocd proj create control-plane-proj --description "control plane proj" 

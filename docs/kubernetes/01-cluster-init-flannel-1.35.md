@@ -600,7 +600,7 @@ helm show values argoproj/argo-cd \
 helm install argo-cd argoproj/argo-cd \
   -n kube-server \
   -f argocd.yaml-${ARGOCD_VERSION} \
-  --version ${ARGOCD_VERSION}
+  --version ${ARGOCD_VERSION}  
 ```
 
 
