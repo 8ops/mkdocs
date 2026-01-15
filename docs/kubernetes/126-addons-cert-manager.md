@@ -355,7 +355,7 @@ spec:
 EOF
 kubectl get ClusterIssuer 8ops-root-ca-clusterissuer # clusterissuer 不区分命名空间
 
-# 3，Ingress auto issue
+# 3，Ingress auto issue/此种方式会缺失CN/O/OU，区别于Webhook的方式会缺失O/OU
 kubectl apply -f - << EOF
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -383,7 +383,7 @@ spec:
   - hosts:
     - 8ops.top
     - www.8ops.top
-    - ingress-tls-auto.8ops.top
+    - ingress-selfsign-auto.8ops.top
     - "*.8ops.top"
     secretName: tls-8ops.top-auto # 自动生成 secret 名称
 EOF
@@ -403,7 +403,7 @@ spec:
     kind: ClusterIssuer
   privateKey: # 显示声明Key的轮询方式
     algorithm: RSA
-    size: 4096
+    size: 2048 # 建议 2048，4096 没必要
     rotationPolicy: Always
   subject:
     organizations:
@@ -416,7 +416,7 @@ spec:
       - Shanghai
     localities:
       - Shanghai
-  commonName: "8OPS *.8ops.top"
+  commonName: "8ops.top" # 建议移除未来会废弃。配置上不允许有空格，需要与dnsNames匹配。错误配置webhook会失败/LetsEncrpyt
   dnsNames:
     - "8ops.top"
     - "*.8ops.top"
@@ -425,11 +425,12 @@ EOF
 kubectl -n default get Certificate tls-8ops.top-wildcard
 
 # 5，view
-kubectl get ing,secret
+kubectl get ingress,secrets
 NAME                                        CLASS      HOSTS                 ADDRESS         PORTS     AGE
-ingress.networking.k8s.io/ingress-private   external   tls-8ops.top-auto    10.101.11.216   80, 443   8m13s
+ingress.networking.k8s.io/ingress-selfsign-auto   external   tls-8ops.top-auto    10.101.9.216   80, 443   8m13s
 
 NAME                  TYPE                DATA   AGE
+secret/tls-8ops.top-auto    kubernetes.io/tls   3      7m10s
 secret/tls-8ops.top-wildcard    kubernetes.io/tls   3      7m10s
 
 openssl x509 -in tls.crt -noout -subject -issuer

@@ -5,14 +5,14 @@ metadata:
 spec:
   ca:
     secretName: 8ops-root-ca-keypair
-    crlDistributionPoints: # 域名证书吊销列表
+    crlDistributionPoints:
     - "http://crl.8ops.top"
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   annotations:
-    cert-manager.io/cluster-issuer: 8ops-root-ca-clusterissuer # 自动签发注解
+    cert-manager.io/cluster-issuer: 8ops-root-ca-clusterissuer
   labels:
     app: ingress-selfsign-auto
   name: ingress-selfsign-auto
@@ -35,7 +35,32 @@ spec:
     - 8ops.top
     - www.8ops.top
     - "*.8ops.top"
-    secretName: tls-8ops.top-auto # 自动生成 secret 名称
+    secretName: tls-8ops.top-auto
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  labels:
+    app: ingress-selfsign-wildcard
+  name: ingress-selfsign-wildcard
+  namespace: default
+spec:
+  ingressClassName: external
+  rules:
+  - host: ingress-selfsign-wildcard.8ops.top
+    http:
+      paths:
+      - backend:
+          service:
+            name: echoserver
+            port:
+              number: 8080
+        path: /
+        pathType: Prefix
+  tls:
+  - hosts:
+    - ingress-selfsign-wildcard.8ops.top
+    secretName: tls-8ops.top-wildcard
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
@@ -43,13 +68,13 @@ metadata:
   name: tls-8ops.top-wildcard
   namespace: default
 spec:
-  secretName: tls-8ops.top-wildcard # 显示声明secrets的名称
+  secretName: tls-8ops.top-wildcard
   issuerRef:
     name: 8ops-root-ca-clusterissuer
     kind: ClusterIssuer
-  privateKey: # 显示声明Key的轮询方式
+  privateKey:
     algorithm: RSA
-    size: 4096
+    size: 2048
     rotationPolicy: Always
   subject:
     organizations:
@@ -62,8 +87,8 @@ spec:
       - Shanghai
     localities:
       - Shanghai
-  commonName: "8OPS *.8ops.top"
+  commonName: 8ops.top
   dnsNames:
-    - "8ops.top"
+    - 8ops.top
     - "*.8ops.top"
     - "*.lab.8ops.top"

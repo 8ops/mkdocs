@@ -3,9 +3,6 @@ kind: Ingress
 metadata:
   annotations:
     cert-manager.io/cluster-issuer: dnspod-imroc-clusterissuer
-    nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
-    nginx.ingress.kubernetes.io/limit-rps: "100"
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
   labels:
     app: ingress-dnspod-imroc-auto
   name: ingress-dnspod-imroc-auto
@@ -25,9 +22,34 @@ spec:
         pathType: Prefix
   tls:
   - hosts:
-    - "8ops.top"
+    - 8ops.top
     - "*.8ops.top"
     secretName: tls-8ops.top-auto
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  labels:
+    app: ingress-dnspod-imroc-wildcard
+  name: ingress-dnspod-imroc-wildcard
+  namespace: default
+spec:
+  ingressClassName: external
+  rules:
+  - host: ingress-dnspod-imroc-wildcard.8ops.top
+    http:
+      paths:
+      - backend:
+          service:
+            name: echoserver
+            port:
+              number: 8080
+        path: /
+        pathType: Prefix
+  tls:
+  - hosts:
+    - ingress-dnspod-imroc-wildcard.8ops.top
+    secretName: tls-8ops.top-wildcard
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
@@ -55,7 +77,6 @@ spec:
       - Shanghai
     localities:
       - Shanghai
-  commonName: "8OPS *.8ops.top"
   dnsNames:
-  - "8ops.top"
+  - 8ops.top
   - "*.8ops.top"
