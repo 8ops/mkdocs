@@ -332,7 +332,7 @@ helm -n cert-manager uninstall cert-manager
 
 ```bash
 # Example
-# https://books.8ops.top/attachment/cert-manager/70-clusterissuer.yaml
+# https://books.8ops.top/attachment/cert-manager/70-selfsign-clusterissuer.yaml
 #
 
 # 1，ROOT CA
@@ -363,13 +363,13 @@ metadata:
   annotations:
     cert-manager.io/cluster-issuer: 8ops-root-ca-clusterissuer # 自动签发注解
   labels:
-    app: ingress-tls-auto
-  name: ingress-tls-auto
+    app: ingress-selfsign-auto
+  name: ingress-selfsign-auto
   namespace: default
 spec:
   ingressClassName: external
   rules:
-  - host: ingress-tls-auto.8ops.top
+  - host: ingress-selfsign-auto.8ops.top
     http:
       paths:
       - backend:
@@ -387,7 +387,7 @@ spec:
     - "*.8ops.top"
     secretName: tls-8ops.top-auto # 自动生成 secret 名称
 EOF
-kubectl -n default get Ingress ingress-tls-auto
+kubectl -n default get Ingress ingress-selfsign-auto
 
 # 4，wildcard-cert
 kubectl apply -f - << EOF
@@ -508,10 +508,10 @@ kubectl -n cert-manager delete \
 
 # view
 kubectl -n cert-manager get \
-    all,ing,cm,secret,issuer,clusterissuer,certificate,CertificateRequest,cert-manager
+    all,ingress,configmap,secret,issuer,clusterissuer,certificate,CertificateRequest,cert-manager
 
 kubectl -n default get \
-    ingress,secret,issuer,clusterissuer,certificate,CertificateRequest,cert-manager
+    ingress,secret,issuer,clusterissuer,certificate,CertificateRequest,cert-manager,challenge,order
 
 kubectl get challenge,order -A
 

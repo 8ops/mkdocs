@@ -14,13 +14,13 @@ metadata:
   annotations:
     cert-manager.io/cluster-issuer: 8ops-root-ca-clusterissuer # 自动签发注解
   labels:
-    app: ingress-tls-auto
-  name: ingress-tls-auto
+    app: ingress-selfsign-auto
+  name: ingress-selfsign-auto
   namespace: default
 spec:
   ingressClassName: external
   rules:
-  - host: ingress-tls-auto.8ops.top
+  - host: ingress-selfsign-auto.8ops.top
     http:
       paths:
       - backend:
@@ -34,7 +34,6 @@ spec:
   - hosts:
     - 8ops.top
     - www.8ops.top
-    - ingress-tls-auto.8ops.top
     - "*.8ops.top"
     secretName: tls-8ops.top-auto # 自动生成 secret 名称
 ---
