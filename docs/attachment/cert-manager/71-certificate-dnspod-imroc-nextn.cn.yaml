@@ -4,8 +4,8 @@ metadata:
   annotations:
     cert-manager.io/cluster-issuer: dnspod-imroc-clusterissuer
   labels:
-    app: ingress-dnspod-imroc-auto
-  name: ingress-dnspod-imroc-auto
+    app: ingress-dnspod-imroc-auto-nextn
+  name: ingress-dnspod-imroc-auto-nextn
   namespace: default
 spec:
   ingressClassName: external
@@ -30,8 +30,8 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   labels:
-    app: ingress-dnspod-imroc-wildcard
-  name: ingress-dnspod-imroc-wildcard
+    app: ingress-dnspod-imroc-wildcard-nextn
+  name: ingress-dnspod-imroc-wildcard-nextn
   namespace: default
 spec:
   ingressClassName: external
@@ -54,7 +54,7 @@ spec:
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: tls-nextn.cn-wildcard
+  name: tls-nextn.cn-wildcard-nextn
   namespace: default
 spec:
   secretName: tls-nextn.cn-wildcard

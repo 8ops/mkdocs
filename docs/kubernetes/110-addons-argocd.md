@@ -1615,6 +1615,29 @@ argocd proj add-source argo-example-proj https://git.8ops.top/gce/argocd-example
 a:
   b:
   - 1
-  - 2 xxxxx
+  - 2 # 2 后面有空格
+```
+
+
+
+### 4.5 无法发布EndpointSlice
+
+```bash
+# 报错内容
+Application conditions
+ExcludedResourceWarning
+Resource discovery.k8s.io/EndpointSlice haproxy is excluded in the settings
+
+# 解决方法
+kubectl -n kube-server edit cm argocd-cm
+
+  resource.exclusions: |
+    ### Network resources created by the Kubernetes control plane and excluded to reduce the number of watched events and UI clutter
+    - apiGroups:
+      - ''
+      - discovery.k8s.io
+      kinds:
+      - Endpoints
+      - EndpointSlice # 移除此行
 ```
 

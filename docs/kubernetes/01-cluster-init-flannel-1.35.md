@@ -597,9 +597,28 @@ helm search repo argo-cd
 helm show values argoproj/argo-cd \
   --version ${ARGOCD_VERSION} > argocd.yaml-${ARGOCD_VERSION}-default
 
-helm upgrade --install argo-cd argoproj/argo-cd \
+helm install argo-cd argoproj/argo-cd \
   -n kube-server \
   -f argocd.yaml-${ARGOCD_VERSION} \
   --version ${ARGOCD_VERSION}
+```
+
+
+
+### 4.4 Cert-Manager
+
+```bash
+CERT_MANAGER_VERSION=v1.19.2
+helm repo add jetstack https://charts.jetstack.io
+helm repo update jetstack
+helm search repo cert-manager
+helm show values jetstack/cert-manager \
+  --version=${CERT_MANAGER_VERSION} > cert-manager.yaml-${CERT_MANAGER_VERSION}-default
+
+helm install cert-manager jetstack/cert-manager \
+  -f cert-manager.yaml-${CERT_MANAGER_VERSION} \
+  -n cert-manager \
+  --create-namespace \
+  --version ${CERT_MANAGER_VERSION}
 ```
 
