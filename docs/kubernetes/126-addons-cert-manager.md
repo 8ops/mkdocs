@@ -480,13 +480,13 @@ cert-manager also supports out of tree DNS providers using an external webhook. 
 #### 2.2.1 imroc
 
 ```bash
-DNSPOD_WEBHOOK_IMROC_VERSION=1.5.2
+IMROC_VERSION=1.5.2
 helm repo add imroc https://imroc.github.io/cert-manager-webhook-dnspod
 helm repo update imroc
 helm search repo imroc
 
 helm show values imroc/cert-manager-webhook-dnspod \
-  --version ${DNSPOD_WEBHOOK_IMROC_VERSION} > cert-manager-webhook-dnspod-imroc.yaml-${DNSPOD_WEBHOOK_IMROC_VERSION}-default
+  --version ${IMROC_VERSION} > cert-manager-webhook-dnspod-imroc.yaml-${IMROC_VERSION}-default
 
 # Example 
 #   https://books.8ops.top/attachment/cert-manager/helm/cert-manager-webhook-dnspod-imroc.yaml-1.2.0
@@ -495,10 +495,9 @@ helm show values imroc/cert-manager-webhook-dnspod \
 #   
 
 helm install cert-manager-webhook-dnspod-imroc imroc/cert-manager-webhook-dnspod \
-    -f cert-manager-webhook-dnspod-imroc.yaml-${DNSPOD_WEBHOOK_IMROC_VERSION} \
+    -f cert-manager-webhook-dnspod-imroc.yaml-${IMROC_VERSION} \
     -n cert-manager \
-    --create-namespace \
-    --version ${DNSPOD_WEBHOOK_IMROC_VERSION}
+    --version ${IMROC_VERSION}
 
 # uninstall
 helm -n cert-manager uninstall cert-manager-webhook-dnspod-imroc
@@ -532,7 +531,6 @@ git clone https://github.com/qqshfox/cert-manager-webhook-dnspod.git cert-manage
 mv cert-manager-webhook-dnspod-git/deploy/cert-manager-webhook-dnspod cert-manager-webhook-dnspod
 
 # Example 
-#   https://books.8ops.top/attachment/cert-manager/helm/cert-manager-webhook-dnspod-qqshfox.yaml
 #   https://books.8ops.top/attachment/cert-manager/72-certificate-dnspod-qqshfox.yaml 
 #
 
@@ -558,4 +556,68 @@ helm -n cert-manager uninstall cert-manager-webhook-dnspod-qqshfox
 [dns-self-check](https://cert-manager.io/docs/configuration/acme/dns01/#setting-nameservers-for-dns01-self-check)
 
 
+
+#### 2.2.3 reodwind
+
+```bash
+REODWIND_VERSION=v1.18.2
+helm repo add reodwind https://reodwind.github.io/cert-manager-dnspod-webhook
+helm repo update reodwind
+helm search repo reodwind
+helm show values reodwind/dnspod-webhook \
+  --version ${REODWIND_VERSION} > cert-manager-webhook-dnspod-reodwind.yaml-${REODWIND_VERSION}-default
+
+# Example 
+#   https://books.8ops.top/attachment/cert-manager/73-certificate-dnspod-reodwind.yaml 
+#
+
+helm install cert-manager-webhook-dnspod-reodwind reodwind/dnspod-webhook \
+    -f cert-manager-webhook-dnspod-reodwind.yaml-${REODWIND_VERSION} \
+    -n cert-manager \
+    --version ${REODWIND_VERSION}
+
+kubectl -n cert-manager create secret generic dnspod-secret \
+  --from-literal="access-token=yourtoken" \
+  --from-literal="secret-key=yoursecretkey"
+
+```
+
+
+
+## 三、排查问题
+
+### 3.1 Staging证书浏览器不识别
+
+```bash
+openssl x509 -in 8ops.top-wildcard.crt -noout -issuer -subject
+issuer=C=US, O=(STAGING) Let's Encrypt, CN=(STAGING) Riddling Rhubarb R12
+subject=CN=8ops.top
+
+# 签发server区别
+# 测试：server: https://acme-staging-v02.api.letsencrypt.org/directory
+# 正式：server: https://acme-v02.api.letsencrypt.org/directory
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    email: admin@8ops.top
+    server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: letsencrypt-prod-account-key
+    solvers:
+    - dns01:
+        webhook:
+          groupName: acme.yourdomain.com
+          solverName: dnspod
+          config:
+            secretIdRef:
+              name: dnspod-api-secret
+              key: secret-id
+            secretKeyRef:
+              name: dnspod-api-secret
+              key: secret-key
+
+```
 

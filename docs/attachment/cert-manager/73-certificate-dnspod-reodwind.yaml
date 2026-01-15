@@ -1,0 +1,107 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: dnspod-reodwind-clusterissuer
+spec:
+  acme:
+    email: admin@8ops.top
+    server: https://acme-v02.api.dnspod-reodwind-clusterissuer.org/directory
+    privateKeySecretRef:
+      name: dnspod-reodwind-clusterissuer
+    solvers:
+    - dns01:
+        webhook:
+            config:
+              secretIdSecretRef:
+                key: access-token
+                name: dnspod-secret
+              secretKeySecretRef:
+                key: secret-key
+                name: dnspod-secret
+            groupName: cert-manager.io
+            solverName: dnspod-solver
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    cert-manager.io/cluster-issuer: dnspod-reodwind-clusterissuer
+  labels:
+    app: ingress-dnspod-imroc-auto
+  name: ingress-dnspod-imroc-auto
+  namespace: default
+spec:
+  ingressClassName: external
+  rules:
+  - host: ingress-dnspod-imroc-auto.8ops.top
+    http:
+      paths:
+      - backend:
+          service:
+            name: echoserver
+            port:
+              number: 8080
+        path: /
+        pathType: Prefix
+  tls:
+  - hosts:
+    - 8ops.top
+    - "*.8ops.top"
+    secretName: tls-8ops.top-auto
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  labels:
+    app: ingress-dnspod-imroc-wildcard
+  name: ingress-dnspod-imroc-wildcard
+  namespace: default
+spec:
+  ingressClassName: external
+  rules:
+  - host: ingress-dnspod-imroc-wildcard.8ops.top
+    http:
+      paths:
+      - backend:
+          service:
+            name: echoserver
+            port:
+              number: 8080
+        path: /
+        pathType: Prefix
+  tls:
+  - hosts:
+    - ingress-dnspod-imroc-wildcard.8ops.top
+    secretName: tls-8ops.top-wildcard
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: tls-8ops.top-wildcard
+  namespace: default
+spec:
+  secretName: tls-8ops.top-wildcard
+  issuerRef:
+    name: dnspod-reodwind-clusterissuer
+    kind: ClusterIssuer
+    group: cert-manager.io
+  privateKey:
+    algorithm: RSA
+    size: 2048
+    rotationPolicy: Always
+  subject:
+    organizations:
+      - 8OPS Technology Co Ltd
+    organizationalUnits:
+      - IT Department
+    countries:
+      - CN
+    provinces:
+      - Shanghai
+    localities:
+      - Shanghai
+  commonName: 8ops.top
+  dnsNames:
+  - 8ops.top
+  - "*.8ops.top"
