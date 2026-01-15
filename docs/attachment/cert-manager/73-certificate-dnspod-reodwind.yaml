@@ -28,13 +28,13 @@ metadata:
   annotations:
     cert-manager.io/cluster-issuer: dnspod-reodwind-clusterissuer
   labels:
-    app: ingress-dnspod-imroc-auto
-  name: ingress-dnspod-imroc-auto
+    app: ingress-dnspod-reodwind-auto
+  name: ingress-dnspod-reodwind-auto
   namespace: default
 spec:
   ingressClassName: external
   rules:
-  - host: ingress-dnspod-imroc-auto.8ops.top
+  - host: ingress-dnspod-reodwind-auto.8ops.top
     http:
       paths:
       - backend:
@@ -54,13 +54,13 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   labels:
-    app: ingress-dnspod-imroc-wildcard
-  name: ingress-dnspod-imroc-wildcard
+    app: ingress-dnspod-reodwind-wildcard
+  name: ingress-dnspod-reodwind-wildcard
   namespace: default
 spec:
   ingressClassName: external
   rules:
-  - host: ingress-dnspod-imroc-wildcard.8ops.top
+  - host: ingress-dnspod-reodwind-wildcard.8ops.top
     http:
       paths:
       - backend:
@@ -72,7 +72,7 @@ spec:
         pathType: Prefix
   tls:
   - hosts:
-    - ingress-dnspod-imroc-wildcard.8ops.top
+    - ingress-dnspod-reodwind-wildcard.8ops.top
     secretName: tls-8ops.top-wildcard
 ---
 apiVersion: cert-manager.io/v1
