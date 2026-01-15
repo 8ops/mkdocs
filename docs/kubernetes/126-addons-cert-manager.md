@@ -515,7 +515,7 @@ kubectl -n default get \
 
 kubectl get challenge,order -A
 
-# 自动生成 -auto, -wildcard
+# 自动签发 -auto, -wildcard
 kubectl apply -f 71-certificate-dnspod-imroc.yaml
 
 ```
@@ -534,15 +534,12 @@ mv cert-manager-webhook-dnspod-git/deploy/cert-manager-webhook-dnspod cert-manag
 #   https://books.8ops.top/attachment/cert-manager/72-certificate-dnspod-qqshfox.yaml 
 #
 
-helm upgrade --install cert-manager-webhook-dnspod-qqshfox ./cert-manager-webhook-dnspod-qqshfox \
+helm install cert-manager-webhook-dnspod-qqshfox ./cert-manager-webhook-dnspod-qqshfox \
     --namespace cert-manager \
     -f cert-manager-webhook-dnspod-qqshfox.yaml
 
-# 自动生成
-# kubectl apply -f certificate-dnspod-qqshfox.yaml
-
-# Ingress 中 secret 签发
-kubectl apply -f ingress-dnspod-qqshfox.yaml
+# 自动签发 -auto, -wildcard
+kubectl apply -f 72-certificate-dnspod-qqshfox.yaml
 
 # uninstall
 helm -n cert-manager uninstall cert-manager-webhook-dnspod-qqshfox
@@ -579,6 +576,9 @@ helm install cert-manager-webhook-dnspod-reodwind reodwind/dnspod-webhook \
 kubectl -n cert-manager create secret generic dnspod-secret \
   --from-literal="access-token=yourtoken" \
   --from-literal="secret-key=yoursecretkey"
+
+# 自动签发 -auto, -wildcard
+kubectl apply -f 73-certificate-dnspod-reodwind.yaml
 
 ```
 
