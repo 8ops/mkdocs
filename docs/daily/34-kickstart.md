@@ -1,12 +1,306 @@
 # kickstart
 
+## iPXE
+
+### netboot
+
+适用ubuntu22.04。以下测试24.04.3的示例。
+
 ```bash
-pxe
+.
+├── boot.ipxe
+├── netboot
+│   ├── bootx64.efi
+│   ├── grub
+│   │   └── grub.cfg
+│   ├── grubx64.efi
+│   ├── initrd
+│   ├── ldlinux.c32
+│   ├── linux
+│   ├── pxelinux.0
+│   └── pxelinux.cfg
+│       └── default
+└── preseed
+    └── preseed.cfg
 
-1,依赖库安装 
-yum install -y dhcp.x86_64 dhcp-devel.x86_64 dhcp-common.x86_64 nginx.x86_64 tftp-server.x86_64 xinetd.x86_64 syslinux.x86_64 rsync.x86_64 vim.x86_64
+4 directories, 10 files
+```
 
-2,FTP配置
+
+
+```bash
+# 1，down netboot
+https://releases.ubuntu.com/noble/ubuntu-24.04.3-netboot-amd64.tar.gz
+tar xzf ubuntu-24.04.3-netboot-amd64.tar.gz
+mv amd netboot
+
+# 2，配置引导启动
+cat > boot.ipxe <<EOF
+#!ipxe
+dhcp
+
+kernel http://10.101.11.236/netboot/linux \
+  auto=true \
+  priority=critical \
+  preseed/url=http://10.101.11.236/preseed/preseed.cfg \
+  locale=en_US.UTF-8 \
+  keyboard-configuration/layoutcode=us \
+  netcfg/choose_interface=auto ---
+
+initrd http://10.101.11.236/netboot/initrd.gz
+boot
+EOF
+
+# 缺少 initrd.gz，无法继续（TODO）
+
+# 3，d-i 配置
+cat > preseed/preseed.cfg <<EOF
+### 基本模式：完全无人值守
+d-i auto-install/enable boolean true
+d-i debconf/priority string critical
+d-i pkgsel/run_tasksel boolean false
+
+### 语言 / 区域
+d-i debian-installer/locale string en_US.UTF-8
+d-i console-setup/ask_detect boolean false
+d-i keyboard-configuration/layoutcode string us
+
+### 网络（DHCP）
+d-i netcfg/choose_interface select auto
+d-i netcfg/get_hostname string ubuntu
+d-i netcfg/get_domain string localdomain
+d-i netcfg/disable_autoconfig boolean false
+
+### 时区
+d-i time/zone string Asia/Shanghai
+d-i clock-setup/utc boolean true
+d-i clock-setup/ntp boolean true
+
+### 磁盘（整盘自动分区，LVM）
+d-i partman-auto/method string lvm
+d-i partman-lvm/device_remove_lvm boolean true
+d-i partman-md/device_remove_md boolean true
+d-i partman-auto/choose_recipe select atomic
+d-i partman-auto/confirm boolean true
+d-i partman-auto/confirm_nooverwrite boolean true
+
+### 用户账户
+d-i passwd/root-login boolean false
+d-i passwd/user-fullname string ubuntu
+d-i passwd/username string ubuntu
+d-i passwd/user-password password ubuntu
+d-i passwd/user-password-again password ubuntu
+d-i user-setup/allow-password-weak boolean true
+
+### 最小化安装 + openssh
+d-i pkgsel/include string openssh-server
+d-i pkgsel/install-language-support boolean false
+d-i pkgsel/update-policy select none
+
+### GRUB
+d-i grub-installer/only_debian boolean true
+d-i grub-installer/with_other_os boolean true
+d-i grub-installer/bootdev string default
+
+### 完成安装后自动重启
+d-i finish-install/reboot_in_progress note
+EOF
+```
+
+
+
+### autoinstall
+
+适用24.04。
+
+```bash
+.
+├── autoinstall
+│   ├── meta-data
+│   ├── user-data
+│   └── vendor-data
+├── boot.ipxe
+└── ubuntu
+    └── 24.04
+        ├── filesystem.squashfs
+        ├── initrd
+        ├── ubuntu-24.04.3-live-server-amd64.iso
+        └── vmlinuz
+
+3 directories, 8 files
+```
+
+
+
+```bash
+# Ubuntu 24.04.x 不再支持传统 debian-installer，正确方式是（基于iPXE）
+DHCP
+ ├─ 提供 next-server / filename
+TFTP
+ ├─ GRUB EFI / PXELINUX
+HTTP
+ ├─ vmlinuz
+ ├─ initrd
+ ├─ autoinstall.yaml
+
+# 1，down
+wget https://releases.ubuntu.com/24.04/ubuntu-24.04.3-live-server-amd64.iso
+
+# 2，挂载并提取内核
+mkdir /mnt/iso
+mount ubuntu-24.04.3-live-server-amd64.iso /mnt/iso
+
+mkdir -p /var/www/html/ubuntu/24.04/casper
+cp /mnt/iso/casper/vmlinuz /var/www/html/ubuntu/24.04/casper/
+cp /mnt/iso/casper/initrd /var/www/html/ubuntu/24.04/casper/
+cp /mnt/iso/casper/ubuntu-server-minimal.ubuntu-server.installer.squashfs /var/www/html/ubuntu/24.04/casper/
+
+# 3，TFTP + GRUB（UEFI 推荐）
+apt install -q -y dnsmasq grub-efi-amd64-bin
+mkdir -p /srv/tftp/grub
+cp /usr/lib/grub/x86_64-efi/monolithic/grubnetx64.efi /srv/tftp/
+
+cat > /srv/tftp/grub/grub.cfg<<EOF
+set timeout=5
+set default=0
+
+menuentry "Install Ubuntu 24.04.3 (Auto PXE)" {
+    set gfxpayload=keep
+    linuxefi http://10.101.11.236/ubuntu/24.04/vmlinuz \
+      ip=dhcp \
+      url=http://10.101.11.236/ubuntu/24.04/ubuntu-24.04.3-live-server-amd64.iso \
+      autoinstall \
+      ds=nocloud-net;s=http://10.101.11.236/autoinstall/ ---
+    initrdefi http://10.101.11.236/ubuntu/24.04/initrd
+}
+EOF
+
+cat > /etc/dnsmasq.d/pxe.conf<<EOF
+port=0
+interface=eth0
+bind-interfaces
+
+dhcp-range=10.101.11.62,10.101.11.66,12h
+dhcp-option=3,10.101.11.254
+dhcp-option=6,10.101.11.254
+
+enable-tftp
+tftp-root=/srv/tftp
+
+# # UEFI PXE
+# dhcp-match=set:efi64,option:client-arch,7
+# dhcp-boot=tag:efi64,grubnetx64.efi
+
+# iPXE
+dhcp-match=set:ipxe,175
+dhcp-boot=tag:ipxe,http://10.101.11.236/boot.ipxe
+dhcp-boot=pxelinux.0
+EOF
+
+systemctl restart dnsmasq
+
+# 4，autoinstall
+mkdir -p /var/www/html/autoinstall
+touch autoinstall/vendor-data
+
+cat > autoinstall/meta-data<EOF
+instance-id: ubuntu24043
+local-hostname: ubuntu24043
+EOF
+
+cat > autoinstall/user-data<<EOF
+# cloud-config
+autoinstall:
+  version: 1
+  locale: en_US.UTF-8
+  keyboard:
+    layout: us
+
+  identity:
+    hostname: ubuntu24043
+    username: ubuntu
+    password: "$6$P3.moH7U5xwiNCwx$1ABidxOu5dz9agI/zoZ.Y4Kt.t.r/nr501ZwN4zfAKevGs7GHLCqXOhu.hU0hALEXJxJhgyplSAL0doQx03Ul0"
+
+  ssh:
+    install-server: true
+    allow-pw: true
+
+  storage:
+    layout:
+      name: direct
+
+  packages:
+    - openssh-server
+    - vim
+    - curl
+    - net-tools
+
+  late-commands:
+    - curtin in-target -- systemctl enable ssh
+EOF
+
+openssl passwd -6 
+ubuntu # sha256 加密
+
+cat > boot.ipxe<<EOF
+#!ipxe
+dhcp
+
+set base http://10.101.11.236/ubuntu/24.04
+
+kernel ${base}/vmlinuz \
+  ip=dhcp \
+  boot=casper \
+  live-media-path=casper \
+  fetch=${base}/filesystem.squashfs \
+  autoinstall \
+  ds=nocloud-net;s=http://10.101.11.236/autoinstall/ \
+  rootfs-size=8192M \
+  fsck.mode=skip ---
+
+initrd ${base}/initrd
+boot
+EOF
+
+# 5，HTTP服务
+apt install -y nginx
+systemctl enable --now nginx
+
+cat > /etc/nginx/conf.d/pxe.conf <<EOF
+server {
+    listen 80;
+    location / {
+        root /var/www/html;
+        autoindex on;
+    }
+}
+EOF
+nginx -t
+systemctl restart nginx
+
+```
+
+
+
+
+
+
+
+## PXE
+
+基于CentOS操作系统部署DHCP服务器（比较过时的操作参考）。
+
+用于安装CentOS6.4 x86_64的操作系统。
+
+使用kickstart的方式安装。
+
+### kickstart
+
+```bash
+# 1，依赖库安装 
+yum install -q -y dhcp dhcp-devel dhcp-common nginx tftp-server xinetd syslinux rsync vim 
+
+# 2，FTP配置
 vim /etc/xinetd.d/tftp
 service tftp
 {
@@ -22,7 +316,7 @@ service tftp
         flags                   = IPv4
 }
 
-3,Nginx配置
+# 3，Nginx配置
 vim /etc/nginx/nginx.conf
     server{
         listen 80;
@@ -30,7 +324,7 @@ vim /etc/nginx/nginx.conf
         autoindex on;
     }
 
-4,DHCP配置
+# 4，DHCP配置
 vim /etc/dhcp/dhcpd.conf
 ddns-update-style interim;
 ignore client-updates;
@@ -48,25 +342,22 @@ subnet 192.168.100.0 netmask 255.255.255.0 {
 
 }
 
-5,光盘挂载，镜像拷贝
-挂载 CentOS-6.4-x86_64-minimal.iso 
-
+# 5，光盘挂载，镜像拷贝
+# 挂载 CentOS-6.4-x86_64-minimal.iso 
 mkdir -p /data/cdrom /data/iso/pxe /data/tftp/pxelinux.cfg/
 mount -o loop /dev/cdrom /data/cdrom
 rsync -av /data/cdrom/ /data/iso/pxe/
-/bin/cp /usr/share/syslinux/pxelinux.0 /data/tftp/
-/bin/cp /data/iso/pxe/isolinux/isolinux.cfg /data/tftp/pxelinux.cfg/default
-/bin/cp /data/iso/pxe/isolinux/* /data/tftp/
+cp /usr/share/syslinux/pxelinux.0 /data/tftp/
+cp /data/iso/pxe/isolinux/isolinux.cfg /data/tftp/pxelinux.cfg/default
+cp /data/iso/pxe/isolinux/* /data/tftp/
 
-卸载 CentOS-6.4-x86_64-minimal.iso
-
-6,配置 pxe
+# 6，配置 pxe
 
 TT=(date +%Y%m%d.%H%M%S)
 for i in {1..100};do
     echo "-------- Author: jesse. for CentOS 6.4 x86_64 V{TT} by PXE  --------"
 done > /data/iso/pxe/isolinux/boot.msg
-/bin/cp /data/iso/pxe/isolinux/boot.msg /data/tftp/boot.msg
+cp /data/iso/pxe/isolinux/boot.msg /data/tftp/boot.msg
 
 chmod +w /data/tftp/pxelinux.cfg/default
 vim /data/tftp/pxelinux.cfg/default
@@ -113,8 +404,8 @@ label memtest86
   kernel memtest
   append -
 
-copying ...
-/bin/cp binutils-* cmake-2.6.4-5.el6.x86_64.rpm curl-7.19.7-35.el6.x86_64.rpm lrzsz-0.12.20-27.1.el6.x86_64.rpm make-3.81-20.el6.x86_64.rpm nc-1.84-22.el6.x86_64.rpm net-snmp-* openssh-clients-5.3p1-84.1.el6.x86_64.rpm rsync-3.0.6-9.el6.x86_64.rpm sysstat-9.0.4-20.el6.x86_64.rpm tree-1.5.3-2.el6.x86_64.rpm vim-common-7.2.411-1.8.el6.x86_64.rpm vim-minimal-7.2.411-1.8.el6.x86_64.rpm wget-1.12-1.8.el6.x86_64.rpm /data/iso/Packages
+# 拷贝package
+cp binutils-* cmake-2.6.4-5.el6.x86_64.rpm curl-7.19.7-35.el6.x86_64.rpm lrzsz-0.12.20-27.1.el6.x86_64.rpm make-3.81-20.el6.x86_64.rpm nc-1.84-22.el6.x86_64.rpm net-snmp-* openssh-clients-5.3p1-84.1.el6.x86_64.rpm rsync-3.0.6-9.el6.x86_64.rpm sysstat-9.0.4-20.el6.x86_64.rpm tree-1.5.3-2.el6.x86_64.rpm vim-common-7.2.411-1.8.el6.x86_64.rpm vim-minimal-7.2.411-1.8.el6.x86_64.rpm wget-1.12-1.8.el6.x86_64.rpm /data/iso/Packages
 
 vim /data/iso/pxe/ks.cfg
 install
@@ -156,21 +447,11 @@ user manage
 
 groupadd sshuser
 useradd -G sshuser jesse
-useradd -G sshuser ericdu
-useradd -G sshuser balaamwe
-echo "xx"|passwd jesse --stdin
+echo "xxx"|passwd jesse --stdin
 sed -i '/--dport 22/a-A INPUT -m state --state NEW -m tcp -p tcp --dport 50022 -j ACCEPT' /etc/sysconfig/iptables
-sed -i '/^root/a\jesse    ALL=NOPASSWD:       ALL' /etc/sudoers
-sed -i '/^root/a\ericdu    ALL=(ALL)       ALL' /etc/sudoers
-sed -i '/^root/a\balaamwe    ALL=(ALL)       ALL' /etc/sudoers
+echo 'jesse ALL=NOPASSWD: ALL' > /etc/sudoers.d/jesse
 
 other 
-
-echo "30 5 * * * /usr/sbin/ntpdate ntp.uplus.youja.cn" | crontab -
-
-seed -i '1 a\nameserver 10.10.10.82' /etc/resolv.conf
-
-sed -i '1 a\nameserver 10.10.10.83' /etc/resolv.conf
 
 echo "30 5 * * * /usr/sbin/ntpdate cn.pool.ntp.org" | crontab -
 sed -i '1 a\nameserver 192.168.100.1' /etc/resolv.conf
@@ -178,25 +459,23 @@ sed -i '1 a\nameserver 192.168.100.1' /etc/resolv.conf
 init env & tool
 
 cat > /root/init.install.sh << EOF
+#!/bin/bash
 
-! /bin/bash
-
+# install package
 yum install -y wget curl
 mv /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo.backup
 curl -s -o /etc/yum.repos.d/CentOS-Base.repo http://mirrors.163.com/.help/CentOS6-Base-163.repo
 yum makecache
-yum install -y  binutils cmake curl lrzsz make nc net-snmp net-snmp-utils nmap ntpdate openssh-clients rsync sysstat tree vim wget
+yum install -q -y  binutils cmake curl lrzsz make nc net-snmp net-snmp-utils nmap ntpdate openssh-clients rsync sysstat tree vim wget
 mkdir -p /backup
 mv /root/* /backup/
 EOF
 chmod +x /root/init.install.sh
 
-ulimit sets
-
-cat > /etc/security/limits.conf << EOF
-
-- soft nofile 65536
-- hard nofile 65536
+# ulimit setting
+cat > /etc/security/limits.d/99-ops.conf << EOF
+- soft nofile 655360
+- hard nofile 655360
 - hard nproc 4096
 - soft nproc 4096
 EOF
@@ -204,19 +483,16 @@ cat > /etc/security/limits.d/90-nproc.conf << EOF
 - soft    nproc     4096
 EOF
 
-close system service
-
+# close system service
 chkconfig iptables off
 chkconfig ip6tables off
 chkconfig postfix off
 chkconfig rpcbind off
 
-close tty
-
+# close tty
 sed '23s/6/2/g' -i /etc/sysconfig/init
 
-tcp for kernel
-
+# kernel tcp
 cat > /etc/sysctl.conf << EOF
 net.ipv4.ip_forward = 0
 net.ipv4.tcp_syncookies = 1
@@ -244,15 +520,12 @@ net.ipv4.tcp_tw_reuse = 1
 net.ipv4.tcp_tw_recycle = 1
 net.ipv4.ip_local_port_range = 1024 65535
 net.ipv4.tcp_max_tw_buckets = 1024
-
 net.netfilter.nf_conntrack_tcp_timeout_established = 60
 net.netfilter.nf_conntrack_max = 655350
 net.nf_conntrack_max = 655350
-
 EOF
 
-set server hostname
-
+# hostname setting
 sed '2s/^.*/HOSTNAME=youja.cn/g' -i /etc/sysconfig/network
 
 set group timetout
@@ -263,20 +536,18 @@ set history for profile
 
 sed '48s/1000/100/g' -i /etc/profile
 
-login info
-
+# login info
 cat >> /etc/pam.d/login << EOF
 session required /lib64/security/pam_limits.so
 session required pam_limits.so
 EOF
 cat > /etc/issue << EOF
-Welcome to www.youja.cn.
+Welcome to 8ops.top
 CentOS 6.4 x86_64 (Final)
 EOF
 /bin/cp /etc/issue /etc/issue.net
 
-set sshd_config
-
+# ssh setting
 echo "AllowGroups sshuser" >> /etc/ssh/sshd_config
 sed -i '/#PermitRootLogin yes/a\PermitRootLogin no' /etc/ssh/sshd_config
 sed -i '/#Port 22/a\Port 50022' /etc/ssh/sshd_config
@@ -286,39 +557,27 @@ UseDNS no
 Banner /etc/issue
 EOF
 
-configure yum repo
-
-nginx for yum
-
+# repo setting
 cat > /etc/yum.repos.d/nginx.repo << EOF
 [nginx]
 name=nginx repo
-
 baseurl=http://nginx.org/packages/centos/6/$basearch/
-
 baseurl=http://nginx.org/packages/centos/6/x86_64/
 gpgcheck=0
 enabled=1
 EOF
 
-varnish for yum
-
 cat > /etc/yum.repos.d/varnish.repo << EOF
 [varnish-3.0]
 name=Varnish 3.0 for Enterprise Linux 5 - $basearch
-
 baseurl=http://repo.varnish-cache.org/redhat/varnish-3.0/el5/$basearch
-
 baseurl=http://repo.varnish-cache.org/redhat/varnish-4.0/el6/x86_64/
 gpgcheck=0
 enabled=1
-
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-VARNISH
-
 EOF
 
-user ssh key
-
+# ssh-key setting
 mkdir -p /home/jesse/.ssh
 cat > /home/jesse/.ssh/authorized_keys << EOF
 ssh-dss AAAAB3NzaC1kc3MAAACBALN+zutgLhYyLEgmNnW9DbaVnPCLlq3dMv1gCk80lm7ufcUzNp9zvR3OrCECAq3s1w9vVPqWMfg21LkAAF/e/eTgBYI+aF4s+4z+Cn4eiXTyM0mRyuQ0YxWqs3GJLBjqcLVdOpWGy5F3X/9sAe9lG+SbbErSy68YxmYv7U40ha/9AAAAFQDtw6YYdKinAPj6hu6S3Islyb3ZdQAAAIAIIFtUk2V4ASA2QgE2OGLVM/QMeRYaRVdP/OHF4Ri2kvR0B3s5P1C652PKnc97bwb0BTHqDhTJoqfSKiHLHLBdfQXdLY1LLh/hiBdPasMrUMiSEhiy+pvjNqwW1BqL6b4hBpvooVkdHTk/6pKTYQwVhJ2oN8+0FzUk6GC+VseM8AAAAIEAg8LYT2iAv0hicgHFo3qmqv/MFvJQISlRWm0TxRBa3FFp6EH4MuaRzzVekur79h+oDOf/41QZ+j9M2oh5RdePUDGOQ6S3WBcppQOYc5vzF37wPv2Z1p1lD8vRSu2yNMxPjkMvlRu1+plYjjLyQvicyJbX7jN+DDl/iDp1pKYY5vg=
@@ -330,7 +589,7 @@ chown jesse.jesse -R /home/jesse/.ssh
 
 %end
 
-启动服务
+# 启动服务
 /etc/init.d/dhcpd restart
 /etc/init.d/nginx restart
 /etc/init.d/xinetd restart
@@ -339,14 +598,19 @@ chkconfig dhcpd on
 chkconfig nginx on
 chkconfig xinetd on
 
-mk
+```
 
-1,准备环境
+
+
+### mkiso
+
+```bash
+# 1，准备环境
 yum install -y anaconda.x86_64 createrepo.noarch mkisofs.x86_64
 mkdir /data/iso/mk
 rsync -av /data/iso/pxe/ /data/iso/mk/
 
-2,修改配置
+# 2，修改配置
 vim /data/iso/mk/isolinux/ks.cfg
 
 copy vim /data/iso/pxe/ks.cfg
@@ -357,7 +621,7 @@ vim /data/iso/mk/isolinux/isolinux.cfg
 copy /data/tftp/pxelinux.cfg/default
 modify default linux ks=cdrom:/isolinux/ks.cfg initrd=initrd.img
 
-3,生成镜像
+# 3，生成镜像
 /bin/rm -f /data/iso/mk/repodata/*
 /bin/cp /data/iso/pxe/repodata/*-minimal-x86_64.xml  /data/iso/mk/repodata/minimal-x86_64.xml
 createrepo -g /data/iso/mk/repodata/minimal-x86_64.xml /data/iso/mk/
@@ -367,7 +631,6 @@ mkisofs -o /tmp/Auto-CentOS-6.4-x86_64-$(date +%s).iso -b isolinux/isolinux.bin 
 /usr/bin/implantisomd5 /tmp/*.iso 
 
 vim /etc/nginx/nginx.conf
-
     server{
         listen 80;
         root /data/iso/pxe;
@@ -381,14 +644,6 @@ vim /etc/nginx/nginx.conf
 
 nginx -t
 nginx -s reload
-
-
-
-
-
-
-
-
 
 ```
 
