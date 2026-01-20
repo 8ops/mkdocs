@@ -312,7 +312,7 @@ kubectl run redis-client --restart='Never' \
 argocd cluster list
 argocd cluster rm 11-dev-ofc
 
-# cluster add（通过本地kubeconfig中的contexts，关联生成sa会在kube-system）
+# cluster add（通过本地kubeconfig中的contexts，关联生成service-accouts/argocd-manager会在kube-system）
 argocd cluster add 11-dev-ofc-tls  --name=11-dev-ofc  --grpc-web
 argocd cluster add 12-test-ali-tls --name=12-test-ali --grpc-web
 argocd cluster add 13-stage-sh-tls --name=13-stage-sh --grpc-web

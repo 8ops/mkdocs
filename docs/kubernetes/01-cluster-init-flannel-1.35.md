@@ -45,9 +45,11 @@
 
 ```bash
  curl -s https://books.8ops.top/attachment/kubernetes/bin/01-init-ubuntu24.04-v1.35.sh | bash
+ 
+ sed -i '2,2 s/archive.ubuntu.com/mirrors.aliyun.com/' /etc/apt/sources.list.d/ubuntu.sources
 ```
 
-### 
+
 
 ```bash
  # 查看系统随开机启动服务
@@ -104,6 +106,7 @@ grep -P 'pause:|SystemdCgroup' /etc/containerd/config.toml
 
 systemctl restart containerd && systemctl status containerd
 
+vim /etc/containerd/config.toml
 # 调整日志级别（debug、info、warn、error、fatal、panic）和 prometheus 监控指标
 # 27 [debug]
 # 28   address = ''
@@ -274,7 +277,7 @@ kubeadm config images pull --config kubeadm-init.yaml-${KUBE_VERSION}
 
 kubeadm init --config kubeadm-init.yaml-${KUBE_VERSION} --upload-certs
 
-mkdir -p ~/.kube && ln -s /etc/kubernetes/admin.conf ~/.kube/config 
+mkdir -p ~/.kube && ln -s /etc/kubernetes/admin.conf ~/.kube/config
 
 # 添加节点 control-plane
 kubeadm join 10.101.11.110:6443 --token abcdef.0123456789abcdef \
@@ -285,6 +288,8 @@ kubeadm join 10.101.11.110:6443 --token abcdef.0123456789abcdef \
 kubeadm join 10.101.11.110:6443 --token abcdef.0123456789abcdef \
 	--discovery-token-ca-cert-hash sha256:3acfc0056f88d86565bcf482358e62b7729b59192d2faf51f6f553731beb674b  
 ```
+
+#### 2.4.1 yaml kubeadm-init
 
 > 编辑 kubeadm-init.yaml-v1.35.0
 
@@ -347,43 +352,174 @@ scheduler: {}
 
 ### 2.5 优化配置
 
-*optional*
+#### 2.5.1 configmap kube-proxy
 
 ```bash
-# kubelet
-kubectl -n kube-system edit cm kubelet-config
-……
-    # GC
-    imageGCLowThresholdPercent: 40
-    imageGCHighThresholdPercent: 50
-    # Resource
-    systemReserved:
-      cpu: 500m
-      memory: 500m
-    kubeReserved:
-      cpu: 500m
-      memory: 500m
-    evictionPressureTransitionPeriod: 300s # upgrade
-    nodeStatusReportFrequency: 10s         # upgrade
-    nodeStatusUpdateFrequency: 10s         # upgrade
+# kube-proxy 升级为 iptables -> nftables
+kubectl -n kube-system get  configmap kube-proxy -o yaml > configmap-kube-proxy.yaml-default
+kubectl -n kube-system edit configmap kube-proxy
+
+apiVersion: v1
+data:
+  config.conf: |-
+    apiVersion: kubeproxy.config.k8s.io/v1alpha1
+    bindAddress: 0.0.0.0
+    bindAddressHardFail: false
+    clientConnection:
+      acceptContentTypes: ""
+      burst: 60                                           # upgrade
+      contentType: "application/vnd.kubernetes.protobuf"  # upgrade
+      kubeconfig: /var/lib/kube-proxy/kubeconfig.conf
+      qps: 30                                             # upgrade
+    clusterCIDR: 172.22.0.0/16                            # upgrade
+    configSyncPeriod: 30s                                 # upgrade
+    conntrack:
+      maxPerCore: 16384                                   # upgrade
+      min: 131072                                         # upgrade
+      tcpBeLiberal: false
+      tcpCloseWaitTimeout: 1h                             # upgrade
+      tcpEstablishedTimeout: 12h                          # upgrade
+      udpStreamTimeout: 180s                              # upgrade
+      udpTimeout: 30s                                     # upgrade
+    detectLocal:
+      bridgeInterface: ""
+      interfaceNamePrefix: ""
+    detectLocalMode: "ClusterCIDR"                        # upgrade
+    enableProfiling: false
+    healthzBindAddress: "127.0.0.1:10256"                 # upgrade
+    hostnameOverride: ""
+    iptables:
+      localhostNodePorts: null
+      masqueradeAll: false
+      masqueradeBit: null
+      minSyncPeriod: 0s
+      syncPeriod: 0s
+    ipvs:
+      excludeCIDRs: null
+      minSyncPeriod: 0s
+      scheduler: ""
+      strictARP: false
+      syncPeriod: 0s
+      tcpFinTimeout: 0s
+      tcpTimeout: 0s
+      udpTimeout: 0s
+    kind: KubeProxyConfiguration
+    logging:
+      flushFrequency: 5s                                  # upgrade
+      verbosity: 2                                        # upgrade
+    metricsBindAddress: "127.0.0.1:10249"                 # upgrade
+    mode: "nftables"                                      # upgrade
+    nftables:
+      masqueradeAll: false
+      masqueradeBit: 14                                   # upgrade
+      minSyncPeriod: 5s                                   # upgrade
+      syncPeriod: 30s                                     # upgrade
+    nodePortAddresses: null
+    oomScoreAdj: -999                                     # upgrade
+    portRange: ""
+    showHiddenMetricsForVersion: ""
+    winkernel:
+      enableDSR: false
+      forwardHealthCheckVip: false
+      networkName: ""
+      rootHnsEndpointName: ""
+      sourceVip: ""
+  kubeconfig.conf: |-
+    apiVersion: v1
+    kind: Config
+    clusters:
+    - cluster:
+        certificate-authority: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        server: https://10.101.11.223:6443
+      name: default
+    contexts:
+    - context:
+        cluster: default
+        namespace: default
+        user: default
+      name: default
+    current-context: default
+    users:
+    - name: default
+      user:
+        tokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+kind: ConfigMap
+metadata:
+  labels:
+    app: kube-proxy
+  name: kube-proxy
+  namespace: kube-system
+
+kubectl -n kube-system get  configmap kube-proxy -o yaml > configmap-kube-proxy.yaml
+kubectl -n kube-system rollout restart daemonset kube-proxy
+kubectl -n kube-system rollout status daemonset kube-proxy
+```
+
+
+
+#### 2.5.2 configmap kubelet
+
+```bash
+kubectl -n kube-system get  configmap kubelet-config -o yaml > configmap-kubelet-config.yaml-default
+kubectl -n kube-system edit configmap kubelet-config
+
+apiVersion: v1
+data:
+  kubelet: |
+    apiVersion: kubelet.config.k8s.io/v1beta1
+    authentication:
+      anonymous:
+        enabled: false
+      webhook:
+        cacheTTL: 0s
+        enabled: true
+      x509:
+        clientCAFile: /etc/kubernetes/pki/ca.crt
+    authorization:
+      mode: Webhook
+      webhook:
+        cacheAuthorizedTTL: 0s
+        cacheUnauthorizedTTL: 0s
     cgroupDriver: systemd
-    maxPods: 200
-    resolvConf: /etc/resolv.conf
-kind: ConfigMap                            # relative
-……
+    clusterDNS:
+    - 192.168.0.10
+    clusterDomain: cluster.local
+    containerRuntimeEndpoint: ""
+    cpuManagerReconcilePeriod: 10s                        # upgrade
+    crashLoopBackOff: {}
+    evictionPressureTransitionPeriod: 300s                # upgrade
+    fileCheckFrequency: 20s                               # upgrade
+    healthzBindAddress: 127.0.0.1
+    healthzPort: 10248
+    httpCheckFrequency: 20s                               # upgrade
+    imageMinimumGCAge: 2h                                 # upgrade
+    imageMaximumGCAge: 168h                               # upgrade
+    imageGCLowThresholdPercent: 70                        # upgrade
+    imageGCHighThresholdPercent: 80                       # upgrade
+    kind: KubeletConfiguration
+    logging:
+      flushFrequency: 5s                                  # upgrade
+      verbosity: 2                                        # upgrade
+    memorySwap: {}
+    nodeStatusReportFrequency: 20s                        # upgrade
+    nodeStatusUpdateFrequency: 20s                        # upgrade
+    rotateCertificates: true
+    runtimeRequestTimeout: 2m                             # upgrade
+    shutdownGracePeriod: 30s                              # upgrade
+    shutdownGracePeriodCriticalPods: 10s                  # upgrade
+    staticPodPath: /etc/kubernetes/manifests
+    streamingConnectionIdleTimeout: 5m                    # upgrade
+    syncFrequency: 1m                                     # upgrade
+    volumeStatsAggPeriod: 1m                              # upgrade
+    maxPods: 150                                          # upgrade
+    resolvConf: /etc/resolv.conf                          # upgrade
+kind: ConfigMap
+metadata:
+  name: kubelet-config
+  namespace: kube-system
 
-# kube-proxy 
-# 当flannel采用host-gw时，需要开启ipvs
-kubectl -n kube-system edit cm kube-proxy
-
-……
-    configSyncPeriod: 5s # upgrade
-    mode: "ipvs"         # upgrade
-    ipvs:                # relative
-      tcpTimeout: 900s   # upgrade
-      syncPeriod: 5s     # upgrade
-      minSyncPeriod: 5s  # upgrade
-……
+kubectl -n kube-system get  configmap kubelet-config -o yaml > configmap-kubelet-config.yaml
+systemctl restart kubelet && sleep 5 && systemctl start containerd
 ```
 
 
@@ -463,7 +599,7 @@ id
 
 ```bash
 # ubuntu 24.04 uid=101 is messagebus
-# /etc/logrotate.d/nginx
+# vim /etc/logrotate.d/nginx
 /var/log/nginx/access.log
 /data1/log/nginx/*/access.log
  {
@@ -508,14 +644,23 @@ groupadd -g 82 nginx-ingress
 mkdir -p /data1/log/nginx && cd /data1/log/nginx
 chown 101:82 * && ls -l 
 
-systemctl start logrotate && ls -l && sleep 5 && systemctl status logrotate
 
 # 调整定时器为小时
 command -v logrotate || apt install -y -q logrotate
 sed -i 's/OnCalendar=daily/OnCalendar=hourly/' /lib/systemd/system/logrotate.timer
-systemctl daemon-reload && sleep 5 && systemctl status logrotate.timer
+
+systemctl daemon-reload && \
+  systemctl start logrotate && \
+  ls -l && sleep 5 && \
+  systemctl status logrotate
 
 ls -lt /data1/log/nginx/* && tree /data1/log/nginx
+
+sed -i 's/^#NTP=/NTP=ntp.8ops.top/' /etc/systemd/timesyncd.conf
+systemctl restart systemd-timesyncd
+systemctl status systemd-timesyncd
+timedatectl status
+timedatectl timesync-status
 ```
 
 

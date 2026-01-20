@@ -484,7 +484,7 @@ Documentation=man:agetty(8) man:systemd-getty-generator(8)
 After=systemd-user-sessions.service plymouth-quit-wait.service
 
 [Service]
-ExecStart=-/sbin/agetty --keep-baud 115200,38400,9600 ttyS0 $TERM
+ExecStart=-/sbin/agetty --keep-baud 115200,38400,9600 ttyS0 \$TERM
 Type=idle
 Restart=always
 UtmpIdentifier=%I
