@@ -8,34 +8,79 @@
 
 ```bash
 .
-├── boot.ipxe
-├── netboot
-│   ├── bootx64.efi
-│   ├── grub
-│   │   └── grub.cfg
-│   ├── grubx64.efi
-│   ├── initrd
-│   ├── ldlinux.c32
-│   ├── linux
-│   ├── pxelinux.0
-│   └── pxelinux.cfg
-│       └── default
-└── preseed
-    └── preseed.cfg
+├── http
+│   ├── boot.ipxe
+│   ├── netboot
+│   │   ├── bootx64.efi
+│   │   ├── grub
+│   │   │   └── grub.cfg
+│   │   ├── grubx64.efi
+│   │   ├── initrd
+│   │   ├── ldlinux.c32
+│   │   ├── linux
+│   │   ├── pxelinux.0
+│   │   └── pxelinux.cfg
+│   │       └── default
+│   └── preseed
+│       └── preseed.cfg
+└── tftp
+    └── grub
+        ├── grub.cfg
+        └── grubnetx64.efi
 
-4 directories, 10 files
+7 directories, 12 files
+
+# 1，配置dhcp（使用dnsmasq）
+vim /etc/dnsmasq.d/pxe.conf
+
+# 2，down netboot
+mkdir -p /srv/http
+https://releases.ubuntu.com/noble/ubuntu-24.04.3-netboot-amd64.tar.gz
+tar xzf ubuntu-24.04.3-netboot-amd64.tar.gz
+mv amd /srv/http/netboot
+
+# 3，配置引导启动
+vim /srv/http/boot.ipxe 
+# 缺少 initrd.gz，无法继续（TODO）
+
+# 4，d-i 配置
+vim /srv/http/preseed/preseed.cfg
+
+# 5，配置HTTP（使用nginx）
+vim 
 ```
 
 
 
-```bash
-# 1，down netboot
-https://releases.ubuntu.com/noble/ubuntu-24.04.3-netboot-amd64.tar.gz
-tar xzf ubuntu-24.04.3-netboot-amd64.tar.gz
-mv amd netboot
+#### 1. pxe.conf
 
-# 2，配置引导启动
-cat > boot.ipxe <<EOF
+```bash
+port=0
+interface=eth0
+bind-interfaces
+
+dhcp-range=10.101.11.62,10.101.11.66,12h
+dhcp-option=3,10.101.11.254
+dhcp-option=6,10.101.11.254
+
+enable-tftp
+tftp-root=/srv/tftp
+
+# # UEFI PXE
+# dhcp-match=set:efi64,option:client-arch,7
+# dhcp-boot=tag:efi64,grub/grubnetx64.efi
+
+# iPXE
+dhcp-match=set:ipxe,175
+dhcp-boot=tag:ipxe,http://10.101.11.236/boot.ipxe
+dhcp-boot=pxelinux.0
+```
+
+
+
+#### 2. boot.ipxe
+
+```bash
 #!ipxe
 dhcp
 
@@ -49,12 +94,11 @@ kernel http://10.101.11.236/netboot/linux \
 
 initrd http://10.101.11.236/netboot/initrd.gz
 boot
-EOF
+```
 
-# 缺少 initrd.gz，无法继续（TODO）
+#### 3. preseed/preseed.cfg
 
-# 3，d-i 配置
-cat > preseed/preseed.cfg <<EOF
+```bash
 ### 基本模式：完全无人值守
 d-i auto-install/enable boolean true
 d-i debconf/priority string critical
@@ -104,8 +148,23 @@ d-i grub-installer/bootdev string default
 
 ### 完成安装后自动重启
 d-i finish-install/reboot_in_progress note
-EOF
 ```
+
+
+
+#### 4. pxe.conf
+
+```bash
+server {
+    listen 80;
+    location / {
+        root /srv/http;
+        autoindex on;
+    }
+}
+```
+
+
 
 
 
@@ -114,25 +173,29 @@ EOF
 适用24.04。
 
 ```bash
-.
-├── autoinstall
-│   ├── meta-data
-│   ├── user-data
-│   └── vendor-data
-├── boot.ipxe
-└── ubuntu
-    └── 24.04
-        ├── filesystem.squashfs
-        ├── initrd
-        ├── ubuntu-24.04.3-live-server-amd64.iso
-        └── vmlinuz
+# tree /srv
+/srv/
+├── http
+│   ├── autoinstall
+│   │   ├── meta-data
+│   │   ├── user-data
+│   │   ├── user-data-20260123
+│   │   └── vendor-data
+│   ├── boot.ipxe
+│   └── ubuntu
+│       └── 24.04
+│           ├── casper
+│           │   ├── filesystem.squashfs
+│           │   ├── initrd
+│           │   └── vmlinuz
+│           └── ubuntu-24.04.3-live-server-amd64.iso
+└── tftp
+    └── grub
+        ├── grub.cfg
+        └── grubnetx64.efi
 
-3 directories, 8 files
-```
+7 directories, 11 files
 
-
-
-```bash
 # Ubuntu 24.04.x 不再支持传统 debian-installer，正确方式是（基于iPXE）
 DHCP
  ├─ 提供 next-server / filename
@@ -143,39 +206,50 @@ HTTP
  ├─ initrd
  ├─ autoinstall.yaml
 
-# 1，down
+# 1，下载、挂载并提取内核
 wget https://releases.ubuntu.com/24.04/ubuntu-24.04.3-live-server-amd64.iso
 
-# 2，挂载并提取内核
-mkdir /mnt/iso
+mkdir -p /mnt/iso
 mount ubuntu-24.04.3-live-server-amd64.iso /mnt/iso
-
 mkdir -p /var/www/html/ubuntu/24.04/casper
 cp /mnt/iso/casper/vmlinuz /var/www/html/ubuntu/24.04/casper/
 cp /mnt/iso/casper/initrd /var/www/html/ubuntu/24.04/casper/
 cp /mnt/iso/casper/ubuntu-server-minimal.ubuntu-server.installer.squashfs /var/www/html/ubuntu/24.04/casper/
 
-# 3，TFTP + GRUB（UEFI 推荐）
+# 2，TFTP + GRUB（UEFI 推荐，此处采用iPXE）
 apt install -q -y dnsmasq grub-efi-amd64-bin
 mkdir -p /srv/tftp/grub
 cp /usr/lib/grub/x86_64-efi/monolithic/grubnetx64.efi /srv/tftp/
 
-cat > /srv/tftp/grub/grub.cfg<<EOF
-set timeout=5
-set default=0
+vim /etc/dnsmasq.d/pxe.conf
+systemctl restart dnsmasq
 
-menuentry "Install Ubuntu 24.04.3 (Auto PXE)" {
-    set gfxpayload=keep
-    linuxefi http://10.101.11.236/ubuntu/24.04/vmlinuz \
-      ip=dhcp \
-      url=http://10.101.11.236/ubuntu/24.04/ubuntu-24.04.3-live-server-amd64.iso \
-      autoinstall \
-      ds=nocloud-net;s=http://10.101.11.236/autoinstall/ ---
-    initrdefi http://10.101.11.236/ubuntu/24.04/initrd
-}
-EOF
+# 3，配置grub.cfg
+vim /srv/tftp/grub/grub.cfg
 
-cat > /etc/dnsmasq.d/pxe.conf<<EOF
+# 4，autoinstall user-data
+openssl passwd -6 
+ubuntu # sha256 加密
+vim /srv/http/autoinstall/user-data
+
+# 5，配置boot.ipxe
+vim /srv/http/boot.ipxe
+
+# 6，HTTP服务（此处选择nginx）
+apt install -y nginx
+systemctl enable --now nginx
+vim /etc/nginx/conf.d/pxe.conf
+
+nginx -t
+systemctl restart nginx
+```
+
+
+
+#### 1. pxe.conf
+
+```bash
+# cat /etc/dnsmasq.d/pxe.conf
 port=0
 interface=eth0
 bind-interfaces
@@ -189,98 +263,147 @@ tftp-root=/srv/tftp
 
 # # UEFI PXE
 # dhcp-match=set:efi64,option:client-arch,7
-# dhcp-boot=tag:efi64,grubnetx64.efi
+# dhcp-boot=tag:efi64,grub/grubnetx64.efi
 
 # iPXE
 dhcp-match=set:ipxe,175
 dhcp-boot=tag:ipxe,http://10.101.11.236/boot.ipxe
 dhcp-boot=pxelinux.0
-EOF
+```
 
-systemctl restart dnsmasq
 
-# 4，autoinstall
-mkdir -p /var/www/html/autoinstall
-touch autoinstall/vendor-data
 
-cat > autoinstall/meta-data<EOF
-instance-id: ubuntu24043
-local-hostname: ubuntu24043
-EOF
+#### 2，grub.cfg
 
-cat > autoinstall/user-data<<EOF
+```bash
+cat /srv/tftp/grub/grub.cfg
+set timeout=5
+set default=0
+
+menuentry "Install Ubuntu 24.04.3 (PXE Autoinstall)" {
+    set gfxpayload=keep
+
+    linuxefi http://10.101.11.236/ubuntu/24.04/casper/vmlinuz \
+        ip=dhcp \
+        boot=casper \
+        netboot=http \
+        live-media-path=/ubuntu/24.04/casper \
+        autoinstall \
+        ds=nocloud-net;s=http://10.101.11.236/autoinstall/ \
+        console=tty0 console=ttyS0,115200n8 ---
+
+    initrdefi http://10.101.11.236/ubuntu/24.04/casper/initrd
+}
+```
+
+
+
+#### 3，user-data
+
+```bash
+# cat /srv/http/autoinstall/user-data
 # cloud-config
 autoinstall:
   version: 1
   locale: en_US.UTF-8
   keyboard:
     layout: us
-
   identity:
-    hostname: ubuntu24043
+    hostname: ubuntu-pxe
     username: ubuntu
-    password: "$6$P3.moH7U5xwiNCwx$1ABidxOu5dz9agI/zoZ.Y4Kt.t.r/nr501ZwN4zfAKevGs7GHLCqXOhu.hU0hALEXJxJhgyplSAL0doQx03Ul0"
-
+    password: "$6$1qO88.2vhySu1kde$1D2av1yTRfQ8UX1cuy0q7gc/hl0IhbZEMoXNGHQV3UcCWC5gNkj9wY0FzxvaBjix78G7upfJNfLM5mmOzJB3V0"
   ssh:
     install-server: true
     allow-pw: true
-
   storage:
     layout:
-      name: direct
+      name: lvm
+```
 
-  packages:
-    - openssh-server
-    - vim
-    - curl
-    - net-tools
 
-  late-commands:
-    - curtin in-target -- systemctl enable ssh
-EOF
 
-openssl passwd -6 
-ubuntu # sha256 加密
+#### 4，boot.ipxe
 
-cat > boot.ipxe<<EOF
+```bash
+# cat /srv/http/boot.ipxe
 #!ipxe
+
+# ----------------------------
+# DHCP 获取网络
+# ----------------------------
 dhcp
 
-set base http://10.101.11.236/ubuntu/24.04
+# ----------------------------
+# 设置基础 URL
+# ----------------------------
+set base-url http://10.101.11.236
 
-kernel ${base}/vmlinuz \
-  ip=dhcp \
-  boot=casper \
-  live-media-path=casper \
-  fetch=${base}/filesystem.squashfs \
-  autoinstall \
-  ds=nocloud-net;s=http://10.101.11.236/autoinstall/ \
-  rootfs-size=8192M \
-  fsck.mode=skip ---
+# ----------------------------
+# 加载内核
+# ----------------------------
+kernel ${base-url}/ubuntu/24.04/casper/vmlinuz \
+    ip=dhcp \
+    BOOTIF=${net0/mac} \
+    root=/dev/ram0 \
+    boot=casper \
+    iso-url=${base-url}/ubuntu/24.04/ubuntu-24.04.3-live-server-amd64.iso \
+    autoinstall \
+    ds=nocloud-net;s=${base-url}/autoinstall/ \
+    console=ttyS0,115200n8 \
+    console=tty0 \
+    nomodeset \
+    net.ifnames=0 biosdevname=0 \
+    ipv6.disable=1 \
+    quiet splash ---
 
-initrd ${base}/initrd
+# ----------------------------
+# 加载 initrd
+# ----------------------------
+initrd ${base-url}/ubuntu/24.04/casper/initrd
+
+# ----------------------------
+# 启动
+# ----------------------------
 boot
-EOF
+```
 
-# 5，HTTP服务
-apt install -y nginx
-systemctl enable --now nginx
 
-cat > /etc/nginx/conf.d/pxe.conf <<EOF
+
+#### 5，pxe.conf
+
+```bash
+# cat /etc/nginx/conf.d/pxe.conf
 server {
     listen 80;
     location / {
-        root /var/www/html;
+        # root /var/www/netboot;
+        root /srv/http;
         autoindex on;
     }
 }
-EOF
-nginx -t
-systemctl restart nginx
 
 ```
 
 
+
+
+
+
+
+## Libvirtd
+
+```bash
+virt-install \
+  --name ubuntu-pxe-001 \
+  --ram 4096 \
+  --vcpus 2 \
+  --disk size=40 \
+  --os-variant ubuntu24.04 \
+  --network bridge=br0 \
+  --pxe \
+  --boot hd,network # 
+
+```
 
 
 
