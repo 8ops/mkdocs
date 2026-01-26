@@ -268,12 +268,12 @@ tftp-root=/srv/tftp
 # iPXE
 dhcp-match=set:ipxe,175
 dhcp-boot=tag:ipxe,http://10.101.11.236/boot.ipxe
-dhcp-boot=pxelinux.0
+dhcp-boot=pxelinux.0 # 非 iPXE 客户机，pxelinux 只负责“跳板”真正的安装逻辑全部在 iPXE 里
 ```
 
 
 
-#### 2，grub.cfg
+#### 2. grub.cfg
 
 ```bash
 cat /srv/tftp/grub/grub.cfg
@@ -298,7 +298,7 @@ menuentry "Install Ubuntu 24.04.3 (PXE Autoinstall)" {
 
 
 
-#### 3，user-data
+#### 3. user-data
 
 ```bash
 # cat /srv/http/autoinstall/user-data
@@ -322,7 +322,7 @@ autoinstall:
 
 
 
-#### 4，boot.ipxe
+#### 4. boot.ipxe
 
 ```bash
 # cat /srv/http/boot.ipxe
@@ -369,7 +369,7 @@ boot
 
 
 
-#### 5，pxe.conf
+#### 5. pxe.conf
 
 ```bash
 # cat /etc/nginx/conf.d/pxe.conf
@@ -385,6 +385,19 @@ server {
 ```
 
 
+
+## pxelinux
+
+基于autoinstall追加配置。
+
+```bash
+apt install syslinux-common pxelinux
+
+cp /usr/lib/PXELINUX/pxelinux.0 /srv/tftp/
+cp /usr/lib/syslinux/modules/bios/*.c32 /srv/tftp/
+
+
+```
 
 
 

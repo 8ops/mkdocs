@@ -104,6 +104,7 @@ apt update
 }
 
 function op_package(){
+apt install -y -q bash-completion
 apt install -y -q apt-transport-https ca-certificates curl software-properties-common tree socat vim iputils-ping
 systemctl disable --now \
   plymouth-quit-wait.service \
