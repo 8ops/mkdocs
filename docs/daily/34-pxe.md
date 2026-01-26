@@ -1,4 +1,4 @@
-# kickstart
+# pxe
 
 ## iPXE
 
@@ -399,7 +399,7 @@ virt-install \
   --vcpus 2 \
   --disk size=40 \
   --os-variant ubuntu24.04 \
-  --network bridge=br0 \
+  --network bridge=br0,mac=52:54:0A:65:09:08 \
   --pxe \
   --boot hd,network # 
 
