@@ -350,6 +350,23 @@ proxy: {}
 scheduler: {}
 ```
 
+
+
+#### 2.4.2 bash-completion
+
+```bash
+apt install -y -q bash-completion
+
+# tab 按键时命令行提示
+vim .bashrc
+# kubelet
+which kubectl &>/dev/null && source <(kubectl completion bash)
+```
+
+
+
+
+
 ### 2.5 优化配置
 
 #### 2.5.1 configmap kube-proxy

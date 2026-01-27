@@ -179,7 +179,6 @@ server {
 │   ├── autoinstall
 │   │   ├── meta-data
 │   │   ├── user-data
-│   │   ├── user-data-20260123
 │   │   └── vendor-data
 │   ├── boot.ipxe
 │   └── ubuntu
@@ -227,10 +226,15 @@ systemctl restart dnsmasq
 # 3，配置grub.cfg
 vim /srv/tftp/grub/grub.cfg
 
-# 4，autoinstall user-data
+# 4，autoinstall user-data/meta-data/vendor-data
 openssl passwd -6 
 ubuntu # sha256 加密
 vim /srv/http/autoinstall/user-data
+vim /srv/http/autoinstall/meta-data
+touch /srv/http/autoinstall/vendor-data # 空文件
+cat /var/log/installer/autoinstall-user-data # 手动安装后会产生一份完整的user-data
+# DEMO https://books.8ops.top/attachment/pxe/autoinstall-user-data
+
 
 # 5，配置boot.ipxe
 vim /srv/http/boot.ipxe
@@ -242,6 +246,18 @@ vim /etc/nginx/conf.d/pxe.conf
 
 nginx -t
 systemctl restart nginx
+
+# 安装过程报错可进入shell查看日志
+tail -n 20 /var/log/installer/subiquity-server-debug.log
+
+# 反复安装需要新建磁盘
+mkdir -p /data1/lib/libvirt/qemu/
+qemu-img create -f qcow2 /data1/lib/libvirt/qemu/detect-ubuntu24.04.3-vda.qcow2 50G
+qemu-img create -f qcow2 /data1/lib/libvirt/qemu/detect-ubuntu24.04.3-vdb.qcow2 200G
+
+ls -lh /data1/lib/libvirt/qemu/detect-ubuntu24.04.3-vda.qcow2 /data1/lib/libvirt/qemu/detect-ubuntu24.04.3-vdb.qcow2 
+rm -f  /data1/lib/libvirt/qemu/detect-ubuntu24.04.3-vda.qcow2 /data1/lib/libvirt/qemu/detect-ubuntu24.04.3-vdb.qcow2 
+
 ```
 
 
@@ -302,27 +318,88 @@ menuentry "Install Ubuntu 24.04.3 (PXE Autoinstall)" {
 
 ```bash
 # cat /srv/http/autoinstall/user-data
-# cloud-config
+#cloud-config # 此行必须这样，否则进入交互界面。通过cat -A user-data检查文件格式
 autoinstall:
   version: 1
+  interactive-sections: []
+
   locale: en_US.UTF-8
   keyboard:
     layout: us
+
   identity:
     hostname: ubuntu-pxe
     username: ubuntu
     password: "$6$1qO88.2vhySu1kde$1D2av1yTRfQ8UX1cuy0q7gc/hl0IhbZEMoXNGHQV3UcCWC5gNkj9wY0FzxvaBjix78G7upfJNfLM5mmOzJB3V0"
+
   ssh:
     install-server: true
     allow-pw: true
+
   storage:
-    layout:
-      name: lvm
+    config: # disk->partition->format->mount
+      - type: disk
+        id: disk-vda
+        path: /dev/vda
+        ptable: gpt
+        wipe: superblock-recursive
+        grub_device: true
+
+      - type: partition
+        id: bios_grub
+        device: disk-vda
+        size: 2MB
+        flag: bios_grub
+
+      - type: partition
+        id: boot-part
+        device: disk-vda
+        size: 1GB
+
+      - type: format
+        id: boot-fs
+        volume: boot-part
+        fstype: ext4
+
+      - type: mount
+        id: mount-boot
+        device: boot-fs
+        path: /boot
+
+      - type: partition
+        id: root-part
+        device: disk-vda
+        size: -1
+
+      - type: format
+        id: root-fs
+        volume: root-part
+        fstype: xfs
+
+      - type: mount
+        id: mount-root
+        device: root-fs
+        path: /
+
+  late-commands:
+    - curtin in-target -- grub-install --target=i386-pc /dev/vda # 后补 grub
+    - curtin in-target -- update-grub
+    - curtin in-target -- poweroff
 ```
 
 
 
-#### 4. boot.ipxe
+#### 4. meta-data
+
+```bash
+# cat /srv/http/autoinstall/meta-data
+instance-id: ubuntu-24043-pxe
+local-hostname: ubuntu-pxe
+```
+
+
+
+#### 5. boot.ipxe
 
 ```bash
 # cat /srv/http/boot.ipxe
@@ -343,18 +420,18 @@ set base-url http://10.101.11.236
 # ----------------------------
 kernel ${base-url}/ubuntu/24.04/casper/vmlinuz \
     ip=dhcp \
-    BOOTIF=${net0/mac} \
+    BOOTIF=01-${net0/mac} \
     root=/dev/ram0 \
     boot=casper \
     iso-url=${base-url}/ubuntu/24.04/ubuntu-24.04.3-live-server-amd64.iso \
     autoinstall \
-    ds=nocloud-net;s=${base-url}/autoinstall/ \
-    console=ttyS0,115200n8 \
-    console=tty0 \
-    nomodeset \
+    ds=nocloud-net;s=http://10.101.11.236/autoinstall/ \
+    cloud-config-url=/dev/null \
+    fsck.mode=skip \
     net.ifnames=0 biosdevname=0 \
     ipv6.disable=1 \
-    quiet splash ---
+    console=ttyS0,115200n8 console=tty0 \
+    ---
 
 # ----------------------------
 # 加载 initrd
@@ -369,29 +446,29 @@ boot
 
 
 
-#### 5. pxe.conf
+#### 6. pxe.conf
 
 ```bash
 # cat /etc/nginx/conf.d/pxe.conf
 server {
     listen 80;
-    location / {
-        # root /var/www/netboot;
-        root /srv/http;
-        autoindex on;
+    root /srv/http;
+    autoindex on;
+    location /autoinstall {
+        default_type text/plain;
     }
 }
-
+# autoinstall 需要返回 text/plain
 ```
 
 
 
 ## pxelinux
 
-基于autoinstall追加配置。
+基于autoinstall追加配置，受理非iPXE情况在dhcp时已经有声明。
 
 ```bash
-apt install syslinux-common pxelinux
+apt install -y -q syslinux-common pxelinux
 
 cp /usr/lib/PXELINUX/pxelinux.0 /srv/tftp/
 cp /usr/lib/syslinux/modules/bios/*.c32 /srv/tftp/
