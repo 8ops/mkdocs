@@ -7,7 +7,8 @@
 适用ubuntu22.04。以下测试24.04.3的示例。
 
 ```bash
-.
+# tree /srv
+/srv/
 ├── http
 │   ├── boot.ipxe
 │   ├── netboot
@@ -24,11 +25,18 @@
 │   └── preseed
 │       └── preseed.cfg
 └── tftp
-    └── grub
-        ├── grub.cfg
-        └── grubnetx64.efi
-
-7 directories, 12 files
+    ├── bios
+    │   ├── ldlinux.c32
+    │   ├── libutil.c32
+    │   ├── lpxelinux.0
+    │   ├── menu.c32
+    │   ├── pxelinux.0
+    │   └── vesamenu.c32
+    ├── grub
+    │   ├── grub.cfg
+    │   └── grubnetx64.efi
+    └── pxelinux.cfg
+        └── default
 
 # 1，配置dhcp（使用dnsmasq）
 vim /etc/dnsmasq.d/pxe.conf
@@ -47,7 +55,7 @@ vim /srv/http/boot.ipxe
 vim /srv/http/preseed/preseed.cfg
 
 # 5，配置HTTP（使用nginx）
-vim 
+vim /etc/nginx/conf.d/pxe.conf
 ```
 
 
@@ -59,9 +67,9 @@ port=0
 interface=eth0
 bind-interfaces
 
-dhcp-range=10.101.11.62,10.101.11.66,12h
+dhcp-range=10.101.11.62,10.101.11.66,255.255.255.0,2h
 dhcp-option=3,10.101.11.254
-dhcp-option=6,10.101.11.254
+dhcp-option=6,10.101.11.105
 
 enable-tftp
 tftp-root=/srv/tftp
@@ -73,7 +81,7 @@ tftp-root=/srv/tftp
 # iPXE
 dhcp-match=set:ipxe,175
 dhcp-boot=tag:ipxe,http://10.101.11.236/boot.ipxe
-dhcp-boot=pxelinux.0
+dhcp-boot=/bios/pxelinux.0
 ```
 
 
@@ -189,11 +197,18 @@ server {
 │           │   └── vmlinuz
 │           └── ubuntu-24.04.3-live-server-amd64.iso
 └── tftp
-    └── grub
-        ├── grub.cfg
-        └── grubnetx64.efi
-
-7 directories, 11 files
+    ├── bios
+    │   ├── ldlinux.c32
+    │   ├── libutil.c32
+    │   ├── lpxelinux.0
+    │   ├── menu.c32
+    │   ├── pxelinux.0
+    │   └── vesamenu.c32
+    ├── grub
+    │   ├── grub.cfg
+    │   └── grubnetx64.efi
+    └── pxelinux.cfg
+        └── default
 
 # Ubuntu 24.04.x 不再支持传统 debian-installer，正确方式是（基于iPXE）
 DHCP
@@ -233,8 +248,9 @@ vim /srv/http/autoinstall/user-data
 vim /srv/http/autoinstall/meta-data
 touch /srv/http/autoinstall/vendor-data # 空文件
 cat /var/log/installer/autoinstall-user-data # 手动安装后会产生一份完整的user-data
-# DEMO https://books.8ops.top/attachment/pxe/autoinstall-user-data
-
+# DEMO
+# https://books.8ops.top/attachment/pxe/autoinstall-user-data
+# 
 
 # 5，配置boot.ipxe
 vim /srv/http/boot.ipxe
@@ -270,9 +286,12 @@ port=0
 interface=eth0
 bind-interfaces
 
-dhcp-range=10.101.11.62,10.101.11.66,12h
+#-- Set dhcp scope
+dhcp-range=10.101.11.62,10.101.11.66,255.255.255.0,2h
+#-- Set gateway option
 dhcp-option=3,10.101.11.254
-dhcp-option=6,10.101.11.254
+#-- Set DNS server option
+dhcp-option=6,10.101.11.105
 
 enable-tftp
 tftp-root=/srv/tftp
@@ -315,6 +334,8 @@ menuentry "Install Ubuntu 24.04.3 (PXE Autoinstall)" {
 
 
 #### 3. user-data
+
+[Reference](https://canonical-subiquity.readthedocs-hosted.com/en/latest/reference/autoinstall-reference.html)
 
 ```bash
 # cat /srv/http/autoinstall/user-data
@@ -384,7 +405,6 @@ autoinstall:
   late-commands:
     - curtin in-target -- grub-install --target=i386-pc /dev/vda # 后补 grub
     - curtin in-target -- update-grub
-    - curtin in-target -- poweroff
 ```
 
 
@@ -470,8 +490,20 @@ server {
 ```bash
 apt install -y -q syslinux-common pxelinux
 
-cp /usr/lib/PXELINUX/pxelinux.0 /srv/tftp/
-cp /usr/lib/syslinux/modules/bios/*.c32 /srv/tftp/
+mkdir -p /srv/tftp/bios
+cp /usr/lib/PXELINUX/{pxelinux,lpxelinux}.0 /srv/tftp/bios/
+cp /usr/lib/syslinux/modules/bios/{ldlinux,libutil,menu,vesamenu}.c32 /srv/tftp/bios/
+
+# Download “UEFI” Packages （未成功）
+apt-get download shim.signed
+dpkg -x <%name of deb package%> shim
+
+apt-get download grub-efi-amd-signed
+dpkg -x <%name of deb package%> grub
+
+cp shim/usr/lib/shim/shimx64.efi.signed  /tftp/grub/bootx64.efi
+cp grub/usr/lib/grub/x86_64-efi-signed/grubnetx64.efi.signed  /tftp/grubx64.efi
+
 
 
 ```

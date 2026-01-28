@@ -6,6 +6,7 @@ autoinstall:
     disable_components: []
     fallback: offline-install
     geoip: true
+    timezone: Asia/Shanghai
     mirror-selection:
       primary:
       - uri: https://mirrors.aliyun.com/ubuntu/
@@ -13,7 +14,7 @@ autoinstall:
       - arches: &id001
         - amd64
         - i386
-        uri: http://archive.ubuntu.com/ubuntu/
+        uri: https://archive.ubuntu.com/ubuntu/
       - arches: &id002
         - s390x
         - arm64
@@ -21,11 +22,11 @@ autoinstall:
         - powerpc
         - ppc64el
         - riscv64
-        uri: http://ports.ubuntu.com/ubuntu-ports
+        uri: https://ports.ubuntu.com/ubuntu-ports
     preserve_sources_list: false
     security:
     - arches: *id001
-      uri: http://security.ubuntu.com/ubuntu/
+      uri: https://security.ubuntu.com/ubuntu/
     - arches: *id002
       uri: http://ports.ubuntu.com/ubuntu-ports
   codecs:
@@ -33,10 +34,10 @@ autoinstall:
   drivers:
     install: false
   identity:
-    hostname: template-ubuntu2404
-    password: $6$XGKExGKSnzr1VHW.$46xVO1vP.ClBdt4NAgwH/iGk.KcC1/iAJCjY1WRZSdfGyDsVw/PqJaqmyo9xXtbNHN5XvE/z15M5MljbqkIN8/
-    realname: ubuntu
-    username: ubuntu
+    hostname: ubuntu-pxe
+    password: $6$C7x6H252Q/jj/8KE$jLt1s7SZPBKJSnoB8RLX3L1xA9BierZCVE/A6SODVwqztiyJx4cllrUrKvOOxf1lSpTrH1U1VyKIhi0qPSE6S0
+    realname: root
+    username: root
   kernel:
     package: linux-generic
   keyboard:
@@ -48,14 +49,14 @@ autoinstall:
     ethernets:
       ens3:
         addresses:
-        - 10.101.9.8/24
+        - 10.101.11.120/24
         nameservers:
           addresses:
-          - 10.101.9.252
+          - 10.101.11.105
           search: []
         routes:
         - to: default
-          via: 10.101.9.254
+          via: 10.101.11.254
     version: 2
   oem:
     install: auto
@@ -64,79 +65,73 @@ autoinstall:
     search_drivers: false
   ssh:
     allow-pw: true
-    authorized-keys: []
+    authorized-keys: ['ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCh2GwZlo9zZ1ZGwIF8KpiNzuBYSRpunWGY+5LYKMDpXp3ImlVAdcTtTPtufU5y2yq/KUINZT00FbWeMpeTmhOMcD5EcelU30QyhqWz0j45bn83OkmmrZw/7D7/BFZTMqR3po1vFS6kT8E3Nb/Ob2jz8amJgEbvIe6TA+hRWX7mu5TeH/tmhWjgtZ/8YX5QhCklkZlHGe7QR9iqZ+i90qq2l2cMV9kkaxPCXAUdft9mgQgE2kEQtb14cMNqpkDSUNk0uRLNPFqPaTf78RLA7gcxbp/HgVR7DDY3cwT1kfLh4pjWx95amB6SYOiPH78r4PV985iSoWsoLv6qOXdhbJG6T0hTAHmy7WLlYvyql4jqpq/RKZ0514TM1DMX0zPEOQ3q/+SoyeCPGBjNiF5Z1bTUEmbJvJ97eL/VaRiQyJ75VgIndBToPiS5KbgB6UfDWEAz24axSVWEyObTmgOBcBz6qA+ZZRYnG9jOuot3AnpxyOtdFAtfeWyXR9cCz5b/oU136XCdcWAFHX7xDS3F6ATRJh9LfAs0HeJP7LpfQUln9tkdYLlndP96+8LBH7dtPC39OYYanJxq87JHr9BSGvhsGDdX8MR8WONttzT5fDsoh68J80nvbVBe/8hxnIqwR1hO/4M2lfzkUKR3fIdEJ1hVhwskwQo+p15VgXtfkx5nlw== pro-ansible-root-key']
     install-server: true
-  storage:
-    config:
-    - ptable: gpt
-      path: /dev/vda
-      wipe: superblock-recursive
-      preserve: false
-      name: ''
-      grub_device: true
-      id: disk-vda
-      type: disk
-    - device: disk-vda
-      size: 1048576
-      flag: bios_grub
-      number: 1
-      preserve: false
-      grub_device: false
-      offset: 1048576
-      path: /dev/vda1
-      id: partition-0
-      type: partition
-    - device: disk-vda
-      size: 2147483648
-      wipe: superblock
-      number: 2
-      preserve: false
-      grub_device: false
-      offset: 2097152
-      path: /dev/vda2
-      id: partition-1
-      type: partition
-    - fstype: ext4
-      volume: partition-1
-      preserve: false
-      id: format-0
-      type: format
-    - device: disk-vda
-      size: 51536461824
-      wipe: superblock
-      number: 3
-      preserve: false
-      grub_device: false
-      offset: 2149580800
-      path: /dev/vda3
-      id: partition-2
-      type: partition
-    - name: ubuntu-vg
-      devices:
-      - partition-2
-      preserve: false
-      id: lvm_volgroup-0
-      type: lvm_volgroup
-    - name: lv-root
-      volgroup: lvm_volgroup-0
-      size: 51535413248B
-      wipe: superblock
-      preserve: false
-      path: /dev/ubuntu-vg/lv-root
-      id: lvm_partition-1
-      type: lvm_partition
-    - fstype: xfs
-      volume: lvm_partition-1
-      preserve: false
-      id: format-2
-      type: format
-    - path: /
-      device: format-2
-      id: mount-2
-      type: mount
-    - path: /boot
-      device: format-0
-      id: mount-0
-      type: mount
   updates: security
   version: 1
+  storage:
+    config:
+      - type: disk
+        id: disk-vda
+        path: /dev/vda
+        ptable: gpt
+        wipe: superblock-recursive
+        grub_device: true
+      - type: disk
+        id: disk-vdb
+        path: /dev/vdb
+        ptable: gpt
+        wipe: superblock-recursive
+      - type: partition
+        id: bios_grub
+        device: disk-vda
+        size: 2MB
+        flag: bios_grub
+      - type: partition
+        id: boot-part
+        device: disk-vda
+        size: 1GB
+      - type: format
+        id: boot-fs
+        volume: boot-part
+        fstype: ext4
+      - type: mount
+        id: mount-boot
+        device: boot-fs
+        path: /boot
+      - type: partition
+        id: root-part
+        device: disk-vda
+        size: -1
+      - type: partition
+        id: data-part
+        device: disk-vdb
+        size: -1
+      - type: format
+        id: root-fs
+        volume: root-part
+        fstype: xfs
+      - type: format
+        id: data-fs
+        volume: data-part
+        fstype: xfs
+      - type: mount
+        id: mount-root
+        device: root-fs
+        path: /
+      - type: mount
+        id: mount-data
+        device: data-fs
+        path: /data
+  packages:
+    - iputils-ping
+    - vim
+    - tree
+  late-commands:
+    - curtin in-target -- grub-install --target=i386-pc /dev/vda
+    - curtin in-target -- update-grub
+    - curtin in-target -- sed -i 's/^#Port 22/Port 12622/' /etc/ssh/sshd_config
+    - curtin in-target -- systemctl disable systemd-resolved
+    - curtin in-target -- sed -i 's/^#DNS=/DNS=10.101.11.254/' /etc/systemd/resolved.conf
+    - curtin in-target -- rm -f /etc/resolv.conf && echo 'nameserver 10.101.11.254' > /etc/resolv.conf 
+    - curtin in-target -- sed -i 's/^#NTP=/NTP=ntp.8ops.top/' /etc/systemd/timesyncd.conf
