@@ -31,12 +31,12 @@ docker update --restart=always <container id>
 
 
 
-### 1.3 Centos
+### 1.3 centos
 
 ```bash
 # 国内
 yum install -y yum-utils
-yum-config-manager --add-repo http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
+yum-config-manager --add-repo https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
 
 yum search docker-ce
 yum info docker-ce
@@ -49,13 +49,58 @@ systemctl is-enabled docker
 systemctl start docker
 systemctl status docker
 
-yum search docker-compose
-yum install -y docker-compose
+systemctl is-enabled docker
+systemctl status docker
+
+docker version
+docker compose ls
 ```
 
 
 
-### 1.4 docker-compose
+### 1.4 ubuntu
+
+```bash
+# step 1: 安装必要的一些系统工具
+apt-get update
+apt-get install ca-certificates curl gnupg
+
+# step 2: 信任 Docker 的 GPG 公钥
+install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://mirrors.aliyun.com/docker-ce/linux/ubuntu/gpg | \
+  gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+chmod a+r /etc/apt/keyrings/docker.gpg
+
+# Step 3: 写入软件源信息
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://mirrors.aliyun.com/docker-ce/linux/ubuntu \
+  "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | \
+  tee /etc/apt/sources.list.d/docker.list > /dev/null
+ 
+# Step 4: 安装Docker
+apt-get update
+apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+# 安装指定版本的Docker-CE:
+# Step 1: 查找Docker-CE的版本:
+# apt-cache madison docker-ce
+#   docker-ce | 17.03.1~ce-0~ubuntu-xenial | https://mirrors.aliyun.com/docker-ce/linux/ubuntu xenial/stable amd64 Packages
+#   docker-ce | 17.03.0~ce-0~ubuntu-xenial | https://mirrors.aliyun.com/docker-ce/linux/ubuntu xenial/stable amd64 Packages
+# Step 2: 安装指定版本的Docker-CE: (VERSION例如上面的17.03.1~ce-0~ubuntu-xenial)
+# sudo apt-get -y install docker-ce=[VERSION]
+
+systemctl is-enabled docker
+systemctl status docker
+
+docker version
+docker compose ls
+```
+
+
+
+
+
+### 1.5 docker-compose
 
 ```bash
 # down binary
