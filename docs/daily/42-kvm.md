@@ -586,6 +586,23 @@ ifenslave bond0 em1 em2
 
 
 
+### 2.3 vnc
+
+```bash
+# 在xml配置文件中增加
+    <graphics type='vnc' port='-1' autoport='yes' listen='0.0.0.0' passwd='loginpass'>
+      <listen type='address' address='0.0.0.0'/>
+    </graphics>
+  </devices>
+
+virsh destroy kvm
+virsh define kvm.xml
+
+ss -nutlp # 可以看到一个端口可以远程连接ubuntu desktop
+```
+
+
+
 
 
 
