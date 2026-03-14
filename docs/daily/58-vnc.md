@@ -88,3 +88,49 @@ EOF
 
 - **编辑systemd服务文件** `sudo systemctl edit vncserver@:1.service`确保配置如下（替换`vncuser`）： `[Service] Type=forking User=vncuser Group=vncuser ExecStart=/usr/bin/vncserver :1 -geometry 1920x1080 -localhost no ExecStop=/usr/bin/vncserver -kill :1 Environment=DISPLAY=:1`
 - **重载并重启服务** `sudo systemctl daemon-reload sudo systemctl restart vncserver@:1.service`
+
+
+
+### 三、修复
+
+```bash
+# 查找实际的 Xauthority 文件路径
+ps aux | grep -E 'Xorg|Xwayland' | grep -v grep
+
+# 输出类似
+/usr/lib/xorg/Xorg :0 -auth /run/user/1000/gdm/Xauthority ...
+
+# 手动测试
+x11vnc -display :0 \
+       -auth /run/user/1000/gdm/Xauthority \  # 替换为上一步找到的实际路径
+       -rfbauth ~/.vnc/passwd \
+       -forever
+
+# 修复service
+cat > /etc/systemd/system/x11vnc.service <<EOF
+[Unit]
+Description=Start x11vnc at startup
+After=graphical.target
+Wants=graphical.target
+
+[Service]
+Type=simple
+# 使用实际找到的认证路径
+ExecStart=/usr/bin/x11vnc -display :0 -auth AUTH_PATH -forever -rfbauth /home/ubuntu/.vnc/passwd -rfbport 5900 -shared
+Restart=always
+User=ubuntu
+Group=ubuntu
+Environment=DISPLAY=:0
+
+[Install]
+WantedBy=graphical.target
+EOF
+
+# reload service
+systemctl daemon-reload
+systemctl restart x11vnc.service
+systemctl status x11vnc.service
+
+
+```
+
