@@ -96,12 +96,19 @@ ldconfig -v
 # output
 openssl version
 
-# # env
+# # env: openssl
 # LD_RUN_PATH="/usr/local/openssl/lib64" \
 # LDFLAGS="-L/usr/local/openssl/lib64" \
 # CPPFLAGS="-I/usr/local/openssl/include" \
 # CFLAGS="-I/usr/local/openssl/include" \
 # CONFIGURE_OPTS="--with-openssl=/usr/local/openssl" 
+
+# error: 'for' loop initial declarations are only allowed in C99 mode
+make CFLAGS="-std=c99" && make install
+# OR
+make clean
+./Configure linux-x86_64 --prefix=/usr/local/openssl "CFLAGS=-std=c99 -O3"
+make && make install
 ```
 
 
