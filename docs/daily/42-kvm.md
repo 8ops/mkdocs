@@ -598,11 +598,38 @@ ifenslave bond0 em1 em2
 virsh destroy kvm
 virsh define kvm.xml
 
-ss -nutlp # 可以看到一个端口可以远程连接ubuntu desktop
+ss -nutlp # 可以看到一个端口可以远程连接 ubuntu desktop
+# 通过vnc可以远程连接
 ```
 
 
 
+### 2.4 镜像到其他机器
+
+```bash
+virsh start K-LAB-LB-KEEPALIVE-02
+error: Failed to start domain K-LAB-LB-KEEPALIVE-02
+error: the CPU is incompatible with host CPU: Host CPU does not provide required features: md-clear, spec-ctrl, ssbd
+
+virsh edit K-LAB-LB-KEEPALIVE-02
+<cpu mode='custom' match='exact'>
+  <model fallback='forbid'>Skylake-Client</model>
+  <feature policy='require' name='md-clear'/>
+  <feature policy='require' name='spec-ctrl'/>
+  <feature policy='require' name='ssbd'/>
+</cpu>
+# 替换为
+<cpu mode='host-model'/>
+# OR
+<cpu mode='host-passthrough'/>
+# OR
+<cpu mode='custom'>
+  <model fallback='allow'>Skylake-Client</model>
+</cpu>
+
+virsh define K-LAB-LB-KEEPALIVE-02.xml
+virsh start K-LAB-LB-KEEPALIVE-02
+```
 
 
 
