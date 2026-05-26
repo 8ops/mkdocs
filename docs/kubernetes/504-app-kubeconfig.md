@@ -253,15 +253,15 @@ kubectl -n kube-server get secret dashboard-${USER}-secret \
 
 ### 3.2 单租户
 
-限定在单个命名空间的 dashboard 的 token
+限定在单个命名空间的 user 的 token
 
 ```bash
 # 方式一
-USER=guest # default: dashboard-guest
+USER=guest # default: user-guest
 NAMESPACE=kube-app
-kubectl -n ${NAMESPACE} create serviceaccount dashboard-${USER} 
+kubectl -n ${NAMESPACE} create serviceaccount user-${USER} 
 
-kubectl -n ${NAMESPACE} create role dashboard-${USER} \
+kubectl -n ${NAMESPACE} create role user-role-for-${USER} \
   --verb=* \
   --resource=* 
 
@@ -269,22 +269,20 @@ kubectl -n ${NAMESPACE} create role dashboard-${USER} \
 #  apiGroups: ["", "extensions", "apps"]  
 #  resources: ["*"]
 
-kubectl -n ${NAMESPACE} create rolebinding dashboard-${USER} \
-  --role=dashboard-${USER} \
-  --serviceaccount=kube-app:dashboard-${USER}
+kubectl -n ${NAMESPACE} create rolebinding user-role-binding-for-${USER} \
+  --role=user-${USER} \
+  --serviceaccount=${NAMESPACE}:user-${USER}
 
-kubectl describe secrets -n ${NAMESPACE} \
-  $(kubectl -n ${NAMESPACE} get secret | awk '/dashboard-'${USER}'/{print $1}')
+kubectl -n ${NAMESPACE} describe secret ${USER}-token
   
 # 方式二
 USER=guest # default: guest
 NAMESPACE=kube-app
-kubectl -n ${NAMESPACE} create serviceaccount ${USER} 
-kubectl -n ${NAMESPACE} create role ${USER} --verb=* --resource=* 
-kubectl -n ${NAMESPACE} create rolebinding ${USER} \
-  --role=${USER} --serviceaccount=${NAMESPACE}:${USER}
-kubectl describe secrets -n ${NAMESPACE} \
-  $(kubectl -n ${NAMESPACE} get secret | awk '/'${USER}'/{print $1}')
+kubectl -n ${NAMESPACE} create serviceaccount user-${USER} 
+kubectl -n ${NAMESPACE} create role user-role-for-${USER} --verb=* --resource=* 
+kubectl -n ${NAMESPACE} create rolebinding user-role-binding-for-${USER} \
+  --role=${USER} --serviceaccount=${NAMESPACE}:user-${USER}
+kubectl -n ${NAMESPACE} describe secret ${USER}-token
 
 # create token
 # kubernetes v1.24.0+ newst 需要主动创建 secret
@@ -295,7 +293,7 @@ metadata:
   name: ${USER}-token
   namespace: ${NAMESPACE}
   annotations:
-    kubernetes.io/service-account.name: ${USER}
+    kubernetes.io/service-account.name: user-${USER}
 type: kubernetes.io/service-account-token
 EOF
 
@@ -334,6 +332,20 @@ rules:
 ```
 
 
+
+## 四、ack
+
+[ack-ram-tool](https://aliyuncontainerservice.github.io/ack-ram-tool/)
+
+```bash
+# 安装ack-ram-tool
+# 参考：https://aliyuncontainerservice.github.io/ack-ram-tool/
+
+# 生成kubeconfig
+ack-ram-tool credential-plugin get-kubeconfig \
+  --cluster-id <cluster-id> \
+  --mode ram-authenticator-token
+```
 
 
 
