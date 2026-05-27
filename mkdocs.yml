@@ -141,6 +141,7 @@ nav:
       - daily/19-firewall.md
       - daily/20-curl.md
       - daily/21-oauth2.md
+      - daily/22-ipv6.md
     - 【常用组件】:
       - daily/33-ppp.md
       - daily/34-pxe.md
@@ -206,6 +207,7 @@ nav:
       - kubernetes/124-addons-rabbitmq.md
       - kubernetes/125-addons-rancher.md
       - kubernetes/126-addons-cert-manager.md
+      - kubernetes/127-addons-airflow.md
     - 【CRI】:
       - kubernetes/200-cri-readme.md
     - 【CNI】:

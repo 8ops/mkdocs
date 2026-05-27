@@ -226,19 +226,19 @@ helm show values elastic/elasticsearch --version 7.17.3 > elasticsearch.yaml-7.1
 # master 节点
 helm upgrade --install elastic-cluster-master elastic/elasticsearch \
     -f elastic-cluster-master.yaml-7.17.3 \
-    -n elastic-system\
+    -n elastic-system \
     --version 7.17.3
 
 # data 节点
 helm upgrade --install elastic-cluster-data elastic/elasticsearch \
     -f elastic-cluster-data.yaml-7.17.3 \
-    -n elastic-system\
+    -n elastic-system \
     --version 7.17.3
 
 # client 节点
 helm upgrade --install elastic-cluster-client elastic/elasticsearch \
     -f elastic-cluster-client.yaml-7.17.3 \
-    -n elastic-system\
+    -n elastic-system \
     --version 7.17.3
 
 #### 
