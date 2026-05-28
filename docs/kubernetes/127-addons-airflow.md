@@ -13,11 +13,14 @@ helm list -n airflow
 helm -n airflow uninstall airflow
 
 # 清除环境
-kubectl -n airflow get all,pvc,pv,job,rs,secret
+kubectl -n airflow get all,pvc,pv,job,rs,secret,sc
+
 kubectl -n airflow delete --force pod/airflow-redis-0 pod/airflow-run-airflow-migrations-7xh65
 kubectl -n airflow delete job.batch/airflow-run-airflow-migrations 
 kubectl -n airflow delete persistentvolumeclaim/data-airflow-postgresql-0
 kubectl -n airflow delete secret/airflow-broker-url secret/airflow-fernet-key secret/airflow-redis-password
+kubectl -n airflow delete persistentvolumeclaim/data-airflow-postgresql-0 persistentvolume/airflow-postgresql-pv
+
 ```
 
 
@@ -32,10 +35,10 @@ helm search repo airflow
 helm show values apache-airflow/airflow \
     --version 1.18.0 > airflow.yaml-1.18.0-default
 
-helm install airflow apache-airflow/airflow \
+helm upgrade --install airflow apache-airflow/airflow \
     -f airflow.yaml-1.18.0 \
     -n airflow \
-    --version 1.18.0
+    --version 1.18.0 --debug
 
 kubectl -n airflow port-forward svc/airflow-api-server 8080:8080
 
@@ -58,6 +61,15 @@ kubectl patch storageclass local-path \
 kubectl get sc -o yaml | grep is-default-class
 kubectl patch storageclass old-sc-name \
   -p '{"metadata":{"annotations":{"storageclass.kubernetes.io/is-default-class":"false"}}}'
+```
+
+
+
+```bash
+kubectl delete -f ../01-persistent-airflow.yaml
+
+kubectl apply  -f ../01-persistent-airflow.yaml
+
 ```
 
 
