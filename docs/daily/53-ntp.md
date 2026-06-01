@@ -2,7 +2,9 @@
 
 NTP 是网络时间协议 (Network Time Protocol)，它是用来同步网络中各个计算机的时间的协议。
 
-## ntpd
+## server
+
+### ntpd
 
 Linux 服务器上快速配置阿里巴巴 OPSX NTP服务
 
@@ -63,9 +65,11 @@ systemctl status ntpd
 
 
 
-## chronyd
+### chronyd
 
 对于使用 chrony 客户端的 linux 主机
+
+适用 CentOS
 
 配置 `/etc/chrony.conf` 文件的内容为：
 
@@ -142,13 +146,14 @@ chronyc activity
 
 ```
 
-## systemd-timesyncd
+## client
+
+### systemd-timesyncd
 
 ubuntu
 
 ```bash
 # /etc/systemd/timesyncd.conf
-
 [Time]
 NTP=ntp.8ops.top
 #FallbackNTP=ntp.ubuntu.com
@@ -161,15 +166,18 @@ NTP=ntp.8ops.top
 
 ```bash
 # 操作集锦
+apt install systemd-timesyncd
+
+systemctl is-enabled systemd-timesyncd
 systemctl status systemd-timesyncd
 
 timedatectl status
 timedatectl timesync-status
 ```
 
-## systemd-timedated
+### systemd-timedated
 
-centos
+centos 客户侧也转向 chroynd
 
 ```bash
 # /etc/systemd/timesyncd.conf
@@ -182,12 +190,13 @@ NTP=ntp.8ops.top
 
 ```bash
 # 操作集锦
+systemctl restart systemd-timedated.service
 systemctl status systemd-timedated.service
+systemctl enable systemd-timedated.service
+systemctl is-enabled systemd-timedated.service
 
 timedatectl status
 ```
-
-
 
 
 
@@ -198,15 +207,14 @@ timedatectl
 
 timedatectl list-timezones | grep -i shanghai
 
-sudo timedatectl set-timezone Asia/Shanghai
+timedatectl set-timezone Asia/Shanghai
+timedatectl set-ntp true  # 确保时间自动同步
+hwclock --systohc  # 将系统时间写入硬件时钟
 
-sudo timedatectl set-ntp true  # 确保时间自动同步
-
-sudo hwclock --systohc  # 将系统时间写入硬件时钟
-
-sudo systemctl status systemd-timesyncd
+systemctl restart systemd-timesyncd
+systemctl status systemd-timesyncd
 
 # 一键设置上海时区并启用NTP
-sudo timedatectl set-timezone Asia/Shanghai && sudo timedatectl set-ntp true
+timedatectl set-timezone Asia/Shanghai && timedatectl set-ntp true
 ```
 
