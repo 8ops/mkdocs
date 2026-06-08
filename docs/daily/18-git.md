@@ -355,11 +355,9 @@ gitlab-rails runner "Notify.test_email('your-email@domain.com', 'Test Email', 'T
 
 ### 2.5 upgrade
 
-**递进式升级**
+[国内镜像加速下载](https://docker.aityp.com/r/docker.io/gitlab)
 
-[Reference](https://gitlab-com.gitlab.io/support/toolbox/upgrade-path)
-
-
+**[递进式升级](https://gitlab-com.gitlab.io/support/toolbox/upgrade-path)**
 
 跨版本升级记录
 
