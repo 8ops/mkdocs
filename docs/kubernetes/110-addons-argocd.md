@@ -313,6 +313,7 @@ argocd cluster list
 argocd cluster rm 11-dev-ofc
 
 # cluster add（通过本地kubeconfig中的contexts，关联生成service-accouts/argocd-manager会在kube-system）
+# argocd cluster add 11-dev-ofc-tls  --name=11-dev-ofc  --grpc-web --upsert # 覆盖添加，用于有更新集群信息时
 argocd cluster add 11-dev-ofc-tls  --name=11-dev-ofc  --grpc-web
 argocd cluster add 12-test-ali-tls --name=12-test-ali --grpc-web
 argocd cluster add 13-stage-sh-tls --name=13-stage-sh --grpc-web
@@ -447,9 +448,9 @@ argocd repo add https://git.8ops.top/ops/control-plane-ops.git \
 
 ```bash
 argocd app list
-    
+
 # Create a directory app
-argocd app delete guestbook --cascade=false # 仅删除argo应用不删除k8s资源
+argocd app delete guestbook --cascade=false -y # 仅删除argo应用不删除k8s资源
 argocd app delete guestbook
 argocd app create guestbook \
     --repo https://git.8ops.top/ops/argocd-example-apps.git \

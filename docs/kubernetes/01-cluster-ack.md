@@ -61,6 +61,42 @@ kubectl -n kube-system edit cm coredns
 
 
 
+### 1.4 ECS 配置网卡
+
+Alibaba Cloud Linux 3/4 LTS
+
+其中
+
+Alibaba Cloud Linux 3 Pro & Alibaba Cloud Linux 4 Pro 是符合信创要求的操作系统，操作系统需要付费购买。
+
+```bash
+########
+# 需要追加一个私有网卡
+########
+
+# 查看网络连接名称
+nmcli con show
+
+# 查看网卡配置
+ip a show eth0
+
+# 追加辅助私网 IP 地址
+nmcli con modify "cloud-init eth0" +ipv4.addresses 192.168.1.202/24
+nmcli con modify "cloud-init eth0" ipv4.addresses 10.170.0.11/24,10.170.0.1/24
+
+# 重启网络设备
+nmcli con reload
+
+# 激活修改后的网络连接
+nmcli con up "cloud-init eth0"
+```
+
+
+
+
+
+
+
 ## 二、资源隔离
 
 在 Kubernetes 中，**按 Namespace 限制资源使用**，通常有 3 种方式，分别解决不同问题：
