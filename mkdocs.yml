@@ -208,6 +208,7 @@ nav:
       - kubernetes/125-addons-rancher.md
       - kubernetes/126-addons-cert-manager.md
       - kubernetes/127-addons-airflow.md
+      - kubernetes/128-addons-spark.md
     - 【CRI】:
       - kubernetes/200-cri-readme.md
     - 【CNI】:

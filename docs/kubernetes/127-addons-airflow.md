@@ -19,7 +19,7 @@ kubectl -n airflow delete --force pod/airflow-redis-0 pod/airflow-run-airflow-mi
 kubectl -n airflow delete job.batch/airflow-run-airflow-migrations 
 kubectl -n airflow delete persistentvolumeclaim/data-airflow-postgresql-0
 kubectl -n airflow delete secret/airflow-broker-url secret/airflow-fernet-key secret/airflow-redis-password
-kubectl -n airflow delete persistentvolumeclaim/data-airflow-postgresql-0 persistentvolume/airflow-postgresql-pv
+kubectl -n airflow delete persistentvolumeclaim/data-airflow-postgresql-0 persistentvolume/airflow-postgresql-pv persistentvolumeclaim/airflow-dags
 
 ```
 
