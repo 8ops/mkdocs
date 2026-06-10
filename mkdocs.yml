@@ -281,6 +281,9 @@ nav:
       - data/11-huggingface.md
     - 【LLM】:
       - data/20-llm.md
+  - AI: 
+    - ai/00-readme.md
+    - ai/01-prompt.md
   - 生活随记: 
     - note/00-class.md
     - note/01-effect.md
