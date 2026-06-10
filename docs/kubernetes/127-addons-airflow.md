@@ -6,20 +6,20 @@
 
 ```bash
 # 下载至本地资源包
-helm install airflow ./airflow-1.18.0.tgz --namespace airflow -f values.yaml
+helm install airflow ./airflow-1.18.0.tgz --namespace kube-bigdata -f values.yaml
 
 # uninstall
-helm list -n airflow
-helm -n airflow uninstall airflow
+helm list -n kube-bigdata
+helm -n kube-bigdata uninstall airflow
 
 # 清除环境
-kubectl -n airflow get all,pvc,pv,job,rs,secret,sc
+kubectl -n kube-bigdata get all,pvc,pv,job,rs,secret,sc
 
-kubectl -n airflow delete --force pod/airflow-redis-0 pod/airflow-run-airflow-migrations-7xh65
-kubectl -n airflow delete job.batch/airflow-run-airflow-migrations 
-kubectl -n airflow delete persistentvolumeclaim/data-airflow-postgresql-0
-kubectl -n airflow delete secret/airflow-broker-url secret/airflow-fernet-key secret/airflow-redis-password
-kubectl -n airflow delete persistentvolumeclaim/data-airflow-postgresql-0 persistentvolume/airflow-postgresql-pv persistentvolumeclaim/airflow-dags
+kubectl -n kube-bigdata delete --force pod/airflow-redis-0 pod/airflow-run-airflow-migrations-7xh65
+kubectl -n kube-bigdata delete job.batch/airflow-run-airflow-migrations 
+kubectl -n kube-bigdata delete persistentvolumeclaim/data-airflow-postgresql-0
+kubectl -n kube-bigdata delete secret/airflow-broker-url secret/airflow-fernet-key secret/airflow-redis-password
+kubectl -n kube-bigdata delete persistentvolumeclaim/data-airflow-postgresql-0 persistentvolume/airflow-postgresql-pv persistentvolumeclaim/airflow-dags
 
 ```
 
@@ -37,10 +37,10 @@ helm show values apache-airflow/airflow \
 
 helm upgrade --install airflow apache-airflow/airflow \
     -f airflow.yaml-1.18.0 \
-    -n airflow \
+    -n kube-bigdata \
     --version 1.18.0 --debug
 
-kubectl -n airflow port-forward svc/airflow-api-server 8080:8080
+kubectl -n kube-bigdata port-forward svc/airflow-api-server 8080:8080
 
 helm show values apache-airflow/airflow \
     --version 1.21.0 > airflow.yaml-1.21.0-default

@@ -35,6 +35,7 @@ helm show values spark-operator/spark-operator \
 helm install spark-operator spark-operator/spark-operator \
   --namespace kube-bigdata \
   --create-namespace \
+  -f spark-operator.yaml-2.5.0
 
 ```
 
@@ -47,7 +48,7 @@ apiVersion: "sparkoperator.k8s.io/v1beta2"
 kind: SparkApplication
 metadata:
   name: spark-pi
-  namespace: default
+  namespace: kube-bigdata
 spec:
   type: Scala
   mode: cluster
