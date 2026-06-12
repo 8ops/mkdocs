@@ -35,10 +35,21 @@ controller:
   replicaCount: 2
 
   service: # 会自动在 clb 创建负载均衡
+  # https://help.aliyun.com/zh/ack/ack-managed-and-ack-dedicated/user-guide/add-annotations-to-the-yaml-file-of-a-service-to-configure-clb-instances
     type: LoadBalancer
     annotations:
       service.beta.kubernetes.io/alibaba-cloud-loadbalancer-address-type: internet # intranet-对内，internet-对外
+      
+      service.beta.kubernetes.io/alibaba-cloud-loadbalancer-delete-protection: "on" # default
+
+# 用于限制其他命名空间恶意创建 clb 资源
+# ack 实例控制面板 --> 安全管理 --> 策略管理
+# ACKBlockLoadBalancer √
+# ACKBlockInternetLoadBalancer
+
 ```
+
+
 
 
 
