@@ -120,7 +120,7 @@ nmcli con up "cloud-init eth0"
 
 ------
 
-### 1. 使用 ResourceQuota 限制 Namespace 总资源
+### 2.1 使用 ResourceQuota 限制 Namespace 总资源
 
 例如限制 `dev` namespace：
 
@@ -188,7 +188,7 @@ pods             12      50
 
 ------
 
-### 2. 使用 LimitRange 限制 Pod 默认资源与上下限
+### 2.2 使用 LimitRange 限制 Pod 默认资源与上下限
 
 仅靠 `ResourceQuota` 有个问题：
 
@@ -282,7 +282,7 @@ maximum cpu usage per Container is 2, but limit is 4
 
 ------
 
-### 3. 限制 GPU / StorageClass 等资源
+### 2.3 限制 GPU / StorageClass 等资源
 
 例如 GPU：
 
@@ -307,7 +307,7 @@ spec:
 
 ------
 
-### 4. 企业常用最佳实践
+### 2.4 企业常用最佳实践
 
 建议按环境设置：
 
@@ -354,7 +354,7 @@ persistentvolumeclaims: 50
 
 ------
 
-### 5. 一键模板（推荐）
+### 2.5 一键模板（推荐）
 
 给 namespace 同时加：
 
@@ -412,4 +412,124 @@ kubectl apply -f namespace-limit.yaml
 - `RBAC`（权限隔离）
 - `PriorityClass`（资源抢占优先级）
 - `LimitRange + ResourceQuota`（资源隔离）
+
+
+
+## 三、技巧使用
+
+### 3.1 ExternalName
+
+```yaml
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: echoserver-external
+    name: echoserver-external
+    namespace: default
+  spec:
+    externalName: echoserver.8ops.top
+    selector:
+      app: echoserver-external
+    sessionAffinity: None
+    type: ExternalName # ExternalName
+- apiVersion: networking.k8s.io/v1
+  kind: Ingress
+  metadata:
+    annotations:
+      nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
+      nginx.ingress.kubernetes.io/limit-rps: "100"
+      nginx.ingress.kubernetes.io/ssl-redirect: "false"
+      nginx.ingress.kubernetes.io/upstream-vhost: echoserver.8ops.top # 指定vhost
+    generation: 3
+    labels:
+      app: echoserver-external
+    name: echoserver-external
+    namespace: default
+  spec:
+    ingressClassName: intranet
+    rules:
+    - host: echoserver-external.8ops.top
+      http:
+        paths:
+        - backend:
+            service:
+              name: echoserver-external # ExternalName service name
+              port:
+                number: 80 # ExternalName service port
+          path: /
+          pathType: Prefix
+    tls:
+    - hosts:
+      - echoserver-external.8ops.top
+      secretName: tls-8ops.top
+kind: List
+```
+
+
+
+### 3.2 灰度流量
+
+金丝雀发布
+
+[canary](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations/#canary)
+
+```yaml
+- apiVersion: networking.k8s.io/v1
+  kind: Ingress
+  metadata:
+    annotations:
+      nginx.ingress.kubernetes.io/canary: "true"
+      nginx.ingress.kubernetes.io/canary-by-header: "foo"
+      nginx.ingress.kubernetes.io/canary-by-header-value: "bar"
+```
+
+
+
+
+
+### 3.3 alb
+
+阿里自带的网关流量路由组件，关键配置
+
+```yaml
+apiVersion: alibabacloud.com/v1
+kind: AlbConfig
+metadata:
+  name: alb-internet
+spec:
+  config:
+    name: alb-config-internet
+    addressType: Internet # required, internet/intranet
+    zoneMappings:         # required, at least two
+    - vSwitchId: vsw-uf6ccg2a9g71hx8go****
+    - vSwitchId: vsw-uf6nun9tql5t8nh15****
+  listeners:
+    - port: 80
+      protocol: HTTP
+    - port: 443
+      protocol: HTTPS
+      securityPolicyId: tls_cipher_policy_1_2_strict_with_1_3
+---
+apiVersion: networking.k8s.io/v1
+kind: IngressClass
+metadata:
+  name: internet
+spec:
+  controller: ingress.k8s.alibabacloud/alb # required, fixed value
+  parameters:
+    apiGroup: alibabacloud.com
+    kind: AlbConfig
+    name: alb-internet                     # associated configuration
+```
+
+
+
+
+
+
+
+
 

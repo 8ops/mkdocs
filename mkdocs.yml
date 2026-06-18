@@ -168,6 +168,7 @@ nav:
       - daily/56-proxyswitch.md
       - daily/57-lvm.md
       - daily/58-vnc.md
+      - daily/59-ss.md
   - Kubernetes:
     - 【搭建】: 
       - kubernetes/01-cluster-init.md
