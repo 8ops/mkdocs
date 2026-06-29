@@ -490,7 +490,7 @@ kind: List
 
 
 
-### 3.3 alb
+### 3.3 alb ingress controller
 
 阿里自带的网关流量路由组件，关键配置
 
@@ -501,7 +501,7 @@ metadata:
   name: alb-internet
 spec:
   config:
-    name: alb-config-internet
+    name: dev-albconfig-internet # optional, 用于控制台显示的名称
     addressType: Internet # required, internet/intranet
     zoneMappings:         # required, at least two
     - vSwitchId: vsw-uf6ccg2a9g71hx8go****
@@ -524,6 +524,24 @@ spec:
     kind: AlbConfig
     name: alb-internet                     # associated configuration
 ```
+
+**安装**
+
+1. 进入 ack 实例控制台 -- 组件管理 -- alb ingress controller （点击安装）
+2. 在拉起 ack 实例时，alb ingress controller 默认安装，按文档点击配置公网/内网即可创建 alb 实例（实际存在 bug 未能成功创建）
+3. 可通过上面的 AlbConfig+IngressClass 配置创建 alb 实例
+
+**卸载**
+
+1. 按文档指引先删除 AlbConfig+IngressClass，alb 实例将会自动释放
+2. 若未能成功释放 alb 实例，需要进 alb 实例控制台关闭修改保护+删除保护再进行释放，再删除 AlbConfig+IngressClass 此时需要变更 finalizers 属性值
+
+```bash
+kubectl patch albconfig alb -p '{"metadata":{"finalizers":null}}' --type=merge
+kubectl delete albconfig alb
+```
+
+
 
 
 
