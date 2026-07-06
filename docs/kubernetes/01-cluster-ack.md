@@ -502,6 +502,7 @@ metadata:
 spec:
   config:
     name: dev-albconfig-internet # optional, 用于控制台显示的名称
+    edition: StandardWithWaf # optional, 开启WAF防护（区别于手动创建alb和cname方式）
     addressType: Internet # required, internet/intranet
     zoneMappings:         # required, at least two
     - vSwitchId: vsw-uf6ccg2a9g71hx8go****
@@ -539,6 +540,26 @@ spec:
 ```bash
 kubectl patch albconfig alb -p '{"metadata":{"finalizers":null}}' --type=merge
 kubectl delete albconfig alb
+```
+
+### 3.4 ecs 磁盘扩容
+
+```bash
+#1 页面手动制作快照
+
+#2 页面手动扩容
+
+#3 查看分区号
+lsblk -f
+
+#4 分区指令（整盘独立分区不需要）
+growpart /dev/vdb vdb2
+
+#5 扩容文件系统
+resize2fs /dev/vdb # 非必须
+xfs_growfs /data1
+
+
 ```
 
 

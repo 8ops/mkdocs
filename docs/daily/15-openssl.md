@@ -197,6 +197,14 @@ acme.sh --issue \
     --dns dns_dp \
     --debug 2
 
+acme.sh --issue \
+    -d 8ops.top \
+    -d "*.8ops.top" \
+    --dns dns_dp \
+    --keylength 2048 \
+    --server  letsencrypt \
+    --debug 2
+
 # install
 acme.sh --install-cert \
     -d 8ops.top \
