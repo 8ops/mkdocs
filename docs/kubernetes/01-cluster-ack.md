@@ -564,6 +564,26 @@ xfs_growfs /data1
 
 
 
+### 3.5 磁盘挂载
+
+ack 里面使用StorageClass引用磁盘类就可以创建CSI磁盘了。
+
+[nas](https://help.aliyun.com/zh/ack/ack-managed-and-ack-dedicated/user-guide/mount-a-dynamically-provisioned-nas-volume)
+
+文件存储 -- 创建文件系统 -- 通用nas
+
+- 回收站
+- 文件备份
+- 虚拟交换机 / 同一可用区
+
+[云盘](https://help.aliyun.com/zh/ack/ack-managed-and-ack-dedicated/user-guide/use-dynamically-provisioned-disk-volumes)
+
+ack控制台 -- 存储 -- 存储类 
+
+- type：cloud_essd,cloud_ssd,cloud_efficiency
+
+
+
 
 
 
