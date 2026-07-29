@@ -133,7 +133,18 @@ syntax enable
 set background=dark
 colorscheme darkblue
 set ruler
+
+# 显示中文
+vim /etc/vim/vimrc
+
+# 末尾追加
+set encoding=utf-8
+set fileencodings=utf-8,gbk,gb18030,gb2312,cp936
+set termencoding=utf-8
+
 ```
+
+
 
 
 
