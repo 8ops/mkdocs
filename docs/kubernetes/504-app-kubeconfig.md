@@ -68,7 +68,7 @@ kubectl config view --kubeconfig ${USER}.kubeconfig
 
 ### 2.2 binding
 
-授权方式有两种
+授权方式有两种：
 
 1. Role+RoleBinding
 
@@ -124,10 +124,14 @@ kubectl -n ${NAMESPACE} edit role user-op-for-${USER}
 
 kubectl --kubeconfig ${USER}.kubeconfig get all,cm,pvc,ing,hpa,jobs,cronjobs
 
+# before v1.24
 kubectl -n ${NAMESPACE} create rolebinding user-op-for-${USER}-binding \
   --role=user-op-for-${USER} \
   --user=${USER}
-  
+# above v1.24
+kubectl -n ${NAMESPACE} create rolebinding user-op-for-${USER}-binding \
+  --role=user-op-for-${USER} \
+  --serviceaccount=${NAMESPACE}:user-${USER}
 ```
 
 
@@ -153,10 +157,14 @@ kubectl edit clusterrole cluster-op-for-${USER}
   - create
 
 # 绑定 ClusterRoleBinding
+# before v1.24
 kubectl create clusterrolebinding cluster-op-for-${USER}-binding \
     --clusterrole=cluster-op-for-${USER} \
     --user=${USER} 
-
+# above v1.24
+kubectl -n ${NAMESPACE} create rolebinding user-op-for-${USER}-binding \
+    --clusterrole=cluster-op-for-${USER} \
+    --serviceaccount=${NAMESPACE}:user-${USER}
 ```
 
 
@@ -330,6 +338,58 @@ rules:
 #   resources: ["roles", "rolebindings"]
 #   verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]  
 ```
+
+
+
+### 3.3 快速只读单租户
+
+```bash
+# default: user-guest
+USER=guest
+NAMESPACE=kube-app
+kubectl -n ${NAMESPACE} create serviceaccount user-${USER} 
+
+kubectl -n ${NAMESPACE} create role user-op-for-${USER} \
+  --verb=* \
+  --resource=* 
+
+# read
+kubectl -n ${NAMESPACE} edit role user-op-for-${USER}
+- apiGroups: [""]
+  resources: ["pods", "pods/log", "services", "replicationcontrollers", "configmaps", "persistentvolumeclaims"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["apps"]
+  resources: ["replicasets", "deployments", "daemonsets", "statefulsets"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["networking.k8s.io"]
+  resources: ["ingresses"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["autoscaling"]
+  resources: ["horizontalpodautoscalers"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["batch"]
+  resources: ["cronjobs","jobs"]
+  verbs: ["get", "list", "watch"]
+
+kubectl -n ${NAMESPACE} create rolebinding user-op-for-${USER}-binding \
+  --role=user-op-for-${USER} \
+  --serviceaccount=${NAMESPACE}:user-${USER}
+
+kubectl apply -f - <<EOF
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ${USER}-token
+  namespace: ${NAMESPACE}
+  annotations:
+    kubernetes.io/service-account.name: user-${USER}
+type: kubernetes.io/service-account-token
+EOF
+
+kubectl -n ${NAMESPACE} describe secret ${USER}-token
+```
+
+
 
 
 
