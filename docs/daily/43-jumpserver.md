@@ -39,7 +39,7 @@ helm search repo jumpserver
 helm show values jumpserver/jumpserver > jumpserver.yaml-2.26.1-default
 
 # Example
-#    https://m.8ops.top/attachment/jumpserver/helm/jumpserver.yaml-2.26.1
+#    https://books.8ops.top/attachment/jumpserver/helm/jumpserver.yaml-2.26.1
 # 
 
 helm install jumpserver jumpserver/jumpserver \
