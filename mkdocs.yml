@@ -142,6 +142,7 @@ nav:
       - daily/20-curl.md
       - daily/21-oauth2.md
       - daily/22-ipv6.md
+      - daily/23-proxy.md
     - 【常用组件】:
       - daily/33-ppp.md
       - daily/34-pxe.md
