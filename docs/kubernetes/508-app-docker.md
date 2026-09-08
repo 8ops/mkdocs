@@ -443,3 +443,45 @@ docker pull mongo:7.0.12
 
 ```
 
+
+
+### 4.2 推送镜像
+
+containerd
+
+**nerdctl**
+
+```bash
+# 查看镜像
+nerdctl -n k8s.io images | grep hub.8ops.top
+# 打tag
+nerdctl -n k8s.io tag \
+  hub.8ops.top/third/busybox:1.28.0 \
+  hub.8ops.top/third/busybox:1.28.0-x
+# 登录
+nerdctl -n k8s.io login hub.8ops.top
+# 推送
+nerdctl -n k8s.io hub.8ops.top/third/busybox:1.28.0-x
+```
+
+**ctl**
+
+```bash
+# 1. 查看镜像
+ctr -n k8s.io images ls
+
+# 2. 给镜像打上私有仓库地址
+ctr -n k8s.io images tag \
+  hub.8ops.top/project/image:tag \
+  hub.8ops.top/project/image:tag-new
+
+# 3. 登录仓库
+ctr -n k8s.io images pull ...
+# 或 push 时通过 --user 指定认证
+
+# 4. 推送
+ctr -n k8s.io images push \
+  --user 用户名:密码 \
+  hub.8ops.top/project/image:tag
+```
+
