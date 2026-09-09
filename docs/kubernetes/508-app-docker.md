@@ -452,6 +452,17 @@ containerd
 **nerdctl**
 
 ```bash
+# 安装
+uname -m
+x86_64  → amd64
+aarch64 → arm64
+
+VERSION=2.1.1
+wget https://github.com/containerd/nerdctl/releases/download/v${VERSION}/nerdctl-${VERSION}-linux-amd64.tar.gz
+tar -C /usr/local/bin -xzf nerdctl-${VERSION}-linux-amd64.tar.gz
+
+nerdctl version
+
 # 查看镜像
 nerdctl -n k8s.io images | grep hub.8ops.top
 # 打tag
@@ -467,6 +478,8 @@ nerdctl -n k8s.io hub.8ops.top/third/busybox:1.28.0-x
 **ctl**
 
 ```bash
+## 未通过 ##
+
 # 1. 查看镜像
 ctr -n k8s.io images ls
 
