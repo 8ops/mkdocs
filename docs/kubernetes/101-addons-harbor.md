@@ -65,3 +65,10 @@ chmod +x /usr/local/bin/docker-compose
 # 3. aliyun cloud linux 无法源安装，可通过curl二进制
 ```
 
+### 2.2 更新域名证书
+
+```bash
+# harbor仅重启nginx
+docker-compose restart proxy # nginx
+```
+

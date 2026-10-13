@@ -559,6 +559,29 @@ services:
 
 
 
+### 2.6 例行维护
+
+#### 更新域名证书
+
+```bash
+cat docker-compose.yml
+……
+    volumes:
+      - '/opt/lib/gitlab-ops/config:/etc/gitlab'
+      - '/opt/lib/gitlab-ops/logs:/var/log/gitlab'
+      - '/opt/lib/gitlab-ops/data:/var/opt/gitlab'
+    shm_size: '4g'
+
+# gitlab重新加载配置
+gitlab-ctl reconfigure
+gitlab-ctl restart
+
+```
+
+
+
+
+
 ## 三、安装gitlab-runner
 
 [Reference](https://docs.gitlab.com/runner/install/docker.html)
