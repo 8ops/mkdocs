@@ -69,6 +69,9 @@ chmod +x /usr/local/bin/docker-compose
 
 ```bash
 # harbor仅重启nginx
-docker-compose restart proxy # nginx
+docker-compose restart proxy # 貌似未生效
+docker-compose down
+./prepare --with-notary --with-trivy --with-chartmuseum
+docker-compose up -d
 ```
 
