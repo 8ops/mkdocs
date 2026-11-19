@@ -561,6 +561,25 @@ services:
 
 ### 2.6 例行维护
 
+#### docker compose 升级快速
+
+```bash
+gitlab upgrade note
+1. stop service
+docker compose down
+2. backup data dir 
+rsync -a /opt/lib/gitlab-ops/ /data1/DELETE/gitlab-ops-v19.0.1
+3. backup docker-compose.yaml
+cp docker-compose.yaml archive/docker-compose.yaml-v19.0.1
+4. edit  docker-compose.yaml to 19.2.10
+vim docker-compose.yaml
+5. start service
+docker compose up -d
+6. test service
+```
+
+
+
 #### 更新域名证书
 
 ```bash
